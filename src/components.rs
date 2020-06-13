@@ -110,3 +110,12 @@ impl Add for Position {
         Self { x, y }
     }
 }
+
+#[derive(Debug, Default, Copy, Clone, PartialEq, PartialOrd)]
+pub struct Population(f64);
+
+impl Population {
+    pub fn in_millions(mm_people: f64) -> Self {
+        Self(mm_people * 1e6)
+    }
+}
