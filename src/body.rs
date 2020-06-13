@@ -127,6 +127,7 @@ mod tests {
         let quarter = bodies.get_position(id, Time::in_s(15.0)).unwrap();
 
         assert_eq!(Length::in_m(-1000.0), quarter.x);
+        assert!(Length::in_m(0.001) > quarter.y && quarter.y > Length::in_m(-0.001));
     }
 
     #[test]
@@ -136,6 +137,7 @@ mod tests {
         let quarter = bodies.get_position(id, Time::in_s(0.0)).unwrap();
 
         assert_eq!(Length::in_m(-1000.0), quarter.x);
+        assert!(Length::in_m(0.001) > quarter.y && quarter.y > Length::in_m(-0.001));
     }
 
     #[test]
@@ -155,6 +157,7 @@ mod tests {
         let three_quarters = bodies.get_position(id, Time::in_s(45.0)).unwrap();
 
         assert_eq!(Length::in_m(1000.0), three_quarters.x);
+        assert!(Length::in_m(0.001) > three_quarters.y && three_quarters.y > Length::in_m(-0.001));
     }
 
     #[test]
