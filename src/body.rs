@@ -127,7 +127,7 @@ mod tests {
         let quarter = bodies.get_position(id, Time::in_s(15.0)).unwrap();
 
         assert_eq!(Length::in_m(-1000.0), quarter.x);
-        assert!(Length::in_m(0.001) > quarter.y && quarter.y > Length::in_m(-0.001));
+        assert!(nearly_zero(quarter.y));
     }
 
     #[test]
@@ -137,7 +137,7 @@ mod tests {
         let quarter = bodies.get_position(id, Time::in_s(0.0)).unwrap();
 
         assert_eq!(Length::in_m(-1000.0), quarter.x);
-        assert!(Length::in_m(0.001) > quarter.y && quarter.y > Length::in_m(-0.001));
+        assert!(nearly_zero(quarter.y));
     }
 
     #[test]
@@ -147,7 +147,7 @@ mod tests {
         let half = bodies.get_position(id, Time::in_s(30.0)).unwrap();
 
         assert_eq!(Length::in_m(-1000.0), half.y);
-        assert!(Length::in_m(0.001) > half.x && half.x > Length::in_m(-0.001));
+        assert!(nearly_zero(half.x));
     }
 
     #[test]
@@ -157,7 +157,7 @@ mod tests {
         let three_quarters = bodies.get_position(id, Time::in_s(45.0)).unwrap();
 
         assert_eq!(Length::in_m(1000.0), three_quarters.x);
-        assert!(Length::in_m(0.001) > three_quarters.y && three_quarters.y > Length::in_m(-0.001));
+        assert!(nearly_zero(three_quarters.y));
     }
 
     #[test]
@@ -223,5 +223,9 @@ mod tests {
 
     fn get_star() -> Id<Star> {
         Allocator::<Star>::default().create()
+    }
+
+    fn nearly_zero(value: Length) -> bool {
+        Length::in_m(0.00001) > value && value > Length::in_m(-0.00001)
     }
 }
