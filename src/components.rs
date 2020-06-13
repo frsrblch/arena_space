@@ -2,6 +2,8 @@ use std::ops::*;
 
 // TODO write scalar and vector component macros
 
+// TODO add ops to vector!();
+
 macro_rules! scalar {
     ($scalar:ident, $unit:ident, $abrev:ident) => {
         paste::item! {
@@ -58,7 +60,32 @@ scalar!(Temperature, kelvin, k);
 scalar!(Time, seconds, s);
 scalar!(Angle, radians, rad);
 
+macro_rules! vector {
+    ($vector:ident, $scalar:ty, $units:ident, $abrev:ident) => {
+        paste::item! {
+            #[derive(Debug, Default, Copy, Clone, PartialEq, PartialOrd)]
+            pub struct $vector {
+                pub x: $scalar,
+                pub y: $scalar,
+            }
+
+            impl $vector {
+                pub fn [<in_ $abrev>](x: f64, y: f64) -> Self {
+                    Self {
+                        x: $scalar(x),
+                        y: $scalar(y),
+                    }
+                }
+            }
+        }
+    }
+}
+
 impl Angle {
+    pub fn in_deg(degrees: f64) -> Self {
+        Self(degrees * Self::RAD_PER_DEG)
+    }
+
     pub fn sin(self) -> f64 {
         self.0.sin()
     }
@@ -66,19 +93,13 @@ impl Angle {
     pub fn cos(self) -> f64 {
         self.0.cos()
     }
+
+    const RAD_PER_DEG: f64 = std::f64::consts::PI / 180.0;
 }
 
-#[derive(Debug, Default, Copy, Clone, PartialEq)]
-pub struct Position {
-    pub x: Length,
-    pub y: Length
-}
+vector!(Position, Length, meters, m);
 
 impl Position {
-    pub fn in_m(x: f64, y: f64) -> Self {
-        Self { x: Length::in_m(x), y: Length::in_m(y) }
-    }
-
     /// Returns the position vector given an angle and a radius
     ///
     ///  # Arguments
