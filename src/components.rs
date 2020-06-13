@@ -26,6 +26,22 @@ impl Add for Length {
     }
 }
 
+impl Mul<f64> for Length {
+    type Output = Self;
+
+    fn mul(self, rhs: f64) -> Self::Output {
+        Length(self.0 * rhs)
+    }
+}
+
+impl Div<f64> for Length {
+    type Output = Self;
+
+    fn div(self, rhs: f64) -> Self::Output {
+        Length(self.0 / rhs)
+    }
+}
+
 #[derive(Debug, Default, Copy, Clone, PartialEq, PartialOrd)]
 pub struct Temperature(f64);
 
@@ -58,6 +74,14 @@ pub struct Angle(f64);
 impl Angle {
     pub fn in_rad(radians: f64) -> Self {
         Self(radians)
+    }
+
+    pub fn sin(self) -> f64 {
+        self.0.sin()
+    }
+
+    pub fn cos(self) -> f64 {
+        self.0.cos()
     }
 }
 
@@ -95,9 +119,9 @@ impl Position {
     /// * `angle` - as measured clockwise from the positive y-axis
     /// * `magnitude` - length of the resulting vector
     pub fn from_angle_and_radius(angle: Angle, magnitude: Length) -> Self {
-        let x = angle.0.sin() * magnitude.0;
-        let y = angle.0.cos() * magnitude.0;
-        Self::in_m(x, y)
+        let x = magnitude * angle.sin();
+        let y = magnitude * angle.cos();
+        Self { x, y }
     }
 }
 
