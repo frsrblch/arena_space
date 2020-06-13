@@ -6,9 +6,8 @@ pub mod star;
 pub mod body;
 pub mod colony;
 
-use fnv::{FnvHashMap, FnvHashSet};
-pub type HashMap<I, T> = FnvHashMap<I, T>;
-pub type HashSet<I> = FnvHashSet<I>;
+pub type HashMap<I, T> = fnv::FnvHashMap<I, T>;
+pub type HashSet<I> = fnv::FnvHashSet<I>;
 
 #[derive(Debug, Default)]
 pub struct State {
