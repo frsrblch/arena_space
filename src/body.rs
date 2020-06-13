@@ -109,6 +109,7 @@ impl OrbitParams {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::f64::consts::PI;
 
     #[test]
     fn orbit_test_at_time_zero() {
@@ -124,6 +125,15 @@ mod tests {
         let (bodies, id) = get_one_planet();
 
         let quarter = bodies.get_position(id, Time::in_s(15.0)).unwrap();
+
+        assert_eq!(Length::in_m(-1000.0), quarter.x);
+    }
+
+    #[test]
+    fn orbit_test_at_zero_with_quarter_offset() {
+        let (bodies, id) = get_one_planet_with_offset(Angle::in_rad(PI / 2.0));
+
+        let quarter = bodies.get_position(id, Time::in_s(0.0)).unwrap();
 
         assert_eq!(Length::in_m(-1000.0), quarter.x);
     }
@@ -157,6 +167,10 @@ mod tests {
     }
 
     fn get_one_planet() -> (Body, Id<Body>) {
+        get_one_planet_with_offset(Angle::default())
+    }
+
+    fn get_one_planet_with_offset(offset: Angle) -> (Body, Id<Body>) {
         let mut body = Body::default();
 
         let planet = BodyRow {
@@ -166,7 +180,7 @@ mod tests {
             orbit: OrbitParams {
                 radius: Length::in_m(1000.0),
                 period: Time::in_s(60.0),
-                offset: Angle::default(),
+                offset,
             }
         };
 
