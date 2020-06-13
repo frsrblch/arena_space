@@ -44,6 +44,7 @@ pub mod orbit {
             } else {
                 self.params.calculate_position(time)
             }
+            .into()
         }
     }
 
@@ -55,9 +56,9 @@ pub mod orbit {
     }
 
     impl OrbitParams {
-        pub fn calculate_position(&self, time: Time) -> Position {
+        pub fn calculate_position(&self, time: Time) -> Distance {
             let angle = self.get_angle(time);
-            Position::from_angle_and_radius(angle, self.radius)
+            Distance::from_angle_and_radius(angle, self.radius)
         }
 
         pub fn get_angle(&self, time: Time) -> Angle {
@@ -237,9 +238,23 @@ impl Body {
     }
 
     pub fn get_position(&self, id: Id<Body>, time: Time) -> Option<Position> {
-        self.orbit
-            .get(id)
-            .map(|orbit| orbit.calculate_position(time))
+        self.orbit.get(id)?
+            .calculate_position(time)
+            .into()
+    }
+
+    pub fn get_distance(&self, from: Id<Body>, to: Id<Body>, time: Time) -> Option<Distance> {
+        let system_from = self.star.get(from)?;
+        let system_to = self.star.get(to)?;
+
+        if system_from == system_to {
+            let from = self.get_position(from, time)?;
+            let to = self.get_position(to, time)?;
+
+            Some(to - from)
+        } else {
+            unimplemented!("Distance between bodies in different systems not implemented.")
+        }
     }
 }
 

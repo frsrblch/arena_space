@@ -7,6 +7,7 @@ pub struct Star {
     pub mass: Component<Self, Mass>,
     pub radius: Component<Self, Length>,
     pub temperature: Component<Self, Temperature>,
+    pub position: Component<Self, Position>,
 }
 
 fixed_arena!(Star, u16);
@@ -19,6 +20,7 @@ impl Star {
         self.mass.insert(id, row.mass);
         self.radius.insert(id, row.radius);
         self.temperature.insert(id, row.temperature);
+        self.position.insert(id, row.position);
 
         id
     }
@@ -29,4 +31,5 @@ pub struct StarRow {
     pub mass: Mass,
     pub radius: Length,
     pub temperature: Temperature,
+    pub position: Position,
 }

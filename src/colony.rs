@@ -25,6 +25,19 @@ impl Colony {
 
         id.id
     }
+
+    pub fn get_food_demand(&self, id: Id<Self>) -> Option<MassRate> {
+        self.get_population(id)
+            .map(|pop| pop.value * Self::FOOD_PER_PERSON_SECOND)
+    }
+
+    pub fn get_population(&self, id: Id<Self>) -> Option<&Population> {
+        self.alloc
+            .validate(id)
+            .and_then(|id| self.population.get(id))
+    }
+
+    const FOOD_PER_PERSON_SECOND: MassRate = MassRate::in_kg_per_s(2.0 / Time::SECONDS_PER_DAY); // 2 kg per day
 }
 
 #[derive(Debug, Clone)]
