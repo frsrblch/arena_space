@@ -88,7 +88,7 @@ impl Position {
         Self { x: Length::in_m(x), y: Length::in_m(y) }
     }
 
-    /// Returns the position given an angle and a radius
+    /// Returns the position vector given an angle and a radius
     ///
     ///  # Arguments
     ///
