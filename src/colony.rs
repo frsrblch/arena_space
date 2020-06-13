@@ -12,11 +12,7 @@ pub struct Colony {
     pub body: Component<Self, Id<Body>>,
 }
 
-impl Arena for Colony {
-    type Index = u32;
-    type Generation = NonZeroU32;
-    type Allocator = DynamicAllocator<Self>;
-}
+dynamic_arena!(Colony, u32);
 
 impl Colony {
     pub fn create(&mut self, row: ColonyRow, links: ColonyLinks) -> Id<Self> {

@@ -9,11 +9,7 @@ pub struct Star {
     pub temperature: Component<Self, Temperature>,
 }
 
-impl Arena for Star {
-    type Index = u16;
-    type Generation = ();
-    type Allocator = FixedAllocator<Self>;
-}
+fixed_arena!(Star, u16);
 
 impl Star {
     pub fn create(&mut self, row: StarRow) -> Id<Self> {

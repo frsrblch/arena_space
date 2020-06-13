@@ -204,11 +204,7 @@ pub struct Body {
     pub star: Component<Self, Id<Star>>,
 }
 
-impl Arena for Body {
-    type Index = u32;
-    type Generation = ();
-    type Allocator = FixedAllocator<Self>;
-}
+fixed_arena!(Body, u32);
 
 impl Body {
     pub fn create(&mut self, row: BodyRow, links: BodyLinks) -> Id<Self> {
