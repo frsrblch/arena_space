@@ -31,13 +31,13 @@ impl Colony {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ColonyRow {
     pub name: String,
     pub population: Population,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct ColonyLinks {
     pub body: Id<Body>,
 }
