@@ -11,8 +11,8 @@ pub struct Body {
 
     pub star: Component<Self, Id<Star>>,
 
-    pub planets: FnvHashMap<Id<Self>, PlanetOrbit>,
-    pub moons: FnvHashMap<Id<Self>, MoonOrbit>,
+    pub planets: HashMap<Id<Self>, Orbit>,
+    pub moons: HashMap<Id<Self>, MoonOrbit>,
 }
 
 impl Arena for Body {
@@ -34,14 +34,10 @@ impl Body {
         if let Some(parent) = link.parent {
             self.moons.insert(id, MoonOrbit {
                 parent,
-                body: id,
                 orbit: row.orbit,
             });
         } else {
-            self.planets.insert(id, PlanetOrbit {
-                body: id,
-                orbit: row.orbit,
-            });
+            self.planets.insert(id, row.orbit);
         }
 
         id
@@ -70,14 +66,7 @@ pub struct Orbit {
 }
 
 #[derive(Debug)]
-pub struct PlanetOrbit {
-    pub body: Id<Body>,
-    pub orbit: Orbit,
-}
-
-#[derive(Debug)]
 pub struct MoonOrbit {
     pub parent: Id<Body>,
-    pub body: Id<Body>,
     pub orbit: Orbit,
 }
