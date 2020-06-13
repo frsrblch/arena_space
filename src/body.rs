@@ -50,7 +50,7 @@ pub mod orbit {
     #[derive(Debug, Copy, Clone)]
     pub struct OrbitParams {
         pub radius: Length,
-        pub period: Time,
+        pub period: Duration,
         pub offset: Angle,
     }
 
@@ -143,7 +143,7 @@ pub mod orbit {
                 radius: Length::in_m(1.0),
                 orbit: OrbitParams {
                     radius: Length::in_m(1000.0),
-                    period: Time::in_s(60.0),
+                    period: Duration::in_s(60.0),
                     offset,
                 }
             };
@@ -167,7 +167,7 @@ pub mod orbit {
                 radius: Length::in_m(0.1),
                 orbit: OrbitParams {
                     radius: Length::in_m(10.0),
-                    period: Time::in_s(10.0),
+                    period: Duration::in_s(10.0),
                     offset: Default::default()
                 }
             };
@@ -230,7 +230,7 @@ impl Body {
         let parent = parent
             .and_then(|parent| self.orbit.get(parent))
             .map(|orbit| {
-                assert!(orbit.parent.is_none());
+                assert!(orbit.parent.is_none(), "Cannot use a moon as a parent body.");
                 orbit.params
             });
 
@@ -260,4 +260,3 @@ pub struct BodyLinks {
     star: Id<Star>,
     parent: Option<Id<Body>>,
 }
-
