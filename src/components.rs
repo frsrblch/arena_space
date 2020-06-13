@@ -1,103 +1,70 @@
 use std::ops::*;
 
-#[derive(Debug, Default, Copy, Clone, PartialEq, PartialOrd)]
-pub struct Mass(f64);
+// TODO write scalar and vector component macros
 
-impl Mass {
-    pub fn in_kg(kilograms: f64) -> Self {
-        Self(kilograms)
+macro_rules! scalar {
+    ($scalar:ident, $unit:ident, $abrev:ident) => {
+        paste::item! {
+            #[derive(Debug, Default, Copy, Clone, PartialEq, PartialOrd)]
+            pub struct $scalar(f64);
+
+            impl $scalar {
+                pub fn [<in_ $abrev>] ($unit: f64) -> Self {
+                    Self($unit)
+                }
+            }
+
+            impl Add for $scalar {
+                type Output = Self;
+                fn add(self, rhs: Self) -> Self::Output {
+                    Self(self.0 + rhs.0)
+                }
+            }
+
+            impl Sub for $scalar {
+                type Output = Self;
+                fn sub(self, rhs: Self) -> Self::Output {
+                    Self(self.0 - rhs.0)
+                }
+            }
+
+            impl Mul<f64> for $scalar {
+                type Output = Self;
+                fn mul(self, rhs: f64) -> Self {
+                    Self(self.0 * rhs)
+                }
+            }
+
+            impl Div<f64> for $scalar {
+                type Output = Self;
+                fn div(self, rhs: f64) -> Self {
+                    Self(self.0 / rhs)
+                }
+            }
+
+            impl Div for $scalar {
+                type Output = f64;
+                fn div(self, rhs: Self) -> Self::Output {
+                    self.0 / rhs.0
+                }
+            }
+        }
     }
 }
 
-#[derive(Debug, Default, Copy, Clone, PartialEq, PartialOrd)]
-pub struct Length(f64);
-
-impl Length {
-    pub fn in_m(meters: f64) -> Self {
-        Self(meters)
-    }
-}
-
-impl Add for Length {
-    type Output = Self;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        Self::in_m(self.0 + rhs.0)
-    }
-}
-
-impl Mul<f64> for Length {
-    type Output = Self;
-
-    fn mul(self, rhs: f64) -> Self::Output {
-        Length(self.0 * rhs)
-    }
-}
-
-impl Div<f64> for Length {
-    type Output = Self;
-
-    fn div(self, rhs: f64) -> Self::Output {
-        Length(self.0 / rhs)
-    }
-}
-
-#[derive(Debug, Default, Copy, Clone, PartialEq, PartialOrd)]
-pub struct Temperature(f64);
-
-impl Temperature {
-    pub fn in_k(kelvin: f64) -> Self {
-        Self(kelvin)
-    }
-}
-
-#[derive(Debug, Default, Copy, Clone, PartialEq, PartialOrd)]
-pub struct Time(f64);
-
-impl Time {
-    pub fn in_s(seconds: f64) -> Self {
-        Self(seconds)
-    }
-}
-
-impl Div for Time {
-    type Output = f64;
-
-    fn div(self, rhs: Self) -> Self::Output {
-        self.0 / rhs.0
-    }
-}
-
-#[derive(Debug, Default, Copy, Clone, PartialEq, PartialOrd)]
-pub struct Angle(f64);
+scalar!(Mass, kilograms, kg);
+scalar!(Length, meters, m);
+scalar!(Temperature, kelvin, k);
+scalar!(Time, seconds, s);
+scalar!(Angle, radians, rad);
 
 impl Angle {
-    pub fn in_rad(radians: f64) -> Self {
-        Self(radians)
-    }
-
     pub fn sin(self) -> f64 {
         self.0.sin()
     }
 
     pub fn cos(self) -> f64 {
         self.0.cos()
-    }
-}
-
-impl Add for Angle {
-    type Output = Self;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        Self::in_rad(self.0 + rhs.0)
-    }
-}
-
-impl Sub for Angle {
-    type Output = Self;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        Self::in_rad(self.0 - rhs.0)
     }
 }
 
