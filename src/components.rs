@@ -5,6 +5,13 @@ macro_rules! scalar {
         #[derive(Debug, Default, Copy, Clone, PartialEq, PartialOrd)]
         pub struct $scalar($base);
 
+        impl $scalar {
+            #[allow(dead_code)]
+            fn new(value: $base) -> Self {
+                Self(value)
+            }
+        }
+
         impl Add for $scalar {
             type Output = Self;
             fn add(self, rhs: Self) -> Self::Output {
@@ -196,6 +203,42 @@ macro_rules! vector {
     }
 }
 
+macro_rules! scalar_div {
+    ($num:ty, $den:ty, $res:ty) => {
+        impl Div<$den> for $num {
+            type Output = $res;
+            fn div(self, rhs: $den) -> Self::Output {
+                Self::Output::new(self.0 / rhs.0)
+            }
+        }
+        impl Mul<$den> for $res {
+            type Output = $num;
+            fn mul(self, rhs: $den) -> Self::Output {
+                Self::Output::new(self.0 * rhs.0)
+            }
+        }
+        impl Mul<$res> for $den {
+            type Output = $num;
+            fn mul(self, rhs: $res) -> Self::Output {
+                Self::Output::new(self.0 * rhs.0)
+            }
+        }
+
+        paste::item! {
+            #[test]
+            fn [<$num:snake _ $den:snake _ $res:snake _conversion_tests>] () {
+                let numerator = $num::new(6.0);
+                let denominator = $den::new(2.0);
+                let result = $res::new(3.0);
+            
+                assert_eq!(result, numerator / denominator);
+                assert_eq!(numerator, result * denominator);
+                assert_eq!(numerator, denominator * result);                
+            }
+        }
+    }
+}
+
 scalar!(Mass, kilograms, kg);
 scalar!(Temperature, kelvin, k);
 scalar!(Angle, radians, rad);
@@ -283,3 +326,6 @@ impl Div<Duration> for Time {
 
 scalar!(Duration, seconds, s);
 
+scalar!(MassRate, kg_per_second, kgps);
+
+scalar_div!(Mass, Duration, MassRate);
