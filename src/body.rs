@@ -147,10 +147,17 @@ mod tests {
         assert_eq!(Length::in_m(1000.0), three_quarters.x);
     }
 
+    #[test]
+    fn get_moon_orbit() {
+        let (bodies, _planet, moon) = get_planet_and_moon();
+
+        let mooon_position = bodies.get_position(moon, Time::in_s(0.0)).unwrap();
+
+        assert_eq!(Position::in_m(0.0, 1010.0), mooon_position);
+    }
+
     fn get_one_planet() -> (Body, Id<Body>) {
         let mut body = Body::default();
-
-        let star = Allocator::<Star>::default().create();
 
         let planet = BodyRow {
             name: "Planet".to_string(),
@@ -164,12 +171,40 @@ mod tests {
         };
 
         let links = BodyLinks {
-            star,
+            star: get_star(),
             parent: None
         };
 
-        let id = body.create(planet, links);
+        let planet = body.create(planet, links);
 
-        (body, id)
+        (body, planet)
+    }
+
+    fn get_planet_and_moon() -> (Body, Id<Body>, Id<Body>) {
+        let (mut body, planet) = get_one_planet();
+
+        let moon = BodyRow {
+            name: "Moon".to_string(),
+            mass: Mass::in_kg(5.0),
+            radius: Length::in_m(0.1),
+            orbit: OrbitParams {
+                radius: Length::in_m(10.0),
+                period: Time::in_s(10.0),
+                offset: Default::default()
+            }
+        };
+
+        let links = BodyLinks {
+            star: get_star(),
+            parent: Some(planet),
+        };
+
+        let moon = body.create(moon, links);
+
+        (body, planet, moon)
+    }
+
+    fn get_star() -> Id<Star> {
+        Allocator::<Star>::default().create()
     }
 }
