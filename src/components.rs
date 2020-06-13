@@ -92,11 +92,11 @@ impl Position {
     ///
     ///  # Arguments
     ///
-    /// * `angle` - An angle as measured clockwise from the positive y-axis
-    /// * `length` - The length of the resulting vector
-    pub fn from_angle_and_radius(angle: Angle, length: Length) -> Self {
-        let x = angle.0.sin() * length.0;
-        let y = angle.0.cos() * length.0;
+    /// * `angle` - as measured clockwise from the positive y-axis
+    /// * `magnitude` - length of the resulting vector
+    pub fn from_angle_and_radius(angle: Angle, magnitude: Length) -> Self {
+        let x = angle.0.sin() * magnitude.0;
+        let y = angle.0.cos() * magnitude.0;
         Self::in_m(x, y)
     }
 }
