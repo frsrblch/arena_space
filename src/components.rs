@@ -287,6 +287,7 @@ impl Population {
     }
 }
 
+/// Elapsed game time in seconds.
 #[derive(Debug, Default, Copy, Clone, PartialEq, PartialOrd)]
 pub struct Time(f64);
 
@@ -307,6 +308,25 @@ impl Add<Duration> for Time {
     type Output = Self;
     fn add(self, rhs: Duration) -> Self {
         Self(self.0 + rhs.0)
+    }
+}
+
+impl AddAssign<Duration> for Time {
+    fn add_assign(&mut self, rhs: Duration) {
+        self.0 += rhs.0;
+    }
+}
+
+impl Sub<Duration> for Time {
+    type Output = Self;
+    fn sub(self, rhs: Duration) -> Self {
+        Self(self.0 - rhs.0)
+    }
+}
+
+impl SubAssign<Duration> for Time {
+    fn sub_assign(&mut self, rhs: Duration) {
+        self.0 -= rhs.0;
     }
 }
 
