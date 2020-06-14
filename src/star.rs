@@ -37,7 +37,7 @@ pub struct StarRow {
 
 pub mod system {
     use super::*;
-    use crate::body::{BodyLinks, planet::Planet};
+    use crate::body::planet::Planet;
 
     #[derive(Debug, Clone)]
     pub struct StarSystem {
