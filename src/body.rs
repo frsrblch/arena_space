@@ -1,4 +1,5 @@
 use crate::*;
+use habitability::Habitability;
 use crate::star::Star;
 
 pub mod planet {
@@ -33,6 +34,32 @@ pub mod planet {
     }
 }
 
+pub use components::*;
+mod components {
+    #[derive(Debug, Copy, Clone)]
+    pub struct Conditions {
+        surface: Surface,
+        pressure: Pressure,
+    }
+
+    #[derive(Debug, Copy, Clone)]
+    pub enum Surface {
+        Barren,
+        Gaseous,
+        Continental,
+        Volcanic,
+        Oceanic,
+    }
+
+    #[derive(Debug, Copy, Clone)]
+    pub enum Pressure {
+        Vacuum,
+        Thin,
+        Normal,
+        High,
+        Crushing,
+    }
+}
 
 #[derive(Debug, Default)]
 pub struct Body {
@@ -43,6 +70,7 @@ pub struct Body {
     pub radius: Component<Self, Length>,
     pub orbit: Component<Self, Orbit>,
     pub surface: Component<Self, Surface>,
+    pub atmosphere: Component<Self, Pressure>,
 
     pub star: Component<Self, Id<Star>>,
 }
@@ -56,8 +84,9 @@ impl Body {
         self.name.insert(id, row.name);
         self.mass.insert(id, row.mass);
         self.radius.insert(id, row.radius);
-        self.surface.insert(id, row.surface);
         self.orbit.insert(id, self.get_orbit(links.parent, row.orbit));
+        self.surface.insert(id, row.surface);
+        self.atmosphere.insert(id, row.atmosphere);
 
         self.star.insert(id, links.star);
 
@@ -97,6 +126,13 @@ impl Body {
             unimplemented!("Distance between bodies in different systems not implemented.")
         }
     }
+
+    pub fn get_habitability(&self, id: Id<Body>) -> Option<Habitability> {
+        let surface = *self.surface.get(id)?;
+        let atmosphere = *self.atmosphere.get(id)?;
+
+        Habitability::new(surface, atmosphere).into()
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -106,10 +142,63 @@ pub struct BodyRow {
     pub radius: Length,
     pub orbit: OrbitParams,
     pub surface: Surface,
+    pub atmosphere: Pressure,
 }
 
 #[derive(Debug, Copy, Clone)]
 pub struct BodyLinks {
     pub star: Id<Star>,
     pub parent: Option<Id<Body>>,
+}
+
+mod habitability {
+    use super::*;
+    use Surface::*;
+    use Pressure::*;
+    use Habitability::*;
+
+    /// The ability of an environment to support human life.
+    #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
+    pub enum Habitability {
+        /// Unable to support human life in any capacity, (i.e., Jupiter, Venus).
+        Uninhabitable,
+        /// Unable to support human life with significant assistance (i.e., Mars, full vacuum).
+        Hostile,
+        /// Barely able to support human life (i.e., dessert, tundra, high altitudes).
+        Marginal,
+        /// Able to support human life (i.e., grasslands, forests).
+        Optimal,
+    }
+
+    impl Default for Habitability {
+        fn default() -> Self {
+            Habitability::Uninhabitable
+        }
+    }
+
+    impl Habitability {
+        pub fn new(surface: Surface, pressure: Pressure) -> Self {
+            Self::for_surface(surface).min(Self::for_pressure(pressure))
+        }
+
+        fn for_surface(surface: Surface) -> Self {
+            match surface {
+                Barren => Marginal,
+                Gaseous => Uninhabitable,
+                Continental => Optimal,
+                Volcanic => Hostile,
+                Oceanic => Marginal,
+            }
+        }
+
+        fn for_pressure(pressure: Pressure) -> Self {
+            match pressure {
+                Vacuum => Hostile,
+                Thin => Marginal,
+                Normal => Optimal,
+                High => Marginal,
+                Crushing => Uninhabitable,
+            }
+        }
+    }
 }

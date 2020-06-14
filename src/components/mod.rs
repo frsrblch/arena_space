@@ -77,14 +77,5 @@ scalar_div!(Mass, Duration, MassRate);
 scalar!(MassRatePerPerson, kg_per_person_second, kg_per_s_person);
 scalar_div!(MassRate, Population, MassRatePerPerson);
 
-#[derive(Debug, Copy, Clone)]
-pub enum Surface {
-    Barren,
-    Gaseous,
-    Continental,
-    Volcanic,
-    Oceanic,
-}
-
 #[cfg(test)]
 mod test;
