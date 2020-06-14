@@ -1,5 +1,13 @@
 use std::ops::*;
-// use macros::*;
+
+pub use position::*;
+mod position;
+
+pub use time::*;
+mod time;
+
+pub use orbit::*;
+mod orbit;
 
 #[macro_use]
 mod macros;
@@ -42,16 +50,6 @@ impl Distance {
     }
 }
 
-
-pub use position::*;
-mod position;
-
-pub use time::*;
-mod time;
-
-pub use orbit::*;
-mod orbit;
-
 scalar!(PixelScale, meters_per_pixel, m_per_px, f32);
 
 scalar!(Population, f64);
@@ -89,4 +87,4 @@ pub enum Surface {
 }
 
 #[cfg(test)]
-mod tests;
+mod test;
