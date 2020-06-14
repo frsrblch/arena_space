@@ -57,11 +57,9 @@ impl Body {
         self.mass.insert(id, row.mass);
         self.radius.insert(id, row.radius);
         self.surface.insert(id, row.surface);
+        self.orbit.insert(id, self.get_orbit(links.parent, row.orbit));
 
         self.star.insert(id, links.star);
-
-        let orbit = self.get_orbit(links.parent, row.orbit);
-        self.orbit.insert(id, orbit);
 
         id
     }
