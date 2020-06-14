@@ -1,5 +1,5 @@
 use arena_ecs::*;
-pub use components::*;
+use components::*;
 use state::State;
 
 pub mod state;
