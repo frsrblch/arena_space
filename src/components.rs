@@ -31,7 +31,7 @@ macro_rules! scalar {
             }
         }
 
-        impl Add<&Self> for $scalar {
+        impl Add<&$scalar> for $scalar {
             type Output = Self;
             fn add(self, rhs: &Self) -> Self::Output {
                 self + *rhs
@@ -71,7 +71,7 @@ macro_rules! scalar {
             }
         }
 
-        impl Sub<&Self> for $scalar {
+        impl Sub<&$scalar> for $scalar {
             type Output = Self;
             fn sub(self, rhs: &Self) -> Self::Output {
                 self - *rhs
@@ -107,7 +107,7 @@ macro_rules! scalar {
         impl Mul<$base> for $scalar {
             type Output = Self;
             fn mul(self, rhs: $base) -> Self::Output {
-                Self::new(self.value * rhs)
+                Self::Output::new(self.value * rhs)
             }
         }
 
@@ -121,7 +121,7 @@ macro_rules! scalar {
         impl Mul<&$base> for $scalar {
             type Output = Self;
             fn mul(self, rhs: &$base) -> Self::Output {
-                Self::new(self.value * *rhs)
+                self * *rhs
             }
         }
 
@@ -135,28 +135,28 @@ macro_rules! scalar {
         impl Mul<$scalar> for $base {
             type Output = $scalar;
             fn mul(self, rhs: $scalar) -> Self::Output {
-                $scalar::new(self * rhs.value)
+                rhs * self
             }
         }
 
         impl Mul<&$scalar> for $base {
             type Output = $scalar;
             fn mul(self, rhs: &$scalar) -> Self::Output {
-                self * *rhs
+                rhs * self
             }
         }
 
         impl Mul<$scalar> for &$base {
             type Output = $scalar;
             fn mul(self, rhs: $scalar) -> Self::Output {
-                $scalar::new(self * rhs.value)
+                rhs * self
             }
         }
 
         impl Mul<&$scalar> for &$base {
             type Output = $scalar;
             fn mul(self, rhs: &$scalar) -> Self::Output {
-                *self * *rhs
+                rhs * self
             }
         }
 
@@ -175,7 +175,7 @@ macro_rules! scalar {
         impl Div<$base> for $scalar {
             type Output = Self;
             fn div(self, rhs: $base) -> Self::Output {
-                Self::new(self.value / rhs)
+                Self::Output::new(self.value / rhs)
             }
         }
 
@@ -189,14 +189,14 @@ macro_rules! scalar {
         impl Div<&$base> for $scalar {
             type Output = Self;
             fn div(self, rhs: &$base) -> Self::Output {
-                Self::new(self.value / rhs)
+                self / *rhs
             }
         }
 
         impl Div<&$base> for &$scalar {
             type Output = $scalar;
             fn div(self, rhs: &$base) -> Self::Output {
-                *self / rhs
+                *self / *rhs
             }
         }
 
@@ -219,7 +219,7 @@ macro_rules! scalar {
             }
         }
 
-        impl Div<&Self> for $scalar {
+        impl Div<&$scalar> for $scalar {
             type Output = $base;
             fn div(self, rhs: &Self) -> Self::Output {
                 self.value / rhs.value
@@ -243,14 +243,42 @@ macro_rules! scalar {
         impl Neg for $scalar {
             type Output = Self;
             fn neg(self) -> Self::Output {
-                Self::new(-self.value)
+                Self::Output::new(-self.value)
+            }
+        }
+
+        impl Neg for &$scalar {
+            type Output = $scalar;
+            fn neg(self) -> Self::Output {
+                -*self
             }
         }
 
         impl Rem for $scalar {
-            type Output = Self;
-            fn rem(self, rhs: Self) -> Self {
-                Self::new(self.value % rhs.value)
+            type Output = $scalar;
+            fn rem(self, rhs: $scalar) -> Self::Output {
+                Self::Output::new(self.value % rhs.value)
+            }
+        }
+
+        impl Rem<&$scalar> for $scalar {
+            type Output = $scalar;
+            fn rem(self, rhs: &$scalar) -> Self::Output {
+                self % *rhs
+            }
+        }
+
+        impl Rem<$scalar> for &$scalar {
+            type Output = $scalar;
+            fn rem(self, rhs: $scalar) -> Self::Output {
+                *self % rhs
+            }
+        }
+
+        impl Rem<&$scalar> for &$scalar {
+            type Output = $scalar;
+            fn rem(self, rhs: &$scalar) -> Self::Output {
+                *self % *rhs
             }
         }
     };
@@ -537,6 +565,16 @@ macro_rules! vector {
         }
 
         impl Neg for $vector {
+            type Output = $vector;
+            fn neg(self) -> Self::Output {
+                Self::Output {
+                    x: -self.x,
+                    y: -self.y,
+                }
+            }
+        }
+
+        impl Neg for &$vector {
             type Output = $vector;
             fn neg(self) -> Self::Output {
                 Self::Output {
@@ -1014,6 +1052,29 @@ mod tests {
     }
 
     #[test]
+    fn scalar_rem_test() {
+        let a = TestScalar::in_test(5.0);
+        let b = TestScalar::in_test(3.0);
+
+        let rem = TestScalar::in_test(2.0);
+
+        assert_eq!(rem,  a %  b);
+        assert_eq!(rem,  a % &b);
+        assert_eq!(rem, &a %  b);
+        assert_eq!(rem, &a % &b);
+    }
+
+    #[test]
+    fn scalar_neg_test() {
+        let a = TestScalar::in_test(2.0);
+
+        let neg = TestScalar::in_test(-2.0);
+
+        assert_eq!(neg, -&a);
+        assert_eq!(neg, - a);
+    }
+
+    #[test]
     fn vector_add_test() {
         let a = TestVector::in_test(2.0, 3.0);
         let b = TestVector::in_test(5.0, 7.0);
@@ -1132,5 +1193,15 @@ mod tests {
         let mut a = a_0;
         a /= &b;
         assert_eq!(expected, a);
+    }
+
+    #[test]
+    fn vector_neg_test() {
+        let a = TestVector::in_test(2.0, 3.0);
+        
+        let neg = TestVector::in_test(-2.0, -3.0);
+
+        assert_eq!(neg, - a);
+        assert_eq!(neg, -&a);
     }
 }

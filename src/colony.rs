@@ -27,8 +27,9 @@ impl Colony {
     }
 
     pub fn get_food_demand(&self, id: Id<Self>) -> Option<MassRate> {
+        let calculate_food_requirement = |pop: &Population| pop * Self::FOOD_RATE_PER_PERSON;
         self.get_population(id)
-            .map(|pop| pop * Self::FOOD_RATE_PER_PERSON)
+            .map(calculate_food_requirement)
     }
 
     pub fn get_population(&self, id: Id<Self>) -> Option<&Population> {
