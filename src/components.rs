@@ -12,10 +12,43 @@ macro_rules! scalar {
             }
         }
 
+        impl Into<$base> for $scalar {
+            fn into(self) -> $base {
+                self.value
+            }
+        }
+
+        impl From<$base> for $scalar {
+            fn from(value: $base) -> Self {
+                Self::new(value)
+            }
+        }
+
         impl Add for $scalar {
             type Output = Self;
             fn add(self, rhs: Self) -> Self::Output {
-                Self::new(self.value + rhs.value)
+                Self::Output::new(self.value + rhs.value)
+            }
+        }
+
+        impl Add<&Self> for $scalar {
+            type Output = Self;
+            fn add(self, rhs: &Self) -> Self::Output {
+                self + *rhs
+            }
+        }
+
+        impl Add<$scalar> for &$scalar {
+            type Output = $scalar;
+            fn add(self, rhs: $scalar) -> Self::Output {
+                *self + rhs
+            }
+        }
+
+        impl Add for &$scalar {
+            type Output = $scalar;
+            fn add(self, rhs: Self) -> Self::Output {
+                *self + *rhs
             }
         }
 
@@ -25,10 +58,37 @@ macro_rules! scalar {
             }
         }
 
+        impl AddAssign<&Self> for $scalar {
+            fn add_assign(&mut self, rhs: &Self) {
+                self.value += rhs.value;
+            }
+        }
+
         impl Sub for $scalar {
             type Output = Self;
             fn sub(self, rhs: Self) -> Self::Output {
-                Self::new(self.value - rhs.value)
+                Self::Output::new(self.value - rhs.value)
+            }
+        }
+
+        impl Sub<&Self> for $scalar {
+            type Output = Self;
+            fn sub(self, rhs: &Self) -> Self::Output {
+                self - *rhs
+            }
+        }
+
+        impl Sub<$scalar> for &$scalar {
+            type Output = $scalar;
+            fn sub(self, rhs: $scalar) -> Self::Output {
+                *self - rhs
+            }
+        }
+
+        impl Sub for &$scalar {
+            type Output = $scalar;
+            fn sub(self, rhs: Self) -> Self::Output {
+                *self - *rhs
             }
         }
 
@@ -38,10 +98,23 @@ macro_rules! scalar {
             }
         }
 
+        impl SubAssign<&Self> for $scalar {
+            fn sub_assign(&mut self, rhs: &Self) {
+                self.value -= rhs.value;
+            }
+        }
+
         impl Mul<$base> for $scalar {
             type Output = Self;
-            fn mul(self, rhs: $base) -> Self {
+            fn mul(self, rhs: $base) -> Self::Output {
                 Self::new(self.value * rhs)
+            }
+        }
+
+        impl Mul<$base> for &$scalar {
+            type Output = $scalar;
+            fn mul(self, rhs: $base) -> Self::Output {
+                *self * rhs
             }
         }
 
@@ -49,6 +122,13 @@ macro_rules! scalar {
             type Output = $scalar;
             fn mul(self, rhs: $scalar) -> Self::Output {
                 $scalar::new(self * rhs.value)
+            }
+        }
+
+        impl Mul<&$scalar> for $base {
+            type Output = $scalar;
+            fn mul(self, rhs: &$scalar) -> Self::Output {
+                self * *rhs
             }
         }
 
@@ -60,8 +140,15 @@ macro_rules! scalar {
 
         impl Div<$base> for $scalar {
             type Output = Self;
-            fn div(self, rhs: $base) -> Self {
+            fn div(self, rhs: $base) -> Self::Output {
                 Self::new(self.value / rhs)
+            }
+        }
+
+        impl Div<$base> for &$scalar {
+            type Output = $scalar;
+            fn div(self, rhs: $base) -> Self::Output {
+                *self / rhs
             }
         }
 
@@ -72,6 +159,27 @@ macro_rules! scalar {
         }
 
         impl Div for $scalar {
+            type Output = $base;
+            fn div(self, rhs: Self) -> Self::Output {
+                self.value / rhs.value
+            }
+        }
+
+        impl Div<&Self> for $scalar {
+            type Output = $base;
+            fn div(self, rhs: &Self) -> Self::Output {
+                self.value / rhs.value
+            }
+        }
+
+        impl Div<$scalar> for &$scalar {
+            type Output = $base;
+            fn div(self, rhs: $scalar) -> Self::Output {
+                self.value / rhs.value
+            }
+        }
+
+        impl Div for &$scalar {
             type Output = $base;
             fn div(self, rhs: Self) -> Self::Output {
                 self.value / rhs.value
@@ -226,12 +334,14 @@ macro_rules! scalar_div {
                 Self::Output::new(self.value / rhs.value)
             }
         }
+
         impl Mul<$den> for $res {
             type Output = $num;
             fn mul(self, rhs: $den) -> Self::Output {
                 Self::Output::new(self.value * rhs.value)
             }
         }
+        
         impl Mul<$res> for $den {
             type Output = $num;
             fn mul(self, rhs: $res) -> Self::Output {
@@ -386,8 +496,6 @@ impl Time {
     fn new(value: f64) -> Self {
         Self { value }
     }
-
-    pub const SECONDS_PER_DAY: f64 = 3600.0 * 24.0;
 }
 
 impl Div for Time {
@@ -433,6 +541,16 @@ impl Div<Duration> for Time {
 
 scalar!(Duration, seconds, s);
 
-scalar!(MassRate, kg_per_second, kg_per_s);
+impl Duration {
+    pub fn in_days(days: f64) -> Self {
+        Self::in_s(days * Self::SECONDS_PER_DAY)
+    }
 
+    pub const SECONDS_PER_DAY: f64 = 3600.0 * 24.0;
+}
+
+scalar!(MassRate, kg_per_second, kg_per_s);
 scalar_div!(Mass, Duration, MassRate);
+
+scalar!(MassRatePerPerson, kg_per_person_second, kg_per_s_person);
+scalar_div!(MassRate, Population, MassRatePerPerson);
