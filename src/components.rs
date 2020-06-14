@@ -334,6 +334,27 @@ macro_rules! scalar_div {
                 Self::Output::new(self.value / rhs.value)
             }
         }
+        
+        impl Div<$den> for &$num {
+            type Output = $res;
+            fn div(self, rhs: $den) -> Self::Output {
+                Self::Output::new(self.value / rhs.value)
+            }
+        }
+        impl Div<&$den> for $num {
+            type Output = $res;
+            fn div(self, rhs: &$den) -> Self::Output {
+                Self::Output::new(self.value / rhs.value)
+            }
+        }
+        
+        impl Div<&$den> for &$num {
+            type Output = $res;
+            fn div(self, rhs: &$den) -> Self::Output {
+                Self::Output::new(self.value / rhs.value)
+            }
+        }
+
 
         impl Mul<$den> for $res {
             type Output = $num;
@@ -341,10 +362,53 @@ macro_rules! scalar_div {
                 Self::Output::new(self.value * rhs.value)
             }
         }
-        
+
+        impl Mul<$den> for &$res {
+            type Output = $num;
+            fn mul(self, rhs: $den) -> Self::Output {
+                Self::Output::new(self.value * rhs.value)
+            }
+        }
+
+        impl Mul<&$den> for $res {
+            type Output = $num;
+            fn mul(self, rhs: &$den) -> Self::Output {
+                Self::Output::new(self.value * rhs.value)
+            }
+        }
+
+        impl Mul<&$den> for &$res {
+            type Output = $num;
+            fn mul(self, rhs: &$den) -> Self::Output {
+                Self::Output::new(self.value * rhs.value)
+            }
+        }
+
+
         impl Mul<$res> for $den {
             type Output = $num;
             fn mul(self, rhs: $res) -> Self::Output {
+                Self::Output::new(self.value * rhs.value)
+            }
+        }
+
+        impl Mul<$res> for &$den {
+            type Output = $num;
+            fn mul(self, rhs: $res) -> Self::Output {
+                Self::Output::new(self.value * rhs.value)
+            }
+        }
+
+        impl Mul<&$res> for $den {
+            type Output = $num;
+            fn mul(self, rhs: &$res) -> Self::Output {
+                Self::Output::new(self.value * rhs.value)
+            }
+        }
+
+        impl Mul<&$res> for &$den {
+            type Output = $num;
+            fn mul(self, rhs: &$res) -> Self::Output {
                 Self::Output::new(self.value * rhs.value)
             }
         }
