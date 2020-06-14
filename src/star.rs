@@ -35,7 +35,7 @@ pub struct StarRow {
     pub position: Position,
 }
 
-pub mod system {
+pub mod star_system {
     use super::*;
     use crate::body::planet::Planet;
 
