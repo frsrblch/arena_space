@@ -1,6 +1,5 @@
 use crate::*;
 use crate::body::Body;
-use std::num::NonZeroU32;
 
 #[derive(Debug, Default)]
 pub struct Colony {
@@ -12,7 +11,7 @@ pub struct Colony {
     pub body: Component<Self, Id<Body>>,
 }
 
-dynamic_arena!(Colony, u32);
+dynamic_arena!(Colony, u16);
 
 impl Colony {
     pub fn create(&mut self, row: ColonyRow, links: ColonyLinks) -> Id<Self> {
