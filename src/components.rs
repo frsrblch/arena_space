@@ -118,6 +118,20 @@ macro_rules! scalar {
             }
         }
 
+        impl Mul<&$base> for $scalar {
+            type Output = Self;
+            fn mul(self, rhs: &$base) -> Self::Output {
+                Self::new(self.value * *rhs)
+            }
+        }
+
+        impl Mul<&$base> for &$scalar {
+            type Output = $scalar;
+            fn mul(self, rhs: &$base) -> Self::Output {
+                *self * *rhs
+            }
+        }
+
         impl Mul<$scalar> for $base {
             type Output = $scalar;
             fn mul(self, rhs: $scalar) -> Self::Output {
@@ -132,8 +146,28 @@ macro_rules! scalar {
             }
         }
 
+        impl Mul<$scalar> for &$base {
+            type Output = $scalar;
+            fn mul(self, rhs: $scalar) -> Self::Output {
+                $scalar::new(self * rhs.value)
+            }
+        }
+
+        impl Mul<&$scalar> for &$base {
+            type Output = $scalar;
+            fn mul(self, rhs: &$scalar) -> Self::Output {
+                *self * *rhs
+            }
+        }
+
         impl MulAssign<$base> for $scalar {
             fn mul_assign(&mut self, rhs: $base) {
+                self.value *= rhs;
+            }
+        }
+
+        impl MulAssign<&$base> for $scalar {
+            fn mul_assign(&mut self, rhs: &$base) {
                 self.value *= rhs;
             }
         }
@@ -152,8 +186,28 @@ macro_rules! scalar {
             }
         }
 
+        impl Div<&$base> for $scalar {
+            type Output = Self;
+            fn div(self, rhs: &$base) -> Self::Output {
+                Self::new(self.value / rhs)
+            }
+        }
+
+        impl Div<&$base> for &$scalar {
+            type Output = $scalar;
+            fn div(self, rhs: &$base) -> Self::Output {
+                *self / rhs
+            }
+        }
+
         impl DivAssign<$base> for $scalar {
             fn div_assign(&mut self, rhs: $base) {
+                self.value /= rhs;
+            }
+        }
+
+        impl DivAssign<&$base> for $scalar {
+            fn div_assign(&mut self, rhs: &$base) {
                 self.value /= rhs;
             }
         }
@@ -246,47 +300,179 @@ macro_rules! vector {
             }
         }
 
-        impl Add for $vector {
-            type Output = Self;
-            fn add(self, rhs: Self) -> Self {
-                Self {
+        impl Add<$vector> for $vector {
+            type Output = $vector;
+            fn add(self, rhs: $vector) -> Self::Output {
+                Self::Output {
                     x: self.x + rhs.x,
                     y: self.y + rhs.y,
                 }
             }
         }
 
-        impl Sub for $vector {
-            type Output = Self;
-            fn sub(self, rhs: Self) -> Self {
-                Self {
+        impl Add<$vector> for &$vector {
+            type Output = $vector;
+            fn add(self, rhs: $vector) -> Self::Output {
+                Self::Output {
+                    x: self.x + rhs.x,
+                    y: self.y + rhs.y,
+                }
+            }
+        }
+
+        impl Add<&$vector> for $vector {
+            type Output = $vector;
+            fn add(self, rhs: &$vector) -> Self::Output {
+                Self::Output {
+                    x: self.x + rhs.x,
+                    y: self.y + rhs.y,
+                }
+            }
+        }
+
+        impl Add<&$vector> for &$vector {
+            type Output = $vector;
+            fn add(self, rhs: &$vector) -> Self::Output {
+                Self::Output {
+                    x: self.x + rhs.x,
+                    y: self.y + rhs.y,
+                }
+            }
+        }
+
+        impl Sub<$vector> for $vector {
+            type Output = $vector;
+            fn sub(self, rhs: $vector) -> Self::Output {
+                Self::Output {
                     x: self.x - rhs.x,
                     y: self.y - rhs.y,
                 }
             }
         }
 
-        impl AddAssign for $vector {
+        impl Sub<$vector> for &$vector {
+            type Output = $vector;
+            fn sub(self, rhs: $vector) -> Self::Output {
+                Self::Output {
+                    x: self.x - rhs.x,
+                    y: self.y - rhs.y,
+                }
+            }
+        }
+
+        impl Sub<&$vector> for $vector {
+            type Output = $vector;
+            fn sub(self, rhs: &$vector) -> Self::Output {
+                Self::Output {
+                    x: self.x - rhs.x,
+                    y: self.y - rhs.y,
+                }
+            }
+        }
+
+        impl Sub<&$vector> for &$vector {
+            type Output = $vector;
+            fn sub(self, rhs: &$vector) -> Self::Output {
+                Self::Output {
+                    x: self.x - rhs.x,
+                    y: self.y - rhs.y,
+                }
+            }
+        }
+
+        impl AddAssign<$vector> for $vector {
             fn add_assign(&mut self, rhs: Self) {
                 self.x += rhs.x;
                 self.y += rhs.y;
             }
         }
 
-        impl SubAssign for $vector {
-            fn sub_assign(&mut self, rhs: Self) {
+        impl AddAssign<&$vector> for $vector {
+            fn add_assign(&mut self, rhs: &$vector) {
+                self.x += rhs.x;
+                self.y += rhs.y;
+            }
+        }
+
+        impl SubAssign<$vector> for $vector {
+            fn sub_assign(&mut self, rhs: $vector) {
+                self.x -= rhs.x;
+                self.y -= rhs.y;
+            }
+        }
+
+        impl SubAssign<&$vector> for $vector {
+            fn sub_assign(&mut self, rhs: &$vector) {
                 self.x -= rhs.x;
                 self.y -= rhs.y;
             }
         }
 
         impl Mul<$base> for $vector {
-            type Output = Self;
-            fn mul(self, rhs: $base) -> Self {
-                Self {
+            type Output = $vector;
+            fn mul(self, rhs: $base) -> Self::Output {
+                Self::Output {
                     x: self.x * rhs,
                     y: self.y * rhs,
                 }
+            }
+        }
+
+        impl Mul<$base> for &$vector {
+            type Output = $vector;
+            fn mul(self, rhs: $base) -> Self::Output {
+                Self::Output {
+                    x: self.x * rhs,
+                    y: self.y * rhs,
+                }
+            }
+        }
+
+        impl Mul<&$base> for $vector {
+            type Output = $vector;
+            fn mul(self, rhs: &$base) -> Self::Output {
+                Self::Output {
+                    x: self.x * *rhs,
+                    y: self.y * *rhs,
+                }
+            }
+        }
+
+        impl Mul<&$base> for &$vector {
+            type Output = $vector;
+            fn mul(self, rhs: &$base) -> Self::Output {
+                Self::Output {
+                    x: self.x * *rhs,
+                    y: self.y * *rhs,
+                }
+            }
+        }
+
+        impl Mul<$vector> for $base {
+            type Output = $vector;
+            fn mul(self, rhs: $vector) -> Self::Output {
+                rhs * self
+            }
+        }
+
+        impl Mul<$vector> for &$base {
+            type Output = $vector;
+            fn mul(self, rhs: $vector) -> Self::Output {
+                rhs * self
+            }
+        }
+
+        impl Mul<&$vector> for $base {
+            type Output = $vector;
+            fn mul(self, rhs: &$vector) -> Self::Output {
+                rhs * self
+            }
+        }
+
+        impl Mul<&$vector> for &$base {
+            type Output = $vector;
+            fn mul(self, rhs: &$vector) -> Self::Output {
+                rhs * self
             }
         }
 
@@ -297,6 +483,46 @@ macro_rules! vector {
             }
         }
 
+        impl MulAssign<&$base> for $vector {
+            fn mul_assign(&mut self, rhs: &$base) {
+                *self *= *rhs;
+            }
+        }
+
+        impl Div<$base> for $vector {
+            type Output = $vector;
+            fn div(self, rhs: $base) -> Self::Output {
+                Self::Output {
+                    x: self.x / rhs,
+                    y: self.y / rhs,
+                }
+            }
+        }
+
+        impl Div<$base> for &$vector {
+            type Output = $vector;
+            fn div(self, rhs: $base) -> Self::Output {
+                Self::Output {
+                    x: self.x / rhs,
+                    y: self.y / rhs,
+                }
+            }
+        }
+
+        impl Div<&$base> for $vector {
+            type Output = $vector;
+            fn div(self, rhs: &$base) -> Self::Output {
+                self / *rhs
+            }
+        }
+
+        impl Div<&$base> for &$vector {
+            type Output = $vector;
+            fn div(self, rhs: &$base) -> Self::Output {
+                *self / *rhs
+            }
+        }
+
         impl DivAssign<$base> for $vector {
             fn div_assign(&mut self, rhs: $base) {
                 self.x /= rhs;
@@ -304,10 +530,16 @@ macro_rules! vector {
             }
         }
 
+        impl DivAssign<&$base> for $vector {
+            fn div_assign(&mut self, rhs: &$base) {
+                *self /= *rhs;
+            }
+        }
+
         impl Neg for $vector {
-            type Output = Self;
+            type Output = $vector;
             fn neg(self) -> Self::Output {
-                Self {
+                Self::Output {
                     x: -self.x,
                     y: -self.y,
                 }
@@ -618,3 +850,287 @@ scalar_div!(Mass, Duration, MassRate);
 
 scalar!(MassRatePerPerson, kg_per_person_second, kg_per_s_person);
 scalar_div!(MassRate, Population, MassRatePerPerson);
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    vector_and_scalar!(TestVector, TestScalar, test, test);
+
+    #[test]
+    fn scalar_add_tests() {
+        let a = TestScalar::in_test(2.0);
+        let b = TestScalar::in_test(3.0);
+
+        let expected = TestScalar::in_test(5.0);
+
+        assert_eq!(expected,  a +  b);
+        assert_eq!(expected, &a +  b);
+        assert_eq!(expected,  a + &b);
+        assert_eq!(expected, &a + &b);
+    }
+
+    #[test]
+    fn scalar_add_assign_tests() {
+        let a_0 = TestScalar::in_test(2.0);
+        let b = TestScalar::in_test(3.0);
+
+        let expected = TestScalar::in_test(5.0);
+
+        let mut a = a_0;
+        a += b;
+        assert_eq!(expected,  a);
+
+        let mut a = a_0;
+        a += &b;
+        assert_eq!(expected, a);
+    }
+
+    #[test]
+    fn scalar_sub_tests() {
+        let a = TestScalar::in_test(2.0);
+        let b = TestScalar::in_test(3.0);
+
+        let expected = TestScalar::in_test(-1.0);
+
+        assert_eq!(expected,  a -  b);
+        assert_eq!(expected, &a -  b);
+        assert_eq!(expected,  a - &b);
+        assert_eq!(expected, &a - &b);
+    }
+
+    #[test]
+    fn scalar_sub_assign_tests() {
+        let a_0 = TestScalar::in_test(2.0);
+        let b = TestScalar::in_test(3.0);
+
+        let expected = TestScalar::in_test(-1.0);
+
+        let mut a = a_0;
+        a -= b;
+        assert_eq!(expected,  a);
+
+        let mut a = a_0;
+        a -= &b;
+        assert_eq!(expected, a);
+    }
+
+    #[test]
+    fn scalar_mul_test() {
+        let a = TestScalar::in_test(2.0);
+        let b = 3.0f64;
+
+        let expected = TestScalar::in_test(6.0);
+
+        assert_eq!(expected,  a *  b);
+        assert_eq!(expected, &a *  b);
+        assert_eq!(expected,  a * &b);
+        assert_eq!(expected, &a * &b);
+
+        assert_eq!(expected,  b *  a);
+        assert_eq!(expected, &b *  a);
+        assert_eq!(expected,  b * &a);
+        assert_eq!(expected, &b * &a);
+    }
+
+    #[test]
+    fn scalar_mul_assign_test() {
+        let a_0 = TestScalar::in_test(2.0);
+        let b = 3.0f64;
+
+        let expected = TestScalar::in_test(6.0);
+
+        let mut a = a_0;
+        a *= b;
+        assert_eq!(expected, a);
+
+        let mut a = a_0;
+        a *= &b;
+        assert_eq!(expected, a);
+    }
+
+    #[test]
+    fn scalar_div_test() {
+        let a = TestScalar::in_test(2.0);
+        let b = 3.0f64;
+
+        let expected = TestScalar::in_test(2.0 / 3.0);
+
+        assert_eq!(expected,  a /  b);
+        assert_eq!(expected, &a /  b);
+        assert_eq!(expected,  a / &b);
+        assert_eq!(expected, &a / &b);
+    }
+
+    #[test]
+    fn scalar_div_assign_test() {
+        let a_0 = TestScalar::in_test(6.0);
+        let b = 3.0f64;
+
+        let expected = TestScalar::in_test(2.0);
+
+        let mut a = a_0;
+        a /= b;
+        assert_eq!(expected, a);
+
+        let mut a = a_0;
+        a /= &b;
+        assert_eq!(expected, a);
+    }
+
+    scalar!(Num, test, test);
+    scalar!(Den, test, test);
+    scalar!(Res, test, test);
+
+    scalar_div!(Num, Den, Res); // Num / Den = Res
+
+    #[test]
+    fn scalar_div_conversion_test() {
+        let num = Num::in_test(6.0);
+        let den = Den::in_test(2.0);
+        let res = Res::in_test(3.0);
+
+        assert_eq!(res,  num /  den);
+        assert_eq!(res, &num /  den);
+        assert_eq!(res,  num / &den);
+        assert_eq!(res, &num / &den);
+    }
+
+    #[test]
+    fn scalar_mul_conversion_test() {
+        let num = Num::in_test(6.0);
+        let den = Den::in_test(2.0);
+        let res = Res::in_test(3.0);
+
+        assert_eq!(num,  res *  den);
+        assert_eq!(num, &res *  den);
+        assert_eq!(num,  res * &den);
+        assert_eq!(num, &res * &den);
+
+        assert_eq!(num,  den *  res);
+        assert_eq!(num, &den *  res);
+        assert_eq!(num,  den * &res);
+        assert_eq!(num, &den * &res);
+    }
+
+    #[test]
+    fn vector_add_test() {
+        let a = TestVector::in_test(2.0, 3.0);
+        let b = TestVector::in_test(5.0, 7.0);
+
+        let expected = TestVector::in_test(7.0, 10.0);
+
+        assert_eq!(expected,  a +  b);
+        assert_eq!(expected, &a +  b);
+        assert_eq!(expected,  a + &b);
+        assert_eq!(expected, &a + &b);
+    }
+
+    #[test]
+    fn vector_add_assign_test() {
+        let a_0 = TestVector::in_test(2.0, 3.0);
+        let b = TestVector::in_test(5.0, 7.0);
+
+        let expected = TestVector::in_test(7.0, 10.0);
+
+        let mut a = a_0;
+        a += b;
+        assert_eq!(expected, a);
+
+        let mut a = a_0;
+        a += &b;
+        assert_eq!(expected, a);
+    }
+
+    #[test]
+    fn vector_sub_test() {
+        let a = TestVector::in_test(2.0, 3.0);
+        let b = TestVector::in_test(5.0, 7.0);
+
+        let expected = TestVector::in_test(-3.0, -4.0);
+
+        assert_eq!(expected,  a -  b);
+        assert_eq!(expected, &a -  b);
+        assert_eq!(expected,  a - &b);
+        assert_eq!(expected, &a - &b);
+    }
+
+    #[test]
+    fn vector_sub_assign_test() {
+        let a_0 = TestVector::in_test(2.0, 3.0);
+        let b = TestVector::in_test(5.0, 7.0);
+
+        let expected = TestVector::in_test(-3.0, -4.0);
+
+        let mut a = a_0;
+        a -= b;
+        assert_eq!(expected, a);
+
+        let mut a = a_0;
+        a -= &b;
+        assert_eq!(expected, a);
+    }
+
+    #[test]
+    fn vector_mul_test() {
+        let a = TestVector::in_test(2.0, 3.0);
+        let b = 5.0f64;
+
+        let expected = TestVector::in_test(10.0, 15.0);
+
+        assert_eq!(expected,  a *  b);
+        assert_eq!(expected, &a *  b);
+        assert_eq!(expected,  a * &b);
+        assert_eq!(expected, &a * &b);
+
+        assert_eq!(expected,  b *  a);
+        assert_eq!(expected, &b *  a);
+        assert_eq!(expected,  b * &a);
+        assert_eq!(expected, &b * &a);
+    }
+
+    #[test]
+    fn vector_mul_assign_test() {
+        let a_0 = TestVector::in_test(2.0, 3.0);
+        let b = 5.0f64;
+
+        let expected = TestVector::in_test(10.0, 15.0);
+
+        let mut a = a_0;
+        a *= b;
+        assert_eq!(expected, a);
+
+        let mut a = a_0;
+        a *= &b;
+        assert_eq!(expected, a);
+    }
+
+    #[test]
+    fn vector_div_test() {
+        let a = TestVector::in_test(10.0, 15.0);
+        let b = 5.0f64;
+
+        let expected = TestVector::in_test(2.0, 3.0);
+
+        assert_eq!(expected,  a /  b);
+        assert_eq!(expected, &a /  b);
+        assert_eq!(expected,  a / &b);
+        assert_eq!(expected, &a / &b);
+    }
+
+    #[test]
+    fn vector_div_assign_test() {
+        let a_0 = TestVector::in_test(10.0, 15.0);
+        let b = 5.0f64;
+
+        let expected = TestVector::in_test(2.0, 3.0);
+
+        let mut a = a_0;
+        a /= b;
+        assert_eq!(expected, a);
+
+        let mut a = a_0;
+        a /= &b;
+        assert_eq!(expected, a);
+    }
+}
