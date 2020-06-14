@@ -26,10 +26,32 @@ impl Star {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct StarRow {
     pub name: String,
     pub mass: Mass,
     pub radius: Length,
     pub temperature: Temperature,
     pub position: Position,
+}
+
+pub mod system {
+    use super::*;
+    use crate::body::{BodyLinks, planet::Planet};
+
+    #[derive(Debug, Clone)]
+    pub struct StarSystem {
+        star: StarRow,
+        planets: Vec<Planet>,
+    }
+
+    impl State {
+        pub fn create(&mut self, star_system: StarSystem) {
+            let star = self.star.create(star_system.star);
+
+            for planet in star_system.planets {
+                self.body.create_planet(planet, star);
+            }
+        }
+    }
 }
