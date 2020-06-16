@@ -1,13 +1,12 @@
 use crate::*;
+use crate::body::Planet;
 
 #[derive(Debug, Default)]
 pub struct Star {
     pub alloc: Allocator<Self>,
     pub name: Component<Self, String>,
-    pub mass: Component<Self, Mass>,
-    pub radius: Component<Self, Length>,
-    pub temperature: Component<Self, Temperature>,
     pub position: Component<Self, Position>,
+    pub properties: Component<Self, StarProperties>,
 }
 
 fixed_arena!(Star, u16);
@@ -17,10 +16,8 @@ impl Star {
         let id = self.alloc.create();
 
         self.name.insert(id, row.name);
-        self.mass.insert(id, row.mass);
-        self.radius.insert(id, row.radius);
-        self.temperature.insert(id, row.temperature);
         self.position.insert(id, row.position);
+        self.properties.insert(id, row.properties);
 
         id
     }
@@ -29,29 +26,63 @@ impl Star {
 #[derive(Debug, Clone)]
 pub struct StarRow {
     pub name: String,
-    pub mass: Mass,
-    pub radius: Length,
-    pub temperature: Temperature,
     pub position: Position,
+    pub properties: StarProperties,
 }
 
-pub mod star_system {
-    use super::*;
-    use crate::body::planet::Planet;
+#[derive(Debug, Clone)]
+pub struct StarSystem {
+    star: StarRow,
+    planets: Vec<Planet>,
+}
 
-    #[derive(Debug, Clone)]
-    pub struct StarSystem {
-        star: StarRow,
-        planets: Vec<Planet>,
-    }
+impl State {
+    pub fn create(&mut self, star_system: StarSystem) {
+        let star = self.star.create(star_system.star);
 
-    impl State {
-        pub fn create(&mut self, star_system: StarSystem) {
-            let star = self.star.create(star_system.star);
-
-            for planet in star_system.planets {
-                self.body.create_planet(planet, star);
-            }
+        for planet in star_system.planets {
+            self.body.create_planet(planet, star);
         }
     }
 }
+
+// star generation
+// simplest to randomly generate star type based on observed star distribution, and pick random attributes based on the type
+#[derive(Debug, Copy, Clone)]
+pub struct StarProperties {
+    pub classification: StarClassification,
+    pub fraction: Fraction,
+}
+
+impl StarProperties {
+    pub fn get_temperature(self) -> Temperature {
+        let kelvin = match self.classification {
+            StarClassification::G => 5e3 + self.fraction * 1e3,
+        };
+        Temperature::in_k(kelvin)
+    }
+
+    pub fn get_radius(self) -> Length {
+        let solar_fraction: f64 = match self.classification {
+            StarClassification::G => 0.85 + self.fraction * 0.3,
+        };
+
+        SOLAR_RADIUS * solar_fraction
+    }
+
+    pub fn get_mass(self) -> Mass {
+        let solar_fraction: f64 = match self.classification {
+            StarClassification::G => 0.85 + self.fraction * 0.3,
+        };
+
+        SOLAR_MASS * solar_fraction
+    }
+}
+
+#[derive(Debug, Copy, Clone)]
+pub enum StarClassification {
+    G
+}
+
+const SOLAR_MASS: Mass = Mass::in_kg(1.9884e30);
+const SOLAR_RADIUS: Length = Length::in_m(695_700e3);

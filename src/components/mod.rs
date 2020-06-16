@@ -7,6 +7,9 @@ pub use time::*;
 mod time;
 
 pub use orbit::*;
+use rand::Rng;
+use rand::distributions::{Distribution, Standard};
+
 mod orbit;
 
 #[macro_use]
@@ -76,6 +79,55 @@ scalar_div!(Mass, Duration, MassRate);
 
 scalar!(MassRatePerPerson, kg_per_person_second, kg_per_s_person);
 scalar_div!(MassRate, Population, MassRatePerPerson);
+
+#[derive(Debug, Default, Copy, Clone, PartialOrd, PartialEq)]
+pub struct Fraction(f64);
+
+impl Into<f64> for Fraction {
+    fn into(self) -> f64 {
+        self.0
+    }
+}
+
+impl Fraction {
+    pub fn new(value: f64) -> Self {
+        if value == f64::NEG_INFINITY || value == f64::NAN {
+            return Self(0.0)
+        }
+
+        if value == f64::INFINITY {
+            return Self(1.0)
+        }
+
+        match value {
+            value if value < 0.0 => Self(0.0),
+            value if value > 1.0 => Self(1.0),
+            value => Self(value)
+        }
+    }
+}
+
+impl Distribution<Fraction> for Standard {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Fraction {
+        Fraction(rng.gen_range(0.0, 1.0))
+    }
+}
+
+impl Mul<f64> for Fraction {
+    type Output = f64;
+
+    fn mul(self, rhs: f64) -> Self::Output {
+        self.0 * rhs
+    }
+}
+
+impl Mul<Fraction> for f64 {
+    type Output = f64;
+
+    fn mul(self, rhs: Fraction) -> Self::Output {
+        rhs * self
+    }
+}
 
 #[cfg(test)]
 mod test;

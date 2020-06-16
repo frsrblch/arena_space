@@ -10,3 +10,4 @@ edition = "2018"
 arena_ecs = { path = "C:/Users/Farseer/IdeaProjects/arena_ecs" }
 fnv = "1.0.7"
 paste = "0.1.16"
+rand = "0.7.3"
