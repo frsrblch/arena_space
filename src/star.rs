@@ -4,6 +4,7 @@ use crate::body::Planet;
 #[derive(Debug, Default)]
 pub struct Star {
     pub alloc: Allocator<Self>,
+
     pub name: Component<Self, String>,
     pub position: Component<Self, Position>,
     pub properties: Component<Self, StarProperties>,
@@ -59,6 +60,7 @@ impl StarProperties {
         let kelvin = match self.classification {
             StarClassification::G => 5e3 + self.fraction * 1e3,
         };
+
         Temperature::in_k(kelvin)
     }
 
