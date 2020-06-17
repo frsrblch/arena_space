@@ -1,5 +1,6 @@
 use crate::*;
 use crate::body::Body;
+use crate::government::Government;
 
 #[derive(Debug, Default)]
 pub struct Colony {
@@ -9,6 +10,7 @@ pub struct Colony {
     pub population: Component<Self, Population>,
 
     pub body: Component<Self, Id<Body>>,
+    pub government: Component<Self, Id<Government>>,
 }
 
 dynamic_arena!(Colony, u16);
@@ -21,6 +23,7 @@ impl Colony {
         self.population.insert(id, row.population);
 
         self.body.insert(id, links.body);
+        self.government.insert(id, links.government);
 
         id.id
     }
@@ -50,4 +53,5 @@ pub struct ColonyRow {
 #[derive(Debug, Copy, Clone)]
 pub struct ColonyLinks {
     pub body: Id<Body>,
+    pub government: Id<Government>,
 }

@@ -7,6 +7,7 @@ pub mod components;
 pub mod star;
 pub mod body;
 pub mod colony;
+pub mod government;
 
 #[allow(dead_code)]
 type HashMap<I, T> = fnv::FnvHashMap<I, T>;
