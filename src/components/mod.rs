@@ -1,3 +1,4 @@
+use std::fmt::{Display, Result, Formatter};
 use std::ops::*;
 
 pub use position::*;
@@ -9,6 +10,7 @@ mod time;
 pub use orbit::*;
 use rand::Rng;
 use rand::distributions::{Distribution, Standard};
+use std::iter::Sum;
 
 mod orbit;
 
@@ -16,6 +18,31 @@ mod orbit;
 mod macros;
 
 scalar!(Mass, kilograms, kg);
+
+impl Display for Mass {
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        write!(f, "{:.0} kg", self.value)
+    }
+}
+
+#[test]
+fn mass_display() {
+    assert_eq!("25 kg", Mass::in_kg(25.0).to_string());
+}
+
+impl Mass {
+    pub fn tons(self) -> Tons {
+        Tons(self)
+    }
+}
+
+pub struct Tons(Mass);
+
+impl Display for Tons {
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        write!(f, "{:.0} t", self.0.value / 1e3)
+    }
+}
 
 scalar!(Temperature, kelvin, k);
 
@@ -62,7 +89,6 @@ impl Population {
         Self::new(mm_people * 1e6)
     }
 }
-
 
 scalar!(Duration, seconds, s);
 

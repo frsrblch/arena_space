@@ -9,6 +9,10 @@ impl Time {
         Self::new(seconds)
     }
 
+    pub fn in_days(days: f64) -> Self {
+        Self::in_s(days * Duration::SECONDS_PER_DAY)
+    }
+
     fn new(value: f64) -> Self {
         Self { value }
     }

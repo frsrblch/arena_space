@@ -8,6 +8,10 @@ macro_rules! scalar {
             const fn new(value: $base) -> Self {
                 Self { value }
             }
+
+            pub const fn zero() -> Self {
+                Self::new(0.0)
+            }
         }
 
         impl Into<$base> for $scalar {
@@ -279,6 +283,13 @@ macro_rules! scalar {
                 *self % *rhs
             }
         }
+
+        impl Sum<$scalar> for $scalar {
+            fn sum<I: Iterator<Item=Self>>(iter: I) -> Self {
+                Self::new(iter.map(|v| v.value).sum())
+            }
+        }
+
     };
     ($scalar:ident, $unit:ident, $abrev:ident, $base:ty) => {
         scalar!($scalar, $base);
