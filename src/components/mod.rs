@@ -88,6 +88,15 @@ impl Population {
     pub fn in_millions(mm_people: f64) -> Self {
         Self::new(mm_people * 1e6)
     }
+
+    pub fn get_food_requirement(&self) -> MassRate {
+        self * Self::FOOD_PER_PERSON
+    }
+
+    /// 2 kg per person per day
+    const FOOD_PER_PERSON: MassRatePerPerson = MassRatePerPerson::in_kg_per_s_person(
+        2.0 / Duration::SECONDS_PER_DAY
+    );
 }
 
 scalar!(Duration, seconds, s);

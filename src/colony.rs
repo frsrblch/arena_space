@@ -1,6 +1,6 @@
 use crate::*;
 use crate::body::Body;
-use crate::government::Government;
+use crate::nation::Nation;
 
 #[derive(Debug, Default)]
 pub struct Colony {
@@ -14,7 +14,7 @@ pub struct Colony {
     pub hunger: Component<Self, Fraction>,
 
     pub body: Component<Self, Id<Body>>,
-    pub government: Component<Self, Id<Government>>,
+    pub nation: Component<Self, Option<Id<Nation>>>,
 
     last_food_update: Time,
 }
@@ -33,7 +33,7 @@ impl Colony {
         self.hunger.insert(id, Fraction::default());
 
         self.body.insert(id, links.body);
-        self.government.insert(id, links.government);
+        self.nation.insert(id, Some(links.nation));
 
         id.id
     }
@@ -41,77 +41,69 @@ impl Colony {
     pub fn delete(&mut self, id: Id<Self>) {
         if let Some(id) = self.alloc.validate(id) {
             self.population.insert(id, Population::zero());
+            self.food.insert(id, Mass::zero());
             self.food_production.insert(id, MassRate::zero());
+            self.hunger.insert(id, Fraction::default());
+            self.nation.insert(id, None);
+
+            let id = id.id;
+            self.alloc.kill(id);
         }
     }
+}
 
-    pub fn get_food_demand(&self, id: Id<Self>) -> Option<MassRate> {
-        self.get_population(id)
-            .map(|pop| pop * Self::FOOD_PER_PERSON)
-    }
+mod population {
+    use super::*;
 
-    pub fn get_population(&self, id: Id<Self>) -> Option<&Population> {
-        self.alloc
-            .validate(id)
-            .and_then(|id| self.population.get(id))
-    }
-
-    pub fn get_food(&self, id: Id<Self>) -> Option<&Mass> {
-        self.alloc
-            .validate(id)
-            .and_then(|id| self.food.get(id))
-    }
-
-    pub fn sum_population(&self, id: impl Indexes<Government>) -> Population {
-        self.alloc.living()
-            .zip(self.government.iter())
-            .zip(self.population.iter())
-            .filter_map(|((living, govt), pop)| {
-                if living && *govt == id.id() {
-                    Some(*pop)
-                } else {
-                    None
-                }
-            })
-            .sum()
-    }
-
-    /// 2 kg per person per day
-    const FOOD_PER_PERSON: MassRatePerPerson = MassRatePerPerson::in_kg_per_s_person(
-        2.0 / Duration::SECONDS_PER_DAY
-    );
-
-    pub fn update_food(&mut self, time: Time) {
-        if time > self.next_food_update() {
-            self.update_food_production_consumption();
+    impl Colony {
+        pub fn get_population(&self, id: Id<Self>) -> Option<&Population> {
+            self.alloc.validate(id)
+                .and_then(|id| self.population.get(id))
         }
     }
+}
 
-    fn next_food_update(&self) -> Time {
-        self.last_food_update + Self::FOOD_UPDATE_INTERVAL
+mod food {
+    use super::*;
+
+    impl Colony {
+        pub fn get_food(&self, id: Id<Self>) -> Option<&Mass> {
+            self.alloc.validate(id)
+                .and_then(|id| self.food.get(id))
+        }
+
+        pub fn update_food(&mut self, time: Time) {
+            while time > self.next_food_update() {
+                self.update_food_and_hunger();
+
+                self.last_food_update += Self::FOOD_UPDATE_INTERVAL;
+            }
+        }
+
+        fn next_food_update(&self) -> Time {
+            self.last_food_update + Self::FOOD_UPDATE_INTERVAL
+        }
+
+        fn update_food_and_hunger(&mut self) {
+            self.food.iter_mut()
+                .zip(self.hunger.iter_mut())
+                .zip(self.food_production.iter())
+                .zip(self.population.iter())
+                .for_each(|(((food, hunger), production), pop)| {
+                    let consumption = pop.get_food_requirement();
+                    *food += (production - consumption) * Self::FOOD_UPDATE_INTERVAL;
+
+                    if *food < Mass::zero() {
+                        *hunger = Fraction::new(-*food / (consumption * Self::FOOD_UPDATE_INTERVAL));
+                        *food = Mass::zero();
+                    } else {
+                        *hunger = Fraction::default();
+                    }
+                });
+        }
+
+        const FOOD_UPDATE_INTERVAL: Duration = Duration::in_s(1.0 * 3600.0 * 24.0);
     }
-
-    fn update_food_production_consumption(&mut self) {
-        self.food.iter_mut()
-            .zip(self.hunger.iter_mut())
-            .zip(self.food_production.iter())
-            .zip(self.population.iter())
-            .for_each(|(((food, hunger), production), pop)| {
-                let consumption = pop * Self::FOOD_PER_PERSON;
-                *food += (production - consumption) * Self::FOOD_UPDATE_INTERVAL;
-
-                if *food < Mass::zero() {
-                    *hunger = Fraction::new(-*food / (consumption * Self::FOOD_UPDATE_INTERVAL));
-                    *food = Mass::zero();
-                } else {
-                    *hunger = Fraction::default();
-                }
-            });
-
-        self.last_food_update += Self::FOOD_UPDATE_INTERVAL;
-    }
-
-    const FOOD_UPDATE_INTERVAL: Duration = Duration::in_s(1.0 * 3600.0 * 24.0);
 }
 
 #[derive(Debug, Clone)]
@@ -124,7 +116,7 @@ pub struct ColonyRow {
 #[derive(Debug, Copy, Clone)]
 pub struct ColonyLinks {
     pub body: Id<Body>,
-    pub government: Id<Government>,
+    pub nation: Id<Nation>,
 }
 
 #[cfg(test)]
@@ -174,7 +166,7 @@ mod tests {
             },
             ColonyLinks {
                 body: body(),
-                government: govt()
+                nation: govt()
             }
         );
 
@@ -187,7 +179,7 @@ mod tests {
         if let Some(id) = colony.alloc.validate(id) {
             if let Some(pop) = colony.population.get(id) {
                 if let Some(production) = colony.food_production.get_mut(id) {
-                    *production = pop * Colony::FOOD_PER_PERSON * 1.2;
+                    *production = pop.get_food_requirement() * 1.2;
                 }
             }
         }
@@ -199,7 +191,7 @@ mod tests {
         Allocator::<Body>::default().create()
     }
 
-    fn govt() -> Id<Government> {
-        Allocator::<Government>::default().create().id()
+    fn govt() -> Id<Nation> {
+        Allocator::<Nation>::default().create().id()
     }
 }
