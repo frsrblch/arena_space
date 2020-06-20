@@ -2,24 +2,41 @@ use crate::star::Star;
 use crate::body::Body;
 use crate::colony::Colony;
 use crate::nation::Nation;
-use crate::components::Time;
+use crate::time::TimeState;
 
 #[derive(Debug, Default)]
 pub struct State {
-    pub time: Time,
+    pub time: TimeState,
     pub star: Star,
     pub body: Body,
-    pub colony: Colony,
     pub nation: Nation,
+    pub colony: Colony,
 }
 
 impl State {
-    pub fn set_time(&mut self, time: Time) {
-        self.time = time;
+    pub fn update(&mut self, mut interval: std::time::Duration) {
+        while interval > ONE_DAY {
+            self.time += ONE_DAY;
+            interval -= ONE_DAY;
+
+            self.update_daily();
+        }
+
+        self.time += interval;
+        self.update_all();
     }
 
-    pub fn update(&mut self) {
-        self.colony.update_food(self.time);
-        self.nation.update_agri_production(&self.colony, self.time);
+    fn update_daily(&mut self) {
+        let time = self.time.get_time_float();
+
+        self.colony.produce_and_consume_food(time);
+        self.nation.update_agri_production(&self.colony, time);
+        self.colony.update_production(&self.nation, time)
+    }
+
+    fn update_all(&mut self) {
+        self.update_daily();
     }
 }
+
+const ONE_DAY: std::time::Duration = std::time::Duration::from_secs(24 * 3600);

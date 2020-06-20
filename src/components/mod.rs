@@ -4,7 +4,7 @@ use std::ops::*;
 pub use position::*;
 mod position;
 
-pub use time::*;
+pub use self::time::*;
 mod time;
 
 pub use orbit::*;
@@ -95,13 +95,25 @@ impl Population {
 
     /// 2 kg per person per day
     const FOOD_PER_PERSON: MassRatePerPerson = MassRatePerPerson::in_kg_per_s_person(
-        2.0 / Duration::SECONDS_PER_DAY
+        2.0 / DurationFloat::SECONDS_PER_DAY
     );
+
+    pub fn millions(self) -> Millions {
+        Millions(self)
+    }
 }
 
-scalar!(Duration, seconds, s);
+pub struct Millions(Population);
 
-impl Duration {
+impl Display for Millions {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        write!(f, "{:.0}M", self.0.value / 1e6)
+    }
+}
+
+scalar!(DurationFloat, seconds, s);
+
+impl DurationFloat {
     pub fn in_days(days: f64) -> Self {
         Self::in_s(days * Self::SECONDS_PER_DAY)
     }
@@ -110,7 +122,22 @@ impl Duration {
 }
 
 scalar!(MassRate, kg_per_second, kg_per_s);
-scalar_div!(Mass, Duration, MassRate);
+
+impl MassRate {
+    pub fn tons_per_day(self) -> TonsPerDay {
+        TonsPerDay(self)
+    }
+}
+
+pub struct TonsPerDay(MassRate);
+
+impl Display for TonsPerDay {
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        write!(f, "{:.0} t/day", self.0.value)
+    }
+}
+
+scalar_div!(Mass, DurationFloat, MassRate);
 
 scalar!(MassRatePerPerson, kg_per_person_second, kg_per_s_person);
 scalar_div!(MassRate, Population, MassRatePerPerson);

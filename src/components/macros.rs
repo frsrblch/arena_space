@@ -12,6 +12,14 @@ macro_rules! scalar {
             pub const fn zero() -> Self {
                 Self::new(0.0)
             }
+
+            pub fn min(self, rhs: Self) -> Self {
+                Self::new(self.value.min(rhs.value))
+            }
+
+            pub fn max(self, rhs: Self) -> Self {
+                Self::new(self.value.max(rhs.value))
+            }
         }
 
         impl Into<$base> for $scalar {

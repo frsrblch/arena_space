@@ -10,7 +10,7 @@ pub struct Nation {
     pub food_production: Component<Self, MassRate>,
     pub agriculture: Component<Self, FoodProductionTarget>,
 
-    last_agri_update: Time,
+    last_agri_update: TimeFloat,
 }
 
 dynamic_arena!(Nation, u16);
@@ -39,7 +39,7 @@ mod population {
     use crate::colony::Colony;
 
     impl Nation {
-        pub fn sum_population(&mut self, colonies: &Colony) {
+        pub(super) fn sum_population(&mut self, colonies: &Colony) {
             self.zero_population();
             self.add_population_from_colonies(colonies);
         }
@@ -55,9 +55,8 @@ mod population {
                 .zip(colony.nation.iter())
                 .for_each(|(pop, govt)| {
                     if let Some(govt) = self.alloc.validate(govt) {
-                        if let Some(govt_pop) = self.population.get_mut(govt) {
-                            *govt_pop += pop;
-                        }
+                        let govt_pop = self.population.get_mut(govt);
+                        *govt_pop += pop;
                     }
                 });
         }
@@ -69,7 +68,7 @@ mod food {
     use crate::colony::Colony;
 
     impl Nation {
-        pub fn update_agri_production(&mut self, colony: &Colony, time: Time) {
+        pub fn update_agri_production(&mut self, colony: &Colony, time: TimeFloat) {
             if time > self.next_agri_update() {
                 self.sum_population(colony);
                 self.sum_food_production(colony);
@@ -79,11 +78,11 @@ mod food {
             }
         }
 
-        fn next_agri_update(&self) -> Time {
+        fn next_agri_update(&self) -> TimeFloat {
             self.last_agri_update + Self::AGRI_UPDATE_INTERVAL
         }
 
-        const AGRI_UPDATE_INTERVAL: Duration = Duration::in_s(30.0 * 3600.0 * 24.0);
+        const AGRI_UPDATE_INTERVAL: DurationFloat = DurationFloat::in_s(30.0 * 3600.0 * 24.0);
 
         pub fn sum_food_production(&mut self, colony: &Colony) {
             self.zero_food_production();
@@ -101,9 +100,8 @@ mod food {
                 .zip(colony.nation.iter())
                 .for_each(|(production, govt)| {
                     if let Some(govt) = self.alloc.validate(*govt) {
-                        if let Some(govt_production) = self.food_production.get_mut(govt) {
-                            *govt_production += production;
-                        }
+                        let govt_production = self.food_production.get_mut(govt);
+                        *govt_production += production;
                     }
                 });
         }
@@ -122,6 +120,14 @@ mod food {
                     };
                 });
         }
+
+        pub fn get_food_production_target<ID>(&self, id: ID) -> Option<&FoodProductionTarget>
+        where
+            <Nation as Arena>::Allocator: Validate<ID, Self>
+        {
+            self.alloc.validate(id)
+                .map(|id| self.agriculture.get(id))
+        }
     }
 }
 
@@ -135,42 +141,46 @@ pub enum FoodProductionTarget {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::colony::{Colony, ColonyRow, ColonyLinks};
+    use crate::colony::{ColonyRow, ColonyLinks};
     use crate::body::Body;
 
     #[test]
     fn watch_two_colonies() {
-        let mut time = Time::in_days(0.0);
-        let (mut govt, mut colony) = get_fed_and_hungry_colonies();
+        let (mut state, nation_id) = get_fed_and_hungry_colonies();
 
-        while time < Time::in_days(10.0) {
-            time += Duration::in_days(1.0);
+        while state.time.get_time_float() < TimeFloat::in_days(360.0) {
+            let interval = std::time::Duration::from_secs(24 * 3600 * 10);
 
-            colony.update_food(time);
-            govt.update_agri_production(&colony, time);
+            state.update(interval);
 
+            let colony = &state.colony;
             colony.alloc.ids()
                 .for_each(|id| {
                     println!(
-                        "{:<8}  Food: {:>10}    Population: {:>10}",
-                        format!("{}:", colony.name.get(id).unwrap()),
-                        format!("{}", colony.food.get(id).unwrap().tons()),
-                        format!("{}", colony.population.get(id).unwrap().value),
+                        "{:<8}  Food: {:>10}    Population: {:>10}  Production: {:0}",
+                        format!("{}:", colony.name.get(id)),
+                        format!("{}", colony.food.get(id).tons()),
+                        format!("{}", colony.population.get(id).millions()),
+                        colony.food_production.get(id).tons_per_day(),
                     );
                 });
+            println!("Target: {:?}", state.nation.get_food_production_target(nation_id).unwrap());
             println!();
         }
 
-        // assert!(false);
+        assert!(false);
     }
 
-    fn get_fed_and_hungry_colonies() -> (Nation, Colony) {
-        let (mut govt, mut colony) = (Nation::default(), Colony::default());
+    fn get_fed_and_hungry_colonies() -> (State, Id<Nation>) {
+        let mut state = State::default();
 
-        let government = govt.create(GovernmentRow { name: "Nation".to_string() });
+        let nation = &mut state.nation;
+        let colony = &mut state.colony;
+
+        let nation_id = nation.create(GovernmentRow { name: "Nation".to_string() });
 
         let population = Population::in_millions(10.0);
-        let five_days_worth = population.get_food_requirement() * Duration::in_days(5.0);
+        let five_days_worth = population.get_food_requirement() * DurationFloat::in_days(5.0);
 
         let _unfed = colony.create(
             ColonyRow {
@@ -180,7 +190,7 @@ mod tests {
             },
             ColonyLinks {
                 body: get_body(),
-                nation: government
+                nation: nation_id
             }
         );
 
@@ -192,7 +202,7 @@ mod tests {
             },
             ColonyLinks {
                 body: get_body(),
-                nation: government
+                nation: nation_id
             }
         );
 
@@ -200,7 +210,7 @@ mod tests {
             colony.food_production.insert(fed, population.get_food_requirement());
         }
 
-        (govt, colony)
+        (state, nation_id)
     }
 
     fn get_body() -> Id<Body> {

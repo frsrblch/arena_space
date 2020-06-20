@@ -4,6 +4,7 @@ use state::State;
 
 pub mod state;
 pub mod components;
+pub mod time;
 pub mod star;
 pub mod body;
 pub mod colony;

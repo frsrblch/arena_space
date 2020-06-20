@@ -237,4 +237,18 @@ pub mod examples {
     fn venus_habitability() {
         assert_eq!(Uninhabitable, venus().get_habitability());
     }
+
+    #[test]
+    fn hypothetical_desert_planet() {
+        let bp = BodyProperties {
+            surface: Surface::Rocky,
+            pressure: Pressure::Ideal,
+            oxygen: AtmosphericOxygen::Partial,
+            hydrosphere: Hydrosphere::None,
+            biosphere: Biosphere::None,
+            magnetosphere: Magnetosphere::Present,
+        };
+
+        assert_eq!(Habitability::Marginal, bp.get_habitability());
+    }
 }

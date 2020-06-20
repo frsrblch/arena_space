@@ -8,7 +8,8 @@ edition = "2018"
 
 [dependencies]
 arena_ecs = { path = "C:/Users/Farseer/IdeaProjects/arena_ecs" }
-fnv = "1.0.7"
-paste = "0.1.16"
-rand = "0.7.3"
-#rand_distr = "0.2.2"
+fnv = "*"
+paste = "*"
+rand = "*"
+time = "0.2.16"
+chrono = "*"

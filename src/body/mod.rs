@@ -36,7 +36,7 @@ impl Body {
 
     fn get_orbit(&self, parent: Option<Id<Body>>, params: OrbitParams) -> Orbit {
         let parent = parent
-            .and_then(|parent| self.orbit.get(parent))
+            .map(|parent| self.orbit.get(parent))
             .map(|orbit| {
                 assert!(orbit.parent.is_none(), "Cannot use a moon as a parent body.");
                 orbit.params
@@ -48,29 +48,27 @@ impl Body {
         }
     }
 
-    pub fn get_position(&self, id: Id<Body>, time: Time) -> Option<Position> {
-        self.orbit.get(id)?
+    pub fn get_position(&self, id: Id<Body>, time: TimeFloat) -> Position {
+        self.orbit.get(id)
             .calculate_position(time)
-            .into()
     }
 
-    pub fn get_distance(&self, from: Id<Body>, to: Id<Body>, time: Time) -> Option<Distance> {
-        let system_from = self.star.get(from)?;
-        let system_to = self.star.get(to)?;
+    pub fn get_distance(&self, from: Id<Body>, to: Id<Body>, time: TimeFloat, _star: &Star) -> Distance {
+        let system_from = self.star.get(from);
+        let system_to = self.star.get(to);
 
         if system_from == system_to {
-            let from = self.get_position(from, time)?;
-            let to = self.get_position(to, time)?;
+            let from = self.get_position(from, time);
+            let to = self.get_position(to, time);
 
-            Some(to - from)
+            to - from
         } else {
             unimplemented!("Distance between bodies in different systems not implemented.")
         }
     }
 
-    pub fn get_habitability(&self, id: Id<Body>) -> Option<Habitability> {
-        self.properties.get(id)
-            .map(|cond| cond.get_habitability())
+    pub fn get_habitability(&self, id: Id<Body>) -> Habitability {
+        self.properties.get(id).get_habitability()
     }
 }
 

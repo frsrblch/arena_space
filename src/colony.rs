@@ -8,18 +8,32 @@ pub struct Colony {
 
     pub name: Component<Self, String>,
     pub population: Component<Self, Population>,
-    pub food: Component<Self, Mass>,
 
+    pub food: Component<Self, Mass>,
     pub food_production: Component<Self, MassRate>,
     pub hunger: Component<Self, Fraction>,
 
     pub body: Component<Self, Id<Body>>,
     pub nation: Component<Self, Option<Id<Nation>>>,
 
-    last_food_update: Time,
+    last_food_update: TimeFloat,
+    last_production_update: TimeFloat,
 }
 
 dynamic_arena!(Colony, u16);
+
+#[derive(Debug, Clone)]
+pub struct ColonyRow {
+    pub name: String,
+    pub population: Population,
+    pub food: Mass,
+}
+
+#[derive(Debug, Copy, Clone)]
+pub struct ColonyLinks {
+    pub body: Id<Body>,
+    pub nation: Id<Nation>,
+}
 
 impl Colony {
     pub fn create(&mut self, row: ColonyRow, links: ColonyLinks) -> Id<Self> {
@@ -58,21 +72,38 @@ mod population {
     impl Colony {
         pub fn get_population(&self, id: Id<Self>) -> Option<&Population> {
             self.alloc.validate(id)
-                .and_then(|id| self.population.get(id))
+                .map(|id| self.population.get(id))
         }
+    }
+}
+
+mod production {
+    use super::*;
+
+    impl Colony {
+        pub fn update_production(&mut self, nation: &Nation, time: TimeFloat) {
+            if time > self.last_production_update + Self::PRODUCTION_UPDATE_INTERVAL {
+                self.update_food_production(nation);
+
+                self.last_production_update += Self::PRODUCTION_UPDATE_INTERVAL;
+            }
+        }
+
+        pub(super) const PRODUCTION_UPDATE_INTERVAL: DurationFloat = DurationFloat::in_s(5.0 * 24.0 * 3600.0);
     }
 }
 
 mod food {
     use super::*;
+    use crate::nation::FoodProductionTarget;
 
     impl Colony {
         pub fn get_food(&self, id: Id<Self>) -> Option<&Mass> {
             self.alloc.validate(id)
-                .and_then(|id| self.food.get(id))
+                .map(|id| self.food.get(id))
         }
 
-        pub fn update_food(&mut self, time: Time) {
+        pub fn produce_and_consume_food(&mut self, time: TimeFloat) {
             while time > self.next_food_update() {
                 self.update_food_and_hunger();
 
@@ -80,7 +111,7 @@ mod food {
             }
         }
 
-        fn next_food_update(&self) -> Time {
+        fn next_food_update(&self) -> TimeFloat {
             self.last_food_update + Self::FOOD_UPDATE_INTERVAL
         }
 
@@ -90,33 +121,39 @@ mod food {
                 .zip(self.food_production.iter())
                 .zip(self.population.iter())
                 .for_each(|(((food, hunger), production), pop)| {
-                    let consumption = pop.get_food_requirement();
-                    *food += (production - consumption) * Self::FOOD_UPDATE_INTERVAL;
+                    let consumption = pop.get_food_requirement() * Self::FOOD_UPDATE_INTERVAL;
+                    *food += (production * Self::FOOD_UPDATE_INTERVAL) - consumption;
 
                     if *food < Mass::zero() {
-                        *hunger = Fraction::new(-*food / (consumption * Self::FOOD_UPDATE_INTERVAL));
+                        // *hunger = Fraction::new(-*food / consumption);
                         *food = Mass::zero();
                     } else {
-                        *hunger = Fraction::default();
+                        // *hunger = Fraction::default();
                     }
                 });
         }
 
-        const FOOD_UPDATE_INTERVAL: Duration = Duration::in_s(1.0 * 3600.0 * 24.0);
+        const FOOD_UPDATE_INTERVAL: DurationFloat = DurationFloat::in_s(1.0 * 3600.0 * 24.0);
+
+        pub(super) fn update_food_production(&mut self, nation: &Nation) {
+            self.food_production.iter_mut()
+                .zip(self.population.iter())
+                .zip(self.nation.iter())
+                .for_each(|((production, population), nation_id)| {
+                    if let Some(target) = nation.get_food_production_target(nation_id) {
+                        *production += population.get_food_requirement() * match target {
+                            FoodProductionTarget::Expand => {
+                                0.2 * Self::PRODUCTION_UPDATE_INTERVAL / DurationFloat::in_days(365.25)
+                            },
+                            FoodProductionTarget::Contract => {
+                                -0.2 * Self::PRODUCTION_UPDATE_INTERVAL / DurationFloat::in_days(365.25)
+                            },
+                            FoodProductionTarget::Stable => 0.0,
+                        }
+                    }
+                });
+        }
     }
-}
-
-#[derive(Debug, Clone)]
-pub struct ColonyRow {
-    pub name: String,
-    pub population: Population,
-    pub food: Mass,
-}
-
-#[derive(Debug, Copy, Clone)]
-pub struct ColonyLinks {
-    pub body: Id<Body>,
-    pub nation: Id<Nation>,
 }
 
 #[cfg(test)]
@@ -125,13 +162,13 @@ mod tests {
 
     #[test]
     fn food_consumption_hungry() {
-        let mut time = Time::default();
+        let mut time = TimeFloat::default();
         let (mut colony, id) = get_hungry_colony();
 
-        while time < Time::in_days(10.0) {
-            time += Duration::in_s(1.0 * 3600.0);
+        while time < TimeFloat::in_days(10.0) {
+            time += DurationFloat::in_s(1.0 * 3600.0);
 
-            colony.update_food(time);
+            colony.produce_and_consume_food(time);
         }
 
         assert_eq!(Mass::zero(), *colony.get_food(id).unwrap());
@@ -139,15 +176,15 @@ mod tests {
 
     #[test]
     fn food_consumption_fed() {
-        let mut time = Time::default();
+        let mut time = TimeFloat::default();
         let (mut colony, id) = get_fed_colony();
 
         let starting_food = *colony.get_food(id).unwrap();
 
-        while time < Time::in_days(10.0) {
-            time += Duration::in_s(1.0 * 3600.0);
+        while time < TimeFloat::in_days(10.0) {
+            time += DurationFloat::in_s(1.0 * 3600.0);
 
-            colony.update_food(time);
+            colony.produce_and_consume_food(time);
         }
 
         let ending_food = *colony.get_food(id).unwrap();
@@ -177,11 +214,9 @@ mod tests {
         let (mut colony, id) = get_hungry_colony();
 
         if let Some(id) = colony.alloc.validate(id) {
-            if let Some(pop) = colony.population.get(id) {
-                if let Some(production) = colony.food_production.get_mut(id) {
-                    *production = pop.get_food_requirement() * 1.2;
-                }
-            }
+            let pop = colony.population.get(id);
+            let production = colony.food_production.get_mut(id);
+            *production = pop.get_food_requirement() * 1.2;
         }
 
         (colony, id)
