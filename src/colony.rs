@@ -144,8 +144,8 @@ mod food {
 
                     let consumption_rate = pop.get_food_requirement();
                     let consumption = consumption_rate * Self::FOOD_UPDATE_INTERVAL;
-                    *food += production - consumption;
 
+                    *food += production - consumption;
                     *hunger = -(food.min(Mass::zero()) / consumption);
                     *food = food.max(Mass::zero());
                 });
