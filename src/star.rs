@@ -10,7 +10,7 @@ pub struct Star {
     pub properties: Component<Self, StarProperties>,
 }
 
-fixed_arena!(Star, u16);
+fixed_arena!(Star);
 
 impl Star {
     pub fn create(&mut self, row: StarRow) -> Id<Self> {
@@ -56,6 +56,13 @@ pub struct StarProperties {
 }
 
 impl StarProperties {
+    pub fn g(fraction: Fraction) -> Self {
+        StarProperties {
+            classification: StarClassification::G,
+            fraction,
+        }
+    }
+
     pub fn get_temperature(self) -> Temperature {
         let kelvin = match self.classification {
             StarClassification::G => 5e3 + self.fraction * 1e3,

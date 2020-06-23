@@ -31,7 +31,7 @@ impl State {
 
         self.colony.produce_and_consume_food(time);
         self.nation.update_agri_production(&self.colony, time);
-        self.colony.update_production(&self.nation, time)
+        self.colony.update_production(&self.nation, &self.body, time)
     }
 
     fn update_all(&mut self) {

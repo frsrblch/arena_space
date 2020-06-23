@@ -13,7 +13,7 @@ pub struct Nation {
     last_agri_update: TimeFloat,
 }
 
-dynamic_arena!(Nation, u16);
+dynamic_arena!(Nation);
 
 impl Nation {
     pub fn create(&mut self, row: GovernmentRow) -> Id<Self> {
@@ -123,7 +123,7 @@ mod food {
 
         pub fn get_food_production_target<ID>(&self, id: ID) -> Option<&FoodProductionTarget>
         where
-            <Nation as Arena>::Allocator: Validate<ID, Self>
+            <Nation as Arena>::Allocator: Validates<ID, Self>
         {
             self.alloc.validate(id)
                 .map(|id| self.agriculture.get(id))
@@ -138,11 +138,22 @@ pub enum FoodProductionTarget {
     Contract,
 }
 
+impl FoodProductionTarget {
+    pub fn get_multiplier(&self) -> f64 {
+        match self {
+            FoodProductionTarget::Expand => 0.2,
+            FoodProductionTarget::Stable => 0.0,
+            FoodProductionTarget::Contract => -0.2,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::colony::{ColonyRow, ColonyLinks};
-    use crate::body::Body;
+    use crate::body::BodyLinks;
+    use crate::star::{StarRow, StarProperties};
 
     #[test]
     fn watch_two_colonies() {
@@ -155,24 +166,42 @@ mod tests {
 
             let colony = &state.colony;
             colony.alloc.ids()
+                .filter_map(|id| id)
                 .for_each(|id| {
                     println!(
-                        "{:<8}  Food: {:>10}    Population: {:>10}  Production: {:0}",
+                        "{:<8}  Food: {:>10}    Population: {:>6}    Production: {:0}    H: {:.3}",
                         format!("{}:", colony.name.get(id)),
                         format!("{}", colony.food.get(id).tons()),
                         format!("{}", colony.population.get(id).millions()),
                         colony.food_production.get(id).tons_per_day(),
+                        colony.hunger.get(id)
                     );
                 });
             println!("Target: {:?}", state.nation.get_food_production_target(nation_id).unwrap());
             println!();
         }
 
-        assert!(false);
+        // assert!(false);
     }
 
     fn get_fed_and_hungry_colonies() -> (State, Id<Nation>) {
         let mut state = State::default();
+
+        let star = state.star.create(StarRow{
+            name: "Sol".to_string(),
+            position: Default::default(),
+            properties: StarProperties::g(Fraction::new(0.5)),
+        });
+
+        let earth = state.body.create(
+            crate::body::examples::get_earth(),
+            BodyLinks { star, parent: None }
+        );
+
+        let moon = state.body.create(
+            crate::body::examples::get_moon(),
+            BodyLinks { star, parent: Some(earth) }
+        );
 
         let nation = &mut state.nation;
         let colony = &mut state.colony;
@@ -187,9 +216,10 @@ mod tests {
                 name: "Unfed".to_string(),
                 population,
                 food: five_days_worth,
+                food_production: Some(MassRate::zero()),
             },
             ColonyLinks {
-                body: get_body(),
+                body: moon,
                 nation: nation_id
             }
         );
@@ -199,9 +229,10 @@ mod tests {
                 name: "Fed".to_string(),
                 population,
                 food: five_days_worth,
+                food_production: None, // defaults to population requirement
             },
             ColonyLinks {
-                body: get_body(),
+                body: earth,
                 nation: nation_id
             }
         );
@@ -211,9 +242,5 @@ mod tests {
         }
 
         (state, nation_id)
-    }
-
-    fn get_body() -> Id<Body> {
-        Allocator::<Body>::default().create()
     }
 }

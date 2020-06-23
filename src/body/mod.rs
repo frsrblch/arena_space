@@ -17,7 +17,7 @@ pub struct Body {
     pub star: Component<Self, Id<Star>>,
 }
 
-fixed_arena!(Body, u32);
+fixed_arena!(Body);
 
 impl Body {
     pub fn create(&mut self, row: BodyRow, links: BodyLinks) -> Id<Self> {
@@ -53,7 +53,7 @@ impl Body {
             .calculate_position(time)
     }
 
-    pub fn get_distance(&self, from: Id<Body>, to: Id<Body>, time: TimeFloat, _star: &Star) -> Distance {
+    pub fn get_distance(&self, from: Id<Body>, to: Id<Body>, time: TimeFloat, star: &Star) -> Distance {
         let system_from = self.star.get(from);
         let system_to = self.star.get(to);
 
@@ -63,7 +63,10 @@ impl Body {
 
             to - from
         } else {
-            unimplemented!("Distance between bodies in different systems not implemented.")
+            let from = star.position.get(system_from);
+            let to = star.position.get(system_to);
+
+            to - from
         }
     }
 
@@ -112,5 +115,51 @@ impl Body {
         }
 
         planet
+    }
+}
+
+pub mod examples {
+    use super::*;
+
+    pub fn get_earth() -> BodyRow {
+        BodyRow {
+            name: "Earth".to_string(),
+            mass: Mass::in_kg(5.972e24),
+            radius: Length::in_m(6371e3),
+            orbit: OrbitParams {
+                radius: Length::in_m(149.60e9),
+                period: DurationFloat::in_days(365.25),
+                offset: Default::default()
+            },
+            conditions: BodyProperties {
+                surface: Surface::Continental,
+                pressure: Pressure::Ideal,
+                oxygen: AtmosphericOxygen::Ideal,
+                hydrosphere: Hydrosphere::Dynamic,
+                biosphere: Biosphere::Advanced,
+                magnetosphere: Magnetosphere::Present
+            }
+        }
+    }
+
+    pub fn get_moon() -> BodyRow {
+        BodyRow {
+            name: "Luna".to_string(),
+            mass: Mass::in_kg(7.34767309e22),
+            radius: Length::in_m(1737.1e3),
+            orbit: OrbitParams {
+                radius: Length::in_m(384_400e3),
+                period: DurationFloat::in_days(27.322),
+                offset: Default::default()
+            },
+            conditions: BodyProperties {
+                surface: Surface::Rocky,
+                pressure: Pressure::Vacuum,
+                oxygen: AtmosphericOxygen::None,
+                hydrosphere: Hydrosphere::None,
+                biosphere: Biosphere::None,
+                magnetosphere: Magnetosphere::Absent
+            },
+        }
     }
 }

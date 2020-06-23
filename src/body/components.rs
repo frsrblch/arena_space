@@ -15,6 +15,17 @@ pub enum Habitability {
     Optimal,
 }
 
+impl Habitability {
+    pub fn get_food_production_multiplier(&self) -> f64 {
+        match self {
+            Uninhabitable => 0.0,
+            Hostile => 0.1,
+            Marginal => 0.4,
+            Optimal => 1.0,
+        }
+    }
+}
+
 impl Default for Habitability {
     fn default() -> Self {
         Habitability::Uninhabitable
@@ -30,6 +41,19 @@ pub struct BodyProperties {
     pub hydrosphere: Hydrosphere,
     pub biosphere: Biosphere,
     pub magnetosphere: Magnetosphere,
+}
+
+impl Default for BodyProperties {
+    fn default() -> Self {
+        Self {
+            surface: Surface::Rocky,
+            pressure: Pressure::Vacuum,
+            oxygen: AtmosphericOxygen::None,
+            hydrosphere: Hydrosphere::None,
+            biosphere: Biosphere::None,
+            magnetosphere: Magnetosphere::Absent,
+        }
+    }
 }
 
 impl BodyProperties {
@@ -171,6 +195,7 @@ impl AtmosphericOxygen {
     }
 }
 
+#[allow(dead_code)]
 pub mod examples {
     use super::*;
 

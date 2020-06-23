@@ -167,6 +167,10 @@ impl Fraction {
             value => Self(value)
         }
     }
+
+    pub fn value(&self) -> f64 {
+        self.0
+    }
 }
 
 impl Distribution<Fraction> for Standard {
