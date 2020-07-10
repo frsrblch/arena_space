@@ -153,7 +153,7 @@ mod tests {
     use super::*;
     use crate::colony::{ColonyRow, ColonyLinks};
     use crate::body::BodyLinks;
-    use crate::star::{StarRow, StarProperties};
+    use crate::star::{Star, StarProperties};
 
     #[test]
     fn watch_two_colonies() {
@@ -187,7 +187,7 @@ mod tests {
     fn get_fed_and_hungry_colonies() -> (State, Id<Nation>) {
         let mut state = State::default();
 
-        let star = state.star.create(StarRow{
+        let star = state.star.create(Star {
             name: "Sol".to_string(),
             position: Default::default(),
             properties: StarProperties::g(Fraction::new(0.5)),

@@ -1,4 +1,4 @@
-use crate::star::Star;
+use crate::star::Stars;
 use crate::body::Body;
 use crate::colony::Colony;
 use crate::nation::Nation;
@@ -7,7 +7,7 @@ use crate::time::TimeState;
 #[derive(Debug, Default)]
 pub struct State {
     pub time: TimeState,
-    pub star: Star,
+    pub star: Stars,
     pub body: Body,
     pub nation: Nation,
     pub colony: Colony,

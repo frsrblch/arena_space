@@ -1,5 +1,5 @@
 use crate::*;
-use crate::star::Star;
+use crate::star::{Stars, Star};
 
 pub use components::*;
 mod components;
@@ -53,7 +53,7 @@ impl Body {
             .calculate_position(time)
     }
 
-    pub fn get_distance(&self, from: Id<Body>, to: Id<Body>, time: TimeFloat, star: &Star) -> Distance {
+    pub fn get_distance(&self, from: Id<Body>, to: Id<Body>, time: TimeFloat, star: &Stars) -> Distance {
         let system_from = self.star.get(from);
         let system_to = self.star.get(to);
 

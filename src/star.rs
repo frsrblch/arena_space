@@ -1,19 +1,19 @@
 use crate::*;
 use crate::body::Planet;
 
-#[derive(Debug, Default)]
-pub struct Star {
-    pub alloc: Allocator<Self>,
-
-    pub name: Component<Self, String>,
-    pub position: Component<Self, Position>,
-    pub properties: Component<Self, StarProperties>,
-}
-
 fixed_arena!(Star);
 
-impl Star {
-    pub fn create(&mut self, row: StarRow) -> Id<Self> {
+#[derive(Debug, Default)]
+pub struct Stars {
+    pub alloc: Allocator<Star>,
+
+    pub name: Component<Star, String>,
+    pub position: Component<Star, Position>,
+    pub properties: Component<Star, StarProperties>,
+}
+
+impl Stars {
+    pub fn create(&mut self, row: Star) -> Id<Star> {
         let id = self.alloc.create();
 
         self.name.insert(id, row.name);
@@ -25,7 +25,7 @@ impl Star {
 }
 
 #[derive(Debug, Clone)]
-pub struct StarRow {
+pub struct Star {
     pub name: String,
     pub position: Position,
     pub properties: StarProperties,
@@ -33,7 +33,7 @@ pub struct StarRow {
 
 #[derive(Debug, Clone)]
 pub struct StarSystem {
-    star: StarRow,
+    star: Star,
     planets: Vec<Planet>,
 }
 
