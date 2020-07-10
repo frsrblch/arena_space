@@ -2,7 +2,7 @@ use chrono::{NaiveDate, NaiveTime, NaiveDateTime, Duration};
 use crate::components::TimeFloat;
 use std::ops::AddAssign;
 
-pub type DateTime = chrono::DateTime<chrono::Utc>;
+pub type DateTime = NaiveDateTime;
 type StdDuration = std::time::Duration;
 
 #[derive(Debug)]
@@ -42,13 +42,11 @@ impl Default for TimeState {
 fn starting_date() -> DateTime {
     let date = NaiveDate::from_ymd(2050, 1, 1);
     let time = NaiveTime::from_hms(0, 0, 0);
-    let date_time = NaiveDateTime::new(date, time);
-    DateTime::from_utc(date_time, chrono::Utc)
+    NaiveDateTime::new(date, time)
 }
 
 #[test]
 fn time_size_tests() {
     assert_eq!(16, std::mem::size_of::<Duration>());
     assert_eq!(12, std::mem::size_of::<chrono::DateTime<chrono::Utc>>());
-
 }
