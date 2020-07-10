@@ -1,22 +1,20 @@
 use super::*;
 
 #[derive(Debug, Default)]
-pub struct Nation {
-    pub alloc: Allocator<Self>,
+pub struct Nations {
+    pub alloc: Allocator<Nation>,
 
-    pub name: Component<Self, String>,
+    pub name: Component<Nation, String>,
 
-    pub population: Component<Self, Population>,
-    pub food_production: Component<Self, MassRate>,
-    pub agriculture: Component<Self, FoodProductionTarget>,
+    pub population: Component<Nation, Population>,
+    pub food_production: Component<Nation, MassRate>,
+    pub agriculture: Component<Nation, FoodProductionTarget>,
 
     last_agri_update: TimeFloat,
 }
 
-dynamic_arena!(Nation);
-
-impl Nation {
-    pub fn create(&mut self, row: GovernmentRow) -> Id<Self> {
+impl Nations {
+    pub fn create(&mut self, row: Nation) -> Id<Nation> {
         let id = self.alloc.create();
 
         self.name.insert(id, row.name);
@@ -30,15 +28,17 @@ impl Nation {
 }
 
 #[derive(Debug, Clone)]
-pub struct GovernmentRow {
+pub struct Nation {
     pub name: String,
 }
+
+dynamic_arena!(Nation);
 
 mod population {
     use super::*;
     use crate::colony::Colonies;
 
-    impl Nation {
+    impl Nations {
         pub(super) fn sum_population(&mut self, colonies: &Colonies) {
             self.zero_population();
             self.add_population_from_colonies(colonies);
@@ -67,7 +67,7 @@ mod food {
     use super::*;
     use crate::colony::Colonies;
 
-    impl Nation {
+    impl Nations {
         pub fn update_agri_production(&mut self, colony: &Colonies, time: TimeFloat) {
             if time > self.next_agri_update() {
                 self.sum_population(colony);
@@ -123,9 +123,10 @@ mod food {
 
         pub fn get_food_production_target<ID>(&self, id: ID) -> Option<&FoodProductionTarget>
         where
-            <Nation as Arena>::Allocator: Validates<ID, Self>
+            <Nation as Arena>::Allocator: Validates<ID, Nation>
         {
-            self.alloc.validate(id)
+            self.alloc
+                .validate(id)
                 .map(|id| self.agriculture.get(id))
         }
     }
@@ -206,7 +207,7 @@ mod tests {
         let nation = &mut state.nation;
         let colony = &mut state.colony;
 
-        let nation_id = nation.create(GovernmentRow { name: "Nation".to_string() });
+        let nation_id = nation.create(Nation { name: "Nation".to_string() });
 
         let population = Population::in_millions(10.0);
         let five_days_worth = population.get_food_requirement() * DurationFloat::in_days(5.0);
