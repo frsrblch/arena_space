@@ -195,12 +195,12 @@ mod tests {
         });
 
         let earth = state.body.create(
-            crate::body::examples::get_earth(),
+            crate::body::examples::earth(),
             BodyLinks { star, parent: None }
         );
 
         let moon = state.body.create(
-            crate::body::examples::get_moon(),
+            crate::body::examples::luna(),
             BodyLinks { star, parent: Some(earth) }
         );
 

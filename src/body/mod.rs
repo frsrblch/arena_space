@@ -4,6 +4,23 @@ use crate::star::{Stars, Star};
 pub use components::*;
 mod components;
 
+#[derive(Debug, Clone)]
+pub struct Body {
+    pub name: String,
+    pub mass: Mass,
+    pub radius: Length,
+    pub orbit: OrbitParams,
+    pub conditions: BodyProperties,
+}
+
+fixed_arena!(Body);
+
+#[derive(Debug, Copy, Clone)]
+pub struct BodyLinks {
+    pub star: Id<Star>,
+    pub parent: Option<Id<Body>>,
+}
+
 #[derive(Debug, Default)]
 pub struct Bodies {
     pub alloc: Allocator<Body>,
@@ -16,8 +33,6 @@ pub struct Bodies {
 
     pub star: Component<Body, Id<Star>>,
 }
-
-fixed_arena!(Body);
 
 impl Bodies {
     pub fn create(&mut self, row: Body, links: BodyLinks) -> Id<Body> {
@@ -76,21 +91,6 @@ impl Bodies {
 }
 
 #[derive(Debug, Clone)]
-pub struct Body {
-    pub name: String,
-    pub mass: Mass,
-    pub radius: Length,
-    pub orbit: OrbitParams,
-    pub conditions: BodyProperties,
-}
-
-#[derive(Debug, Copy, Clone)]
-pub struct BodyLinks {
-    pub star: Id<Star>,
-    pub parent: Option<Id<Body>>,
-}
-
-#[derive(Debug, Clone)]
 pub struct Planet {
     pub body: Body,
     pub moons: Vec<Body>,
@@ -121,7 +121,7 @@ impl Bodies {
 pub mod examples {
     use super::*;
 
-    pub fn get_earth() -> Body {
+    pub fn earth() -> Body {
         Body {
             name: "Earth".to_string(),
             mass: Mass::in_kg(5.972e24),
@@ -142,7 +142,7 @@ pub mod examples {
         }
     }
 
-    pub fn get_moon() -> Body {
+    pub fn luna() -> Body {
         Body {
             name: "Luna".to_string(),
             mass: Mass::in_kg(7.34767309e22),
