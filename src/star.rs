@@ -1,6 +1,13 @@
 use crate::*;
 use crate::body::Planet;
 
+#[derive(Debug, Clone)]
+pub struct Star {
+    pub name: String,
+    pub position: Position,
+    pub properties: StarProperties,
+}
+
 fixed_arena!(Star);
 
 #[derive(Debug, Default)]
@@ -22,13 +29,6 @@ impl Stars {
 
         id
     }
-}
-
-#[derive(Debug, Clone)]
-pub struct Star {
-    pub name: String,
-    pub position: Position,
-    pub properties: StarProperties,
 }
 
 #[derive(Debug, Clone)]
