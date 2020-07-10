@@ -1,4 +1,12 @@
 use super::*;
+use crate::colony::Colonies;
+
+#[derive(Debug, Clone)]
+pub struct Nation {
+    pub name: String,
+}
+
+dynamic_arena!(Nation);
 
 #[derive(Debug, Default)]
 pub struct Nations {
@@ -27,16 +35,8 @@ impl Nations {
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct Nation {
-    pub name: String,
-}
-
-dynamic_arena!(Nation);
-
 mod population {
     use super::*;
-    use crate::colony::Colonies;
 
     impl Nations {
         pub(super) fn sum_population(&mut self, colonies: &Colonies) {
@@ -65,7 +65,6 @@ mod population {
 
 mod food {
     use super::*;
-    use crate::colony::Colonies;
 
     impl Nations {
         pub fn update_agri_production(&mut self, colony: &Colonies, time: TimeFloat) {
