@@ -36,10 +36,10 @@ pub struct GovernmentRow {
 
 mod population {
     use super::*;
-    use crate::colony::Colony;
+    use crate::colony::Colonies;
 
     impl Nation {
-        pub(super) fn sum_population(&mut self, colonies: &Colony) {
+        pub(super) fn sum_population(&mut self, colonies: &Colonies) {
             self.zero_population();
             self.add_population_from_colonies(colonies);
         }
@@ -50,7 +50,7 @@ mod population {
                 .for_each(|v| *v = Population::zero());
         }
 
-        fn add_population_from_colonies(&mut self, colony: &Colony) {
+        fn add_population_from_colonies(&mut self, colony: &Colonies) {
             colony.population.iter()
                 .zip(colony.nation.iter())
                 .for_each(|(pop, govt)| {
@@ -65,10 +65,10 @@ mod population {
 
 mod food {
     use super::*;
-    use crate::colony::Colony;
+    use crate::colony::Colonies;
 
     impl Nation {
-        pub fn update_agri_production(&mut self, colony: &Colony, time: TimeFloat) {
+        pub fn update_agri_production(&mut self, colony: &Colonies, time: TimeFloat) {
             if time > self.next_agri_update() {
                 self.sum_population(colony);
                 self.sum_food_production(colony);
@@ -84,7 +84,7 @@ mod food {
 
         const AGRI_UPDATE_INTERVAL: DurationFloat = DurationFloat::in_s(30.0 * 3600.0 * 24.0);
 
-        pub fn sum_food_production(&mut self, colony: &Colony) {
+        pub fn sum_food_production(&mut self, colony: &Colonies) {
             self.zero_food_production();
             self.add_production_from_colonies(colony);
         }
@@ -95,7 +95,7 @@ mod food {
                 .for_each(|v| *v = Default::default());
         }
 
-        fn add_production_from_colonies(&mut self, colony: &Colony) {
+        fn add_production_from_colonies(&mut self, colony: &Colonies) {
             colony.food_production.iter()
                 .zip(colony.nation.iter())
                 .for_each(|(production, govt)| {
@@ -151,7 +151,7 @@ impl FoodProductionTarget {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::colony::{ColonyRow, ColonyLinks};
+    use crate::colony::{Colony, ColonyLinks};
     use crate::body::BodyLinks;
     use crate::star::{Star, StarProperties};
 
@@ -212,7 +212,7 @@ mod tests {
         let five_days_worth = population.get_food_requirement() * DurationFloat::in_days(5.0);
 
         let _unfed = colony.create(
-            ColonyRow {
+            Colony {
                 name: "Unfed".to_string(),
                 population,
                 food: five_days_worth,
@@ -225,7 +225,7 @@ mod tests {
         );
 
         let fed = colony.create(
-            ColonyRow {
+            Colony {
                 name: "Fed".to_string(),
                 population,
                 food: five_days_worth,

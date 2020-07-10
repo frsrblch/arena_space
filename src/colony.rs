@@ -2,33 +2,15 @@ use crate::*;
 use crate::body::{Bodies, Body};
 use crate::nation::Nation;
 
-#[derive(Debug, Default)]
-pub struct Colony {
-    pub alloc: Allocator<Self>,
-
-    pub name: Component<Self, String>,
-    pub population: Component<Self, Population>,
-
-    pub food: Component<Self, Mass>,
-    pub food_production: Component<Self, MassRate>,
-    pub hunger: Component<Self, f64>,
-
-    pub body: Component<Self, Id<Body>>,
-    pub nation: Component<Self, Option<Id<Nation>>>,
-
-    last_food_update: TimeFloat,
-    last_production_update: TimeFloat,
-}
-
-dynamic_arena!(Colony);
-
 #[derive(Debug, Clone)]
-pub struct ColonyRow {
+pub struct Colony {
     pub name: String,
     pub population: Population,
     pub food: Mass,
     pub food_production: Option<MassRate>,
 }
+
+dynamic_arena!(Colony);
 
 #[derive(Debug, Copy, Clone)]
 pub struct ColonyLinks {
@@ -36,8 +18,26 @@ pub struct ColonyLinks {
     pub nation: Id<Nation>,
 }
 
-impl Colony {
-    pub fn create(&mut self, row: ColonyRow, links: ColonyLinks) -> Id<Self> {
+#[derive(Debug, Default)]
+pub struct Colonies {
+    pub alloc: Allocator<Colony>,
+
+    pub name: Component<Colony, String>,
+    pub population: Component<Colony, Population>,
+
+    pub food: Component<Colony, Mass>,
+    pub food_production: Component<Colony, MassRate>,
+    pub hunger: Component<Colony, f64>,
+
+    pub body: Component<Colony, Id<Body>>,
+    pub nation: Component<Colony, Option<Id<Nation>>>,
+
+    last_food_update: TimeFloat,
+    last_production_update: TimeFloat,
+}
+
+impl Colonies {
+    pub fn create(&mut self, row: Colony, links: ColonyLinks) -> Id<Colony> {
         let id = self.alloc.create();
 
         self.name.insert(id, row.name);
@@ -55,7 +55,7 @@ impl Colony {
         id.id
     }
 
-    pub fn delete(&mut self, id: Id<Self>) {
+    pub fn delete(&mut self, id: Id<Colony>) {
         if let Some(id) = self.alloc.validate(id) {
             self.population.insert(id, Population::zero());
             self.food.insert(id, Mass::zero());
@@ -72,8 +72,8 @@ impl Colony {
 mod population {
     use super::*;
 
-    impl Colony {
-        pub fn get_population(&self, id: Id<Self>) -> Option<&Population> {
+    impl Colonies {
+        pub fn get_population(&self, id: Id<Colony>) -> Option<&Population> {
             self.alloc.validate(id)
                 .map(|id| self.population.get(id))
         }
@@ -83,7 +83,7 @@ mod population {
 mod production {
     use super::*;
 
-    impl Colony {
+    impl Colonies {
         pub fn update_production(&mut self, nation: &Nation, body: &Bodies, time: TimeFloat) {
             if time > self.last_production_update + Self::PRODUCTION_UPDATE_INTERVAL {
                 self.update_food_production(nation, body);
@@ -120,8 +120,8 @@ mod production {
 mod food {
     use super::*;
 
-    impl Colony {
-        pub fn get_food(&self, id: Id<Self>) -> Option<&Mass> {
+    impl Colonies {
+        pub fn get_food(&self, id: Id<Colony>) -> Option<&Mass> {
             self.alloc.validate(id)
                 .map(|id| self.food.get(id))
         }
@@ -191,11 +191,11 @@ mod tests {
         assert!(ending_food > starting_food);
     }
 
-    fn get_hungry_colony() -> (Colony, Id<Colony>) {
-        let mut colony = Colony::default();
+    fn get_hungry_colony() -> (Colonies, Id<Colony>) {
+        let mut colony = Colonies::default();
 
         let id = colony.create(
-            ColonyRow {
+            Colony {
                 name: "New Spaceville".to_string(),
                 population: Population::in_millions(1.0),
                 food: Mass::in_kg(10e6),
@@ -210,7 +210,7 @@ mod tests {
         (colony, id)
     }
 
-    fn get_fed_colony() -> (Colony, Id<Colony>) {
+    fn get_fed_colony() -> (Colonies, Id<Colony>) {
         let (mut colony, id) = get_hungry_colony();
 
         let id = colony.alloc.validate(id).unwrap();

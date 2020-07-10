@@ -1,6 +1,6 @@
 use crate::star::Stars;
 use crate::body::Bodies;
-use crate::colony::Colony;
+use crate::colony::Colonies;
 use crate::nation::Nation;
 use crate::time::TimeState;
 
@@ -10,7 +10,7 @@ pub struct State {
     pub star: Stars,
     pub body: Bodies,
     pub nation: Nation,
-    pub colony: Colony,
+    pub colony: Colonies,
 }
 
 impl State {
