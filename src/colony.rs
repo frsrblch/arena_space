@@ -1,5 +1,5 @@
 use crate::*;
-use crate::body::Body;
+use crate::body::{Bodies, Body};
 use crate::nation::Nation;
 
 #[derive(Debug, Default)]
@@ -84,7 +84,7 @@ mod production {
     use super::*;
 
     impl Colony {
-        pub fn update_production(&mut self, nation: &Nation, body: &Body, time: TimeFloat) {
+        pub fn update_production(&mut self, nation: &Nation, body: &Bodies, time: TimeFloat) {
             if time > self.last_production_update + Self::PRODUCTION_UPDATE_INTERVAL {
                 self.update_food_production(nation, body);
 
@@ -92,7 +92,7 @@ mod production {
             }
         }
 
-        fn update_food_production(&mut self, nation: &Nation, body: &Body) {
+        fn update_food_production(&mut self, nation: &Nation, body: &Bodies) {
             self.food_production.iter_mut()
                 .zip(self.population.iter())
                 .zip(self.nation.iter())

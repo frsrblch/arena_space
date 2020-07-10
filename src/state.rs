@@ -1,5 +1,5 @@
 use crate::star::Stars;
-use crate::body::Body;
+use crate::body::Bodies;
 use crate::colony::Colony;
 use crate::nation::Nation;
 use crate::time::TimeState;
@@ -8,7 +8,7 @@ use crate::time::TimeState;
 pub struct State {
     pub time: TimeState,
     pub star: Stars,
-    pub body: Body,
+    pub body: Bodies,
     pub nation: Nation,
     pub colony: Colony,
 }

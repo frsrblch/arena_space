@@ -5,22 +5,22 @@ pub use components::*;
 mod components;
 
 #[derive(Debug, Default)]
-pub struct Body {
-    pub alloc: Allocator<Self>,
+pub struct Bodies {
+    pub alloc: Allocator<Body>,
 
-    pub name: Component<Self, String>,
-    pub mass: Component<Self, Mass>,
-    pub radius: Component<Self, Length>,
-    pub orbit: Component<Self, Orbit>,
-    pub properties: Component<Self, BodyProperties>,
+    pub name: Component<Body, String>,
+    pub mass: Component<Body, Mass>,
+    pub radius: Component<Body, Length>,
+    pub orbit: Component<Body, Orbit>,
+    pub properties: Component<Body, BodyProperties>,
 
-    pub star: Component<Self, Id<Star>>,
+    pub star: Component<Body, Id<Star>>,
 }
 
 fixed_arena!(Body);
 
-impl Body {
-    pub fn create(&mut self, row: BodyRow, links: BodyLinks) -> Id<Self> {
+impl Bodies {
+    pub fn create(&mut self, row: Body, links: BodyLinks) -> Id<Body> {
         let id = self.alloc.create();
 
         self.name.insert(id, row.name);
@@ -76,7 +76,7 @@ impl Body {
 }
 
 #[derive(Debug, Clone)]
-pub struct BodyRow {
+pub struct Body {
     pub name: String,
     pub mass: Mass,
     pub radius: Length,
@@ -92,11 +92,11 @@ pub struct BodyLinks {
 
 #[derive(Debug, Clone)]
 pub struct Planet {
-    pub body: BodyRow,
-    pub moons: Vec<BodyRow>,
+    pub body: Body,
+    pub moons: Vec<Body>,
 }
 
-impl Body {
+impl Bodies {
     pub fn create_planet(&mut self, row: Planet, star: Id<Star>) -> Id<Body> {
         let links = BodyLinks {
             star,
@@ -121,8 +121,8 @@ impl Body {
 pub mod examples {
     use super::*;
 
-    pub fn get_earth() -> BodyRow {
-        BodyRow {
+    pub fn get_earth() -> Body {
+        Body {
             name: "Earth".to_string(),
             mass: Mass::in_kg(5.972e24),
             radius: Length::in_m(6371e3),
@@ -142,8 +142,8 @@ pub mod examples {
         }
     }
 
-    pub fn get_moon() -> BodyRow {
-        BodyRow {
+    pub fn get_moon() -> Body {
+        Body {
             name: "Luna".to_string(),
             mass: Mass::in_kg(7.34767309e22),
             radius: Length::in_m(1737.1e3),
