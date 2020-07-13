@@ -12,12 +12,18 @@ pub struct TimeState {
 }
 
 impl TimeState {
+    pub fn set_date_time(&mut self, date_time: DateTime) {
+        debug_assert!(date_time >= self.game_time);
+        self.game_time = date_time;
+        self.time_float = Self::get_as_float(self.game_time)
+    }
+
     pub fn get_time_float(&self) -> TimeFloat {
         self.time_float
     }
 
     fn get_as_float(date_time: DateTime) -> TimeFloat {
-        let game_duration: chrono::Duration = date_time - starting_date();
+        let game_duration: Duration = date_time - starting_date();
         let seconds = game_duration.num_milliseconds() as f64 / 1e3;
         TimeFloat::in_s(seconds)
     }
@@ -25,8 +31,8 @@ impl TimeState {
 
 impl AddAssign<StdDuration> for TimeState {
     fn add_assign(&mut self, rhs: StdDuration) {
-        self.game_time = self.game_time + Duration::from_std(rhs).unwrap();
-        self.time_float = Self::get_as_float(self.game_time)
+        let new_date_time = self.game_time + Duration::from_std(rhs).expect("invalid DateTime after adding Duration");
+        self.set_date_time(new_date_time);
     }
 }
 
@@ -39,7 +45,7 @@ impl Default for TimeState {
     }
 }
 
-fn starting_date() -> DateTime {
+pub fn starting_date() -> DateTime {
     let date = NaiveDate::from_ymd(2050, 1, 1);
     let time = NaiveTime::from_hms(0, 0, 0);
     NaiveDateTime::new(date, time)

@@ -11,6 +11,7 @@ pub use orbit::*;
 use rand::Rng;
 use rand::distributions::{Distribution, Standard};
 use std::iter::Sum;
+use chrono::Duration;
 
 mod orbit;
 
@@ -119,6 +120,21 @@ impl DurationFloat {
     }
 
     pub const SECONDS_PER_DAY: f64 = 3600.0 * 24.0;
+}
+
+impl From<chrono::Duration> for DurationFloat {
+    fn from(duration: Duration) -> Self {
+        let seconds = duration.num_milliseconds() as f64 / 1e3;
+        DurationFloat::in_s(seconds)
+    }
+}
+
+#[test]
+fn duration_float_from_duration() {
+    let one_second = chrono::Duration::seconds(1);
+    let one_second = DurationFloat::from(one_second);
+
+    assert_eq!(DurationFloat::in_s(1.0), one_second);
 }
 
 scalar!(MassRate, kg_per_second, kg_per_s);

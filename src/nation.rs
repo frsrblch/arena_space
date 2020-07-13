@@ -67,21 +67,11 @@ mod food {
     use super::*;
 
     impl Nations {
-        pub fn update_agri_production(&mut self, colony: &Colonies, time: TimeFloat) {
-            if time > self.next_agri_update() {
-                self.sum_population(colony);
-                self.sum_food_production(colony);
-                self.set_agriculture_directive();
-
-                self.last_agri_update += Self::AGRI_UPDATE_INTERVAL;
-            }
+        pub fn update_food_targets(&mut self, colony: &Colonies) {
+            self.sum_population(colony);
+            self.sum_food_production(colony);
+            self.set_agriculture_directive();
         }
-
-        fn next_agri_update(&self) -> TimeFloat {
-            self.last_agri_update + Self::AGRI_UPDATE_INTERVAL
-        }
-
-        const AGRI_UPDATE_INTERVAL: DurationFloat = DurationFloat::in_s(30.0 * 3600.0 * 24.0);
 
         pub fn sum_food_production(&mut self, colony: &Colonies) {
             self.zero_food_production();
@@ -91,7 +81,7 @@ mod food {
         fn zero_food_production(&mut self) {
             self.food_production
                 .iter_mut()
-                .for_each(|v| *v = Default::default());
+                .for_each(|v| *v = MassRate::zero());
         }
 
         fn add_production_from_colonies(&mut self, colony: &Colonies) {
@@ -153,58 +143,30 @@ mod tests {
     use super::*;
     use crate::colony::{Colony, ColonyLinks};
     use crate::body::BodyLinks;
-    use crate::star::{Star, StarProperties};
+    use crate::star::{Star, StarType};
 
-    #[test]
-    fn watch_two_colonies() {
-        let (mut state, nation_id) = get_fed_and_hungry_colonies();
+    #[allow(dead_code)]
+    pub fn get_fed_and_hungry_colonies() -> (SystemState, Id<Nation>) {
+        let mut state = SystemState::default();
 
-        while state.time.get_time_float() < TimeFloat::in_days(360.0) {
-            let interval = std::time::Duration::from_secs(24 * 3600 * 10);
-
-            state.update(interval);
-
-            let colony = &state.colony;
-            colony.alloc.ids()
-                .filter_map(|id| id)
-                .for_each(|id| {
-                    println!(
-                        "{:<8}  Food: {:>10}    Population: {:>6}    Production: {:0}    H: {:.3}",
-                        format!("{}:", colony.name.get(id)),
-                        format!("{}", colony.food.get(id).tons()),
-                        format!("{}", colony.population.get(id).millions()),
-                        colony.food_production.get(id).tons_per_day(),
-                        colony.hunger.get(id)
-                    );
-                });
-            println!("Target: {:?}", state.nation.get_food_production_target(nation_id).unwrap());
-            println!();
-        }
-
-        // assert!(false);
-    }
-
-    fn get_fed_and_hungry_colonies() -> (State, Id<Nation>) {
-        let mut state = State::default();
-
-        let star = state.star.create(Star {
+        let star = state.state.star.create(Star {
             name: "Sol".to_string(),
             position: Default::default(),
-            properties: StarProperties::g(Fraction::new(0.5)),
+            star_type: StarType::G(Fraction::new(0.5)),
         });
 
-        let earth = state.body.create(
+        let earth = state.state.body.create(
             crate::body::examples::earth(),
             BodyLinks { star, parent: None }
         );
 
-        let moon = state.body.create(
+        let moon = state.state.body.create(
             crate::body::examples::luna(),
             BodyLinks { star, parent: Some(earth) }
         );
 
-        let nation = &mut state.nation;
-        let colony = &mut state.colony;
+        let nation = &mut state.state.nation;
+        let colony = &mut state.state.colony;
 
         let nation_id = nation.create(Nation { name: "Nation".to_string() });
 

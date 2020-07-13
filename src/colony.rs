@@ -84,15 +84,9 @@ mod production {
     use super::*;
 
     impl Colonies {
-        pub fn update_production(&mut self, nation: &Nations, body: &Bodies, time: TimeFloat) {
-            if time > self.last_production_update + Self::PRODUCTION_UPDATE_INTERVAL {
-                self.update_food_production(nation, body);
+        pub fn update_food_production_rate(&mut self, nation: &Nations, body: &Bodies) {
+            let year_fraction = Self::get_year_fraction();
 
-                self.last_production_update += Self::PRODUCTION_UPDATE_INTERVAL;
-            }
-        }
-
-        fn update_food_production(&mut self, nation: &Nations, body: &Bodies) {
             self.food_production.iter_mut()
                 .zip(self.population.iter())
                 .zip(self.nation.iter())
@@ -103,8 +97,6 @@ mod production {
                         .get_habitability()
                         .get_food_production_multiplier();
 
-                    let year_fraction = Self::PRODUCTION_UPDATE_INTERVAL / DurationFloat::in_s(365.25 * 24.0 * 3600.0);
-
                     let target_multiplier = nation.get_food_production_target(nation_id)
                         .map(|t| t.get_multiplier())
                         .unwrap_or(0.0);
@@ -113,7 +105,13 @@ mod production {
                 });
         }
 
-        const PRODUCTION_UPDATE_INTERVAL: DurationFloat = DurationFloat::in_s(5.0 * 24.0 * 3600.0);
+        fn get_year_fraction() -> f64 {
+            Self::production_update_interval() / DurationFloat::in_s(365.25 * 24.0 * 3600.0)
+        }
+
+        fn production_update_interval() -> DurationFloat {
+            crate::systems::System::ColonyFoodProductionRate.get_interval().into()
+        }
     }
 }
 
@@ -126,24 +124,18 @@ mod food {
                 .map(|id| self.food.get(id))
         }
 
-        pub fn produce_and_consume_food(&mut self, time: TimeFloat) {
-            while time > self.last_food_update + Self::FOOD_UPDATE_INTERVAL {
-                self.update_food_and_hunger();
-
-                self.last_food_update += Self::FOOD_UPDATE_INTERVAL;
-            }
-        }
-
-        fn update_food_and_hunger(&mut self) {
+        pub fn produce_and_consume_food(&mut self) {
             self.food.iter_mut()
                 .zip(self.hunger.iter_mut())
                 .zip(self.food_production.iter())
                 .zip(self.population.iter())
                 .for_each(|(((food, hunger), production_rate), pop)| {
-                    let production = production_rate * Self::FOOD_UPDATE_INTERVAL;
+                    let interval = Self::food_update_interval();
+
+                    let production = production_rate * interval;
 
                     let consumption_rate = pop.get_food_requirement();
-                    let consumption = consumption_rate * Self::FOOD_UPDATE_INTERVAL;
+                    let consumption = consumption_rate * interval;
 
                     *food += production - consumption;
                     *hunger = -(food.min(Mass::zero()) / consumption);
@@ -151,7 +143,9 @@ mod food {
                 });
         }
 
-        const FOOD_UPDATE_INTERVAL: DurationFloat = DurationFloat::in_s(1.0 * 3600.0 * 24.0);
+        pub(super) fn food_update_interval() -> DurationFloat {
+            crate::systems::System::ColonyFoodProduction.get_interval().into()
+        }
     }
 }
 
@@ -165,9 +159,9 @@ mod tests {
         let (mut colony, id) = get_hungry_colony();
 
         while time < TimeFloat::in_days(10.0) {
-            time += DurationFloat::in_s(1.0 * 3600.0);
+            time += Colonies::food_update_interval();
 
-            colony.produce_and_consume_food(time);
+            colony.produce_and_consume_food();
         }
 
         assert_eq!(Mass::zero(), *colony.get_food(id).unwrap());
@@ -181,9 +175,9 @@ mod tests {
         let starting_food = *colony.get_food(id).unwrap();
 
         while time < TimeFloat::in_days(100.0) {
-            time += DurationFloat::in_s(1.0 * 3600.0);
+            time += Colonies::food_update_interval();
 
-            colony.produce_and_consume_food(time);
+            colony.produce_and_consume_food();
         }
 
         let ending_food = *colony.get_food(id).unwrap();

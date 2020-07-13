@@ -5,7 +5,7 @@ use crate::body::Planet;
 pub struct Star {
     pub name: String,
     pub position: Position,
-    pub properties: StarProperties,
+    pub star_type: StarType,
 }
 
 fixed_arena!(Star);
@@ -16,7 +16,7 @@ pub struct Stars {
 
     pub name: Component<Star, String>,
     pub position: Component<Star, Position>,
-    pub properties: Component<Star, StarProperties>,
+    pub star_type: Component<Star, StarType>,
 }
 
 impl Stars {
@@ -25,7 +25,7 @@ impl Stars {
 
         self.name.insert(id, row.name);
         self.position.insert(id, row.position);
-        self.properties.insert(id, row.properties);
+        self.star_type.insert(id, row.star_type);
 
         id
     }
@@ -47,50 +47,35 @@ impl State {
     }
 }
 
-// star generation
-// simplest to randomly generate star type based on observed star distribution, and pick random attributes based on the type
 #[derive(Debug, Copy, Clone)]
-pub struct StarProperties {
-    pub classification: StarClassification,
-    pub fraction: Fraction,
+pub enum StarType {
+    G(Fraction)
 }
 
-impl StarProperties {
-    pub fn g(fraction: Fraction) -> Self {
-        StarProperties {
-            classification: StarClassification::G,
-            fraction,
-        }
-    }
-
+impl StarType {
     pub fn get_temperature(self) -> Temperature {
-        let kelvin = match self.classification {
-            StarClassification::G => 5e3 + self.fraction * 1e3,
+        let kelvin = match self {
+            StarType::G(fraction) => 5e3 + fraction * 1e3,
         };
 
         Temperature::in_k(kelvin)
     }
 
     pub fn get_radius(self) -> Length {
-        let solar_fraction: f64 = match self.classification {
-            StarClassification::G => 0.85 + self.fraction * 0.3,
+        let solar_fraction: f64 = match self {
+            StarType::G(fraction) => 0.85 + fraction * 0.3,
         };
 
         SOLAR_RADIUS * solar_fraction
     }
 
     pub fn get_mass(self) -> Mass {
-        let solar_fraction: f64 = match self.classification {
-            StarClassification::G => 0.85 + self.fraction * 0.3,
+        let solar_fraction: f64 = match self {
+            StarType::G(fraction) => 0.85 + fraction * 0.3,
         };
 
         SOLAR_MASS * solar_fraction
     }
-}
-
-#[derive(Debug, Copy, Clone)]
-pub enum StarClassification {
-    G
 }
 
 const SOLAR_MASS: Mass = Mass::in_kg(1.9884e30);
