@@ -1,13 +1,14 @@
 use crate::*;
 use crate::body::{Bodies, Body};
 use crate::nation::{Nations, Nation};
+use crate::systems::System;
 
 #[derive(Debug, Clone)]
 pub struct Colony {
     pub name: String,
     pub population: Population,
     pub food: Mass,
-    pub food_production: Option<MassRate>,
+    pub food_production_override: Option<MassRate>,
 }
 
 dynamic_arena!(Colony);
@@ -31,9 +32,6 @@ pub struct Colonies {
 
     pub body: Component<Colony, Id<Body>>,
     pub nation: Component<Colony, Option<Id<Nation>>>,
-
-    last_food_update: TimeFloat,
-    last_production_update: TimeFloat,
 }
 
 impl Colonies {
@@ -44,7 +42,7 @@ impl Colonies {
         self.population.insert(id, row.population);
         self.food.insert(id, row.food);
 
-        let food_production = row.food_production.unwrap_or(row.population.get_food_requirement());
+        let food_production = row.food_production_override.unwrap_or(row.population.get_food_requirement());
         self.food_production.insert(id, food_production);
 
         self.hunger.insert(id, 0.0);
@@ -77,6 +75,30 @@ mod population {
             self.alloc.validate(id)
                 .map(|id| self.population.get(id))
         }
+
+        // Logistic function:   dN/dt = r * N
+        //                      dN/dt = r_max * (K - N) / K * N
+        //
+        // wherer:              N = population
+        //                      r = growth rate (zero growth = 1.0)
+        // where:               K = N_max * r_max / (r_max - 1)
+        //                      N_max = ρ_max * area
+        //                      ρ_max = 11 billion / 510 million sq km = 21.6 people / sq km
+        pub fn update_population(&mut self) {
+            let year_fraction = System::ColonyPopulation.get_interval_as_year_fraction();
+
+            self.population.iter_mut()
+                .zip(self.hunger.iter())
+                .for_each(|(pop, hunger)| {
+                    // TODO: population growth based on population density and the logistic function
+
+                    let annual_growth_rate = 1.0 + Self::BASE_GROWTH_RATE * (1.0 - 3.0 * hunger);
+                    let population_multiplier = annual_growth_rate.powf(year_fraction);
+                    *pop *= population_multiplier;
+                });
+        }
+
+        const BASE_GROWTH_RATE: f64 = 0.02;
     }
 }
 
@@ -85,7 +107,7 @@ mod production {
 
     impl Colonies {
         pub fn update_food_production_rate(&mut self, nation: &Nations, body: &Bodies) {
-            let year_fraction = Self::get_year_fraction();
+            let year_fraction = System::ColonyFoodProductionRate.get_interval_as_year_fraction();
 
             self.food_production.iter_mut()
                 .zip(self.population.iter())
@@ -103,14 +125,6 @@ mod production {
 
                     *production += population.get_food_requirement() * year_fraction * target_multiplier * habitability_multiplier;
                 });
-        }
-
-        fn get_year_fraction() -> f64 {
-            Self::production_update_interval() / DurationFloat::in_s(365.25 * 24.0 * 3600.0)
-        }
-
-        fn production_update_interval() -> DurationFloat {
-            crate::systems::System::ColonyFoodProductionRate.get_interval().into()
         }
     }
 }
@@ -130,7 +144,7 @@ mod food {
                 .zip(self.food_production.iter())
                 .zip(self.population.iter())
                 .for_each(|(((food, hunger), production_rate), pop)| {
-                    let interval = Self::food_update_interval();
+                    let interval = System::ColonyFoodProduction.get_interval_float();
 
                     let production = production_rate * interval;
 
@@ -142,16 +156,13 @@ mod food {
                     *food = food.max(Mass::zero());
                 });
         }
-
-        pub(super) fn food_update_interval() -> DurationFloat {
-            crate::systems::System::ColonyFoodProduction.get_interval().into()
-        }
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::body::BodyLinks;
 
     #[test]
     fn food_consumption_hungry() {
@@ -159,7 +170,7 @@ mod tests {
         let (mut colony, id) = get_hungry_colony();
 
         while time < TimeFloat::in_days(10.0) {
-            time += Colonies::food_update_interval();
+            time += System::ColonyFoodProduction.get_interval_float();
 
             colony.produce_and_consume_food();
         }
@@ -175,7 +186,7 @@ mod tests {
         let starting_food = *colony.get_food(id).unwrap();
 
         while time < TimeFloat::in_days(100.0) {
-            time += Colonies::food_update_interval();
+            time += System::ColonyFoodProduction.get_interval_float();
 
             colony.produce_and_consume_food();
         }
@@ -193,7 +204,7 @@ mod tests {
                 name: "New Spaceville".to_string(),
                 population: Population::in_millions(1.0),
                 food: Mass::in_kg(10e6),
-                food_production: Some(MassRate::zero()),
+                food_production_override: Some(MassRate::zero()),
             },
             ColonyLinks {
                 body: body(),
@@ -222,5 +233,85 @@ mod tests {
 
     fn govt() -> Id<Nation> {
         Allocator::<Nation>::default().create().id()
+    }
+
+    #[test]
+    fn population_growth_fed_colony() {
+        let (mut state, id) = get_fed_colony_system_state();
+        let colony = &mut state.state.colony;
+
+        let population_before = *colony.get_population(id).unwrap();
+
+        let end_time = state.state.time.get_time() + chrono::Duration::days(30);
+        state.update(end_time);
+
+        let colony = &mut state.state.colony;
+        let population_after = *colony.get_population(id).unwrap();
+
+        assert!(population_after > population_before);
+    }
+
+    fn get_fed_colony_system_state() -> (SystemState, Id<Colony>) {
+        let mut state = SystemState::default();
+
+        let star = crate::star::examples::sol();
+        let star = state.state.star.create(star);
+
+        let body = crate::body::examples::earth();
+        let body = state.state.body.create(body, BodyLinks { star, parent: None });
+
+        let nation = crate::nation::examples::humanity();
+        let nation = state.state.nation.create(nation);
+
+        let population = Population::in_millions(8_532.0);
+        let colony = Colony {
+            name: "Earth Sphere".to_string(),
+            population,
+            food: population.get_food_requirement() * DurationFloat::in_days(90.0),
+            food_production_override: None
+        };
+        let colony = state.state.colony.create(colony, ColonyLinks { body, nation });
+
+        (state, colony)
+    }
+
+    #[test]
+    fn population_growth_hungry_colony() {
+        let (mut state, id) = get_hungry_colony_system_state();
+        let colony = &mut state.state.colony;
+
+        let population_before = *colony.get_population(id).unwrap();
+
+        let end_time = state.state.time.get_time() + chrono::Duration::days(30);
+        state.update(end_time);
+
+        let colony = &mut state.state.colony;
+        let population_after = *colony.get_population(id).unwrap();
+
+        assert!(population_after < population_before);
+    }
+
+    fn get_hungry_colony_system_state() -> (SystemState, Id<Colony>) {
+        let mut state = SystemState::default();
+
+        let star = crate::star::examples::sol();
+        let star = state.state.star.create(star);
+
+        let body = crate::body::examples::earth();
+        let body = state.state.body.create(body, BodyLinks { star, parent: None });
+
+        let nation = crate::nation::examples::humanity();
+        let nation = state.state.nation.create(nation);
+
+        let population = Population::in_millions(8_532.0);
+        let colony = Colony {
+            name: "Earth Sphere".to_string(),
+            population,
+            food: Mass::zero(),
+            food_production_override: Some(MassRate::zero()),
+        };
+        let colony = state.state.colony.create(colony, ColonyLinks { body, nation });
+
+        (state, colony)
     }
 }

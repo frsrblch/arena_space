@@ -2,6 +2,7 @@ use std::collections::BTreeSet;
 use crate::time::DateTime;
 use chrono::Duration;
 use crate::state::State;
+use crate::components::DurationFloat;
 
 #[derive(Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub struct UpdateToken {
@@ -27,6 +28,7 @@ pub enum System {
     ColonyFoodProduction,
     NationFoodTargets,
     ColonyFoodProductionRate,
+    ColonyPopulation,
 }
 
 impl System {
@@ -35,6 +37,7 @@ impl System {
             System::ColonyFoodProduction,
             System::NationFoodTargets,
             System::ColonyFoodProductionRate,
+            System::ColonyPopulation,
         ]
             .into_iter()
     }
@@ -44,6 +47,7 @@ impl System {
             System::NationFoodTargets => state.nation.update_food_targets(&state.colony),
             System::ColonyFoodProductionRate => state.colony.update_food_production_rate(&state.nation, &state.body),
             System::ColonyFoodProduction => state.colony.produce_and_consume_food(),
+            System::ColonyPopulation => state.colony.update_population(),
         }
     }
 
@@ -59,7 +63,16 @@ impl System {
             System::NationFoodTargets => Duration::days(30),
             System::ColonyFoodProductionRate => Duration::days(5),
             System::ColonyFoodProduction => Duration::days(1),
+            System::ColonyPopulation => Duration::days(5),
         }
+    }
+
+    pub fn get_interval_float(self) -> DurationFloat {
+        self.get_interval().into()
+    }
+
+    pub fn get_interval_as_year_fraction(self) -> f64 {
+        self.get_interval_float() / DurationFloat::in_days(365.25)
     }
 }
 
@@ -149,7 +162,7 @@ mod tests {
 
     #[test]
     fn system_ord() {
-        assert!(System::ColonyFoodProduction < System::ColonyFoodProductionRate);
-        assert!(System::NationFoodTargets < System::ColonyFoodProductionRate);
+        assert!(System::ColonyFoodProduction.get_first_token() < System::ColonyFoodProductionRate.get_first_token());
+        assert!(System::NationFoodTargets.get_first_token() < System::ColonyFoodProductionRate.get_first_token());
     }
 }

@@ -17,8 +17,6 @@ pub struct Nations {
     pub population: Component<Nation, Population>,
     pub food_production: Component<Nation, MassRate>,
     pub agriculture: Component<Nation, FoodProductionTarget>,
-
-    last_agri_update: TimeFloat,
 }
 
 impl Nations {
@@ -178,7 +176,7 @@ mod tests {
                 name: "Unfed".to_string(),
                 population,
                 food: five_days_worth,
-                food_production: Some(MassRate::zero()),
+                food_production_override: Some(MassRate::zero()),
             },
             ColonyLinks {
                 body: moon,
@@ -191,7 +189,7 @@ mod tests {
                 name: "Fed".to_string(),
                 population,
                 food: five_days_worth,
-                food_production: None, // defaults to population requirement
+                food_production_override: None, // defaults to population requirement
             },
             ColonyLinks {
                 body: earth,
@@ -204,5 +202,15 @@ mod tests {
         }
 
         (state, nation_id)
+    }
+}
+
+pub mod examples {
+    use super::Nation;
+
+    pub fn humanity() -> Nation {
+        Nation {
+            name: "Humanity".to_string()
+        }
     }
 }

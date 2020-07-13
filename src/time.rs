@@ -18,6 +18,10 @@ impl TimeState {
         self.time_float = Self::get_as_float(self.game_time)
     }
 
+    pub fn get_time(&self) -> DateTime {
+        self.game_time
+    }
+
     pub fn get_time_float(&self) -> TimeFloat {
         self.time_float
     }
