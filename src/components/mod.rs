@@ -194,7 +194,7 @@ impl Into<f64> for Fraction {
 
 impl Fraction {
     pub fn new(value: f64) -> Self {
-        if value == f64::NEG_INFINITY || value == f64::NAN {
+        if value == f64::NEG_INFINITY || value.is_nan() {
             return Self(0.0)
         }
 

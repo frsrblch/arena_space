@@ -18,7 +18,7 @@ use super::*;
             Self::in_m(x * Self::M_PER_LY, y * Self::M_PER_LY)
         }
 
-        const M_PER_LY: f64 = 9.460_730_472_580_800e15;
+        const M_PER_LY: f64 = 9.460_730_472_580_8e15;
     }
 
     impl From<Distance> for Position {
