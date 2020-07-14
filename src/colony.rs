@@ -98,8 +98,9 @@ mod population {
                     let area = bodies.get_land_area(body);
                     let max_pop = area * Self::MAX_POPULATION_DENSITY;
                     let k = max_pop * (Self::BASE_GROWTH_MULTIPLIER / Self::BASE_GROWTH_RATE);
+                    let hunger_multiplier = (1.0 - 0.25 * hunger);
 
-                    let annual_growth_rate = Self::BASE_GROWTH_MULTIPLIER * (k - *pop) / k * (1.0 - 0.5 * hunger);
+                    let annual_growth_rate = Self::BASE_GROWTH_MULTIPLIER * (k - *pop) / k * hunger_multiplier;
                     dbg!(annual_growth_rate);
                     let population_multiplier = annual_growth_rate.powf(year_fraction);
 
@@ -107,7 +108,7 @@ mod population {
                 });
         }
 
-        const BASE_GROWTH_RATE: f64 = 0.02;
+        const BASE_GROWTH_RATE: f64 = 0.025;
         const BASE_GROWTH_MULTIPLIER: f64 = 1.0 + Self::BASE_GROWTH_RATE;
 
         /// 12 billion / 104e6 sq km
