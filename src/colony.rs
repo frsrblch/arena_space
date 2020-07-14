@@ -101,7 +101,6 @@ mod population {
                     let hunger_multiplier = (1.0 - 0.25 * hunger);
 
                     let annual_growth_rate = Self::BASE_GROWTH_MULTIPLIER * (k - *pop) / k * hunger_multiplier;
-                    dbg!(annual_growth_rate);
                     let population_multiplier = annual_growth_rate.powf(year_fraction);
 
                     *pop *= population_multiplier;
