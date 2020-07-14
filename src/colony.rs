@@ -89,6 +89,8 @@ mod population {
         //
         //                      land usage: https://ourworldindata.org/land-use
         pub fn update_population(&mut self, bodies: &Bodies) {
+            // TODO: body sum population from colonies so that multiple colonies on one planet limit growth (e.g., Earth)
+
             let year_fraction = System::ColonyPopulation.get_interval_as_year_fraction();
 
             self.population.iter_mut()
