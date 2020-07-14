@@ -82,23 +82,36 @@ mod population {
         // wherer:              N = population
         //                      r = growth rate (zero growth = 1.0)
         // where:               K = N_max * r_max / (r_max - 1)
-        //                      N_max = ρ_max * area
-        //                      ρ_max = 11 billion / 510 million sq km = 21.6 people / sq km
-        pub fn update_population(&mut self) {
+        //                      N_max = ρ_max * surface area * land fraction * habitable fraction
+        //                      land fraction = land area / total area
+        //                      habitable fraction = habitable area / land area
+        //                      ρ_max = 12 billion / 104 million sq km
+        //
+        //                      land usage: https://ourworldindata.org/land-use
+        pub fn update_population(&mut self, bodies: &Bodies) {
             let year_fraction = System::ColonyPopulation.get_interval_as_year_fraction();
 
             self.population.iter_mut()
                 .zip(self.hunger.iter())
-                .for_each(|(pop, hunger)| {
-                    // TODO: population growth based on population density and the logistic function
+                .zip(self.body.iter())
+                .for_each(|((pop, hunger), body)| {
+                    let area = bodies.get_land_area(body);
+                    let max_pop = area * Self::MAX_POPULATION_DENSITY;
+                    let k = max_pop * (Self::BASE_GROWTH_MULTIPLIER / Self::BASE_GROWTH_RATE);
 
-                    let annual_growth_rate = 1.0 + Self::BASE_GROWTH_RATE * (1.0 - 3.0 * hunger);
+                    let annual_growth_rate = Self::BASE_GROWTH_MULTIPLIER * (k - *pop) / k * (1.0 - 0.5 * hunger);
+                    dbg!(annual_growth_rate);
                     let population_multiplier = annual_growth_rate.powf(year_fraction);
+
                     *pop *= population_multiplier;
                 });
         }
 
         const BASE_GROWTH_RATE: f64 = 0.02;
+        const BASE_GROWTH_MULTIPLIER: f64 = 1.0 + Self::BASE_GROWTH_RATE;
+
+        /// 12 billion / 104e6 sq km
+        const MAX_POPULATION_DENSITY: PopulationDensity = PopulationDensity::in_people_per_square_km(12e9 / 104e6);
     }
 }
 
@@ -252,16 +265,7 @@ mod tests {
     }
 
     fn get_fed_colony_system_state() -> (SystemState, Id<Colony>) {
-        let mut state = SystemState::default();
-
-        let star = crate::star::examples::sol();
-        let star = state.state.star.create(star);
-
-        let body = crate::body::examples::earth();
-        let body = state.state.body.create(body, BodyLinks { star, parent: None });
-
-        let nation = crate::nation::examples::humanity();
-        let nation = state.state.nation.create(nation);
+        let (mut state, body, nation) = get_base();
 
         let population = Population::in_millions(8_532.0);
         let colony = Colony {
@@ -282,7 +286,7 @@ mod tests {
 
         let population_before = *colony.get_population(id).unwrap();
 
-        let end_time = state.state.time.get_time() + chrono::Duration::days(30);
+        let end_time = state.state.time.get_time() + chrono::Duration::days(365);
         state.update(end_time);
 
         let colony = &mut state.state.colony;
@@ -292,16 +296,7 @@ mod tests {
     }
 
     fn get_hungry_colony_system_state() -> (SystemState, Id<Colony>) {
-        let mut state = SystemState::default();
-
-        let star = crate::star::examples::sol();
-        let star = state.state.star.create(star);
-
-        let body = crate::body::examples::earth();
-        let body = state.state.body.create(body, BodyLinks { star, parent: None });
-
-        let nation = crate::nation::examples::humanity();
-        let nation = state.state.nation.create(nation);
+        let (mut state, body, nation) = get_base();
 
         let population = Population::in_millions(8_532.0);
         let colony = Colony {
@@ -313,5 +308,51 @@ mod tests {
         let colony = state.state.colony.create(colony, ColonyLinks { body, nation });
 
         (state, colony)
+    }
+
+    #[test]
+    fn population_growth_overpopulated_colony() {
+        let (mut state, id) = get_overpopulated_colony_system_state();
+        let colony = &mut state.state.colony;
+
+        let population_before = *colony.get_population(id).unwrap();
+
+        let end_time = state.state.time.get_time() + chrono::Duration::days(365);
+        state.update(end_time);
+
+        let colony = &mut state.state.colony;
+        let population_after = *colony.get_population(id).unwrap();
+
+        assert!(population_after < population_before);
+    }
+
+    fn get_overpopulated_colony_system_state() -> (SystemState, Id<Colony>) {
+        let (mut state, body, nation) = get_base();
+
+        let population = Population::in_millions(50_000.0);
+        let colony = Colony {
+            name: "Sardine Can".to_string(),
+            population,
+            food: population.get_food_requirement() * DurationFloat::in_days(90.0),
+            food_production_override: None,
+        };
+        let colony = state.state.colony.create(colony, ColonyLinks { body, nation });
+
+        (state, colony)
+    }
+
+    fn get_base() -> (SystemState, Id<Body>, Id<Nation>) {
+        let mut state = SystemState::default();
+
+        let star = crate::star::examples::sol();
+        let star = state.state.star.create(star);
+
+        let body = crate::body::examples::earth();
+        let body = state.state.body.create(body, BodyLinks { star, parent: None });
+
+        let nation = crate::nation::examples::humanity();
+        let nation = state.state.nation.create(nation);
+
+        (state, body, nation)
     }
 }

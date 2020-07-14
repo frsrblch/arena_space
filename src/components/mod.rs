@@ -81,12 +81,27 @@ impl Distance {
     }
 }
 
+scalar!(Area, square_meters, m2);
+
+impl Area {
+    pub fn in_square_km(value: f64) -> Self {
+        Self::in_m2(value * 1e6)
+    }
+}
+
+impl Mul<Length> for Length {
+    type Output = Area;
+    fn mul(self, rhs: Self) -> Self::Output {
+        Area::new(self.value * rhs.value)
+    }
+}
+
 scalar!(PixelScale, meters_per_pixel, m_per_px, f32);
 
 scalar!(Population, f64);
 
 impl Population {
-    pub fn in_millions(mm_people: f64) -> Self {
+    pub const fn in_millions(mm_people: f64) -> Self {
         Self::new(mm_people * 1e6)
     }
 
@@ -111,6 +126,16 @@ impl Display for Millions {
         write!(f, "{:.0}M", self.0.value / 1e6)
     }
 }
+
+scalar!(PopulationDensity, f64);
+
+impl PopulationDensity {
+    pub const fn in_people_per_square_km(value: f64) -> Self {
+        Self::new(value / 1e6)
+    }
+}
+
+scalar_div!(Population, Area, PopulationDensity);
 
 scalar!(DurationFloat, seconds, s);
 
@@ -189,9 +214,21 @@ impl Fraction {
     }
 }
 
+impl Eq for Fraction {
+
+}
+
 impl Distribution<Fraction> for Standard {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Fraction {
         Fraction(rng.gen_range(0.0, 1.0))
+    }
+}
+
+impl Mul<Fraction> for Fraction {
+    type Output = Fraction;
+
+    fn mul(self, rhs: Fraction) -> Self::Output {
+        Self::new(self.0 * rhs.0)
     }
 }
 

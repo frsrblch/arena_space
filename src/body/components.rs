@@ -1,6 +1,7 @@
 use Surface::*;
 use Pressure::*;
 use Habitability::*;
+use crate::components::Fraction;
 
 /// The ability of an environment to support human life.
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
@@ -46,7 +47,7 @@ pub struct BodyProperties {
 impl Default for BodyProperties {
     fn default() -> Self {
         Self {
-            surface: Surface::Rocky,
+            surface: Surface::Barren,
             pressure: Pressure::Vacuum,
             oxygen: AtmosphericOxygen::None,
             hydrosphere: Hydrosphere::None,
@@ -76,9 +77,11 @@ pub enum Surface {
     /// A glacial planet covered by ice
     Frozen,
     /// A barren, rocky surface, e.g., Mars, the Moon
-    Rocky,
+    Barren,
     /// A mix of land mass and ocean
-    Continental,
+    Continental {
+        land: Fraction,
+    },
     /// A planet dominated by water
     Oceanic,
 }
@@ -89,9 +92,9 @@ impl Surface {
             Gaseous => Uninhabitable,
             Volcanic => Hostile,
             Frozen => Hostile,
-            Rocky => Marginal,
+            Barren => Marginal,
             Oceanic => Marginal,
-            Continental => Optimal,
+            Continental { land: _ } => Optimal,
         }
     }
 }
@@ -201,7 +204,7 @@ pub mod examples {
 
     pub fn moon() -> BodyProperties {
         BodyProperties {
-            surface: Surface::Rocky,
+            surface: Surface::Barren,
             pressure: Pressure::Vacuum,
             oxygen: AtmosphericOxygen::None,
             hydrosphere: Hydrosphere::None,
@@ -217,7 +220,7 @@ pub mod examples {
 
     pub fn earth() -> BodyProperties {
         BodyProperties {
-            surface: Surface::Continental,
+            surface: Surface::Continental { land: Fraction::new(0.29) },
             pressure: Pressure::Ideal,
             oxygen: AtmosphericOxygen::Ideal,
             hydrosphere: Hydrosphere::Dynamic,
@@ -266,7 +269,7 @@ pub mod examples {
     #[test]
     fn hypothetical_desert_planet() {
         let bp = BodyProperties {
-            surface: Surface::Rocky,
+            surface: Surface::Barren,
             pressure: Pressure::Ideal,
             oxygen: AtmosphericOxygen::Partial,
             hydrosphere: Hydrosphere::None,

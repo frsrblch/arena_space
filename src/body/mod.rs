@@ -2,6 +2,8 @@ use crate::*;
 use crate::star::{Stars, Star};
 
 pub use components::*;
+use crate::geometry::Sphere;
+
 mod components;
 
 #[derive(Debug, Clone)]
@@ -88,6 +90,20 @@ impl Bodies {
     pub fn get_habitability(&self, id: Id<Body>) -> Habitability {
         self.properties.get(id).get_habitability()
     }
+
+    pub fn get_land_area<I: Indexes<Body> + Copy>(&self, id: I) -> Area {
+        let radius = self.radius.get(id);
+        let area = Sphere::with_radius(*radius).get_area();
+
+        match self.properties.get(id).surface {
+            Surface::Gaseous => Area::zero(),
+            Surface::Volcanic => Area::zero(),
+            Surface::Frozen => area,
+            Surface::Barren => area,
+            Surface::Continental { land } => land.value() * area,
+            Surface::Oceanic => Area::zero(),
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -132,7 +148,7 @@ pub mod examples {
                 offset: Default::default()
             },
             conditions: BodyProperties {
-                surface: Surface::Continental,
+                surface: Surface::Continental { land: Fraction::new(0.204) },
                 pressure: Pressure::Ideal,
                 oxygen: AtmosphericOxygen::Ideal,
                 hydrosphere: Hydrosphere::Dynamic,
@@ -153,7 +169,7 @@ pub mod examples {
                 offset: Default::default()
             },
             conditions: BodyProperties {
-                surface: Surface::Rocky,
+                surface: Surface::Barren,
                 pressure: Pressure::Vacuum,
                 oxygen: AtmosphericOxygen::None,
                 hydrosphere: Hydrosphere::None,
