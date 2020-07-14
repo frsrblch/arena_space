@@ -28,7 +28,7 @@ pub struct Colonies {
 
     pub food: Component<Colony, Mass>,
     pub food_production: Component<Colony, MassRate>,
-    pub hunger: Component<Colony, f64>,
+    pub hunger_ema: Component<Colony, f64>,
 
     pub body: Component<Colony, Id<Body>>,
     pub nation: Component<Colony, Option<Id<Nation>>>,
@@ -45,7 +45,7 @@ impl Colonies {
         let food_production = row.food_production_override.unwrap_or(row.population.get_food_requirement());
         self.food_production.insert(id, food_production);
 
-        self.hunger.insert(id, 0.0);
+        self.hunger_ema.insert(id, 0.0);
 
         self.body.insert(id, links.body);
         self.nation.insert(id, Some(links.nation));
@@ -94,15 +94,19 @@ mod population {
             let year_fraction = System::ColonyPopulation.get_interval_as_year_fraction();
 
             self.population.iter_mut()
-                .zip(self.hunger.iter())
+                .zip(self.hunger_ema.iter())
                 .zip(self.body.iter())
                 .for_each(|((pop, hunger), body)| {
                     let area = bodies.get_land_area(body);
                     let max_pop = area * Self::MAX_POPULATION_DENSITY;
                     let k = max_pop * (Self::BASE_GROWTH_MULTIPLIER / Self::BASE_GROWTH_RATE);
-                    let hunger_multiplier = 1.0 - 0.25 * hunger;
 
-                    let annual_growth_rate = Self::BASE_GROWTH_MULTIPLIER * (k - *pop) / k * hunger_multiplier;
+                    let mut k_factor = (k - *pop) / k;
+                    k_factor = k_factor.max(0.01);
+
+                    let hunger_multiplier = 1.0 - hunger;
+
+                    let annual_growth_rate = Self::BASE_GROWTH_MULTIPLIER * k_factor * hunger_multiplier;
                     let population_multiplier = annual_growth_rate.powf(year_fraction);
 
                     *pop *= population_multiplier;
@@ -154,23 +158,31 @@ mod food {
         }
 
         pub fn produce_and_consume_food(&mut self) {
+            let interval = System::ColonyFoodProduction.get_interval_float();
+
             self.food.iter_mut()
-                .zip(self.hunger.iter_mut())
+                .zip(self.hunger_ema.iter_mut())
                 .zip(self.food_production.iter())
                 .zip(self.population.iter())
-                .for_each(|(((food, hunger), production_rate), pop)| {
-                    let interval = System::ColonyFoodProduction.get_interval_float();
-
+                .for_each(|(((food, hunger_ema), production_rate), pop)| {
                     let production = production_rate * interval;
 
                     let consumption_rate = pop.get_food_requirement();
                     let consumption = consumption_rate * interval;
 
                     *food += production - consumption;
-                    *hunger = -(food.min(Mass::zero()) / consumption);
+
+                    let hunger_value = food.min(Mass::zero()) / consumption; // value between -1.0 and 0.0
+
+                    *hunger_ema *= (1.0 - Self::HUNGER_EMA_MULTIPLIER);
+                    *hunger_ema -= hunger_value * Self::HUNGER_EMA_MULTIPLIER;
+
                     *food = food.max(Mass::zero());
                 });
         }
+
+        const HUNGER_EMA_MULTIPLIER: f64 = 2.0 / (Self::HUNGER_EMA_PERIOD + 1.0);
+        const HUNGER_EMA_PERIOD: f64 = 15.0;
     }
 }
 
@@ -266,6 +278,24 @@ mod tests {
         assert!(population_after > population_before);
     }
 
+    #[test]
+    fn population_growth_fed_colony_over_time() {
+        let (mut state, id) = get_fed_colony_system_state();
+        let colony = &mut state.state.colony;
+
+        let population_before = *colony.get_population(id).unwrap();
+        dbg!(population_before);
+
+        let end_time = state.state.time.get_time() + chrono::Duration::days(3653);
+        state.update(end_time);
+
+        let colony = &mut state.state.colony;
+        let population_after = *colony.get_population(id).unwrap();
+        dbg!(population_after);
+
+        assert!(population_after > population_before);
+    }
+
     fn get_fed_colony_system_state() -> (SystemState, Id<Colony>) {
         let (mut state, body, nation) = get_base();
 
@@ -287,12 +317,14 @@ mod tests {
         let colony = &mut state.state.colony;
 
         let population_before = *colony.get_population(id).unwrap();
+        dbg!(population_before);
 
-        let end_time = state.state.time.get_time() + chrono::Duration::days(365);
+        let end_time = state.state.time.get_time() + chrono::Duration::days(3653);
         state.update(end_time);
 
         let colony = &mut state.state.colony;
         let population_after = *colony.get_population(id).unwrap();
+        dbg!(population_after);
 
         assert!(population_after < population_before);
     }
@@ -305,7 +337,7 @@ mod tests {
             name: "Earth Sphere".to_string(),
             population,
             food: Mass::zero(),
-            food_production_override: Some(MassRate::zero()),
+            food_production_override: Some(population.get_food_requirement() * 0.2),
         };
         let colony = state.state.colony.create(colony, ColonyLinks { body, nation });
 
@@ -318,12 +350,14 @@ mod tests {
         let colony = &mut state.state.colony;
 
         let population_before = *colony.get_population(id).unwrap();
+        dbg!(population_before);
 
         let end_time = state.state.time.get_time() + chrono::Duration::days(365);
         state.update(end_time);
 
         let colony = &mut state.state.colony;
         let population_after = *colony.get_population(id).unwrap();
+        dbg!(population_after);
 
         assert!(population_after < population_before);
     }
@@ -331,7 +365,7 @@ mod tests {
     fn get_overpopulated_colony_system_state() -> (SystemState, Id<Colony>) {
         let (mut state, body, nation) = get_base();
 
-        let population = Population::in_millions(50_000.0);
+        let population = Population::in_millions(500_000.0);
         let colony = Colony {
             name: "Sardine Can".to_string(),
             population,
