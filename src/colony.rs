@@ -28,7 +28,7 @@ pub struct Colonies {
 
     pub food: Component<Colony, Mass>,
     pub food_production: Component<Colony, MassRate>,
-    pub hunger_ema: Component<Colony, Ema<f64, 15.0>>,
+    pub hunger_ema: Component<Colony, ExpMovingAvg<f64, 15.0>>,
 
     pub body: Component<Colony, Id<Body>>,
     pub nation: Component<Colony, Option<Id<Nation>>>,
@@ -45,7 +45,7 @@ impl Colonies {
         let food_production = row.food_production_override.unwrap_or(row.population.get_food_requirement());
         self.food_production.insert(id, food_production);
 
-        self.hunger_ema.insert(id, Ema::default());
+        self.hunger_ema.insert(id, ExpMovingAvg::default());
 
         self.body.insert(id, links.body);
         self.nation.insert(id, Some(links.nation));

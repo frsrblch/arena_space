@@ -2,11 +2,11 @@ use std::ops::Mul;
 use num_traits::MulAddAssign;
 
 #[derive(Debug, Default, Copy, Clone)]
-pub struct Ema<T, const PERIOD: f64> {
+pub struct ExpMovingAvg<T, const PERIOD: f64> {
     value: T,
 }
 
-impl<T, const PERIOD: f64> Ema<T, PERIOD>
+impl<T, const PERIOD: f64> ExpMovingAvg<T, PERIOD>
     where T: Mul<f64,Output=T> + Copy + MulAddAssign<f64, T>,
 {
     pub fn value(&self) -> T {
@@ -25,7 +25,7 @@ impl<T, const PERIOD: f64> Ema<T, PERIOD>
 #[test]
 fn test() {
     const PERIOD: f64 = 2.0;
-    let mut ema = Ema::<f64, PERIOD>::default();
+    let mut ema = ExpMovingAvg::<f64, PERIOD>::default();
 
     ema.add_next(1.0);
     let expected_first = 2.0/(PERIOD + 1.0);
