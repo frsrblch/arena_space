@@ -38,4 +38,3 @@ fn test() {
 
     assert_eq!(expected_second, ema.value());
 }
-
