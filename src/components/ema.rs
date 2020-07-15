@@ -1,7 +1,6 @@
 use std::ops::Mul;
 use num_traits::MulAddAssign;
 
-
 #[derive(Debug, Default, Copy, Clone)]
 pub struct Ema<T, const PERIOD: f64> {
     value: T,
