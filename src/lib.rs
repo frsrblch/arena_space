@@ -1,5 +1,8 @@
-#![feature(map_first_last)]
+#![allow(incomplete_features)]
+
 #![feature(const_fn)]
+#![feature(const_generics)]
+#![feature(map_first_last)]
 
 use arena_ecs::*;
 use components::*;

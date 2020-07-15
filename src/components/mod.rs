@@ -7,6 +7,9 @@ mod position;
 pub use self::time::*;
 mod time;
 
+pub use ema::*;
+mod ema;
+
 pub use orbit::*;
 use rand::Rng;
 use rand::distributions::{Distribution, Standard};

@@ -28,7 +28,7 @@ pub struct Colonies {
 
     pub food: Component<Colony, Mass>,
     pub food_production: Component<Colony, MassRate>,
-    pub hunger_ema: Component<Colony, f64>,
+    pub hunger_ema: Component<Colony, Ema<f64, 15.0>>,
 
     pub body: Component<Colony, Id<Body>>,
     pub nation: Component<Colony, Option<Id<Nation>>>,
@@ -45,7 +45,7 @@ impl Colonies {
         let food_production = row.food_production_override.unwrap_or(row.population.get_food_requirement());
         self.food_production.insert(id, food_production);
 
-        self.hunger_ema.insert(id, 0.0);
+        self.hunger_ema.insert(id, Ema::default());
 
         self.body.insert(id, links.body);
         self.nation.insert(id, Some(links.nation));
@@ -104,7 +104,7 @@ mod population {
                     let mut k_factor = (k - *pop) / k;
                     k_factor = k_factor.max(0.01);
 
-                    let hunger_multiplier = 1.0 - hunger;
+                    let hunger_multiplier = 1.0 - hunger.value();
 
                     let annual_growth_rate = Self::BASE_GROWTH_MULTIPLIER * k_factor * hunger_multiplier;
                     let population_multiplier = annual_growth_rate.powf(year_fraction);
@@ -150,7 +150,6 @@ mod production {
 
 mod food {
     use super::*;
-    use num_traits::MulAddAssign;
 
     impl Colonies {
         pub fn get_food(&self, id: Id<Colony>) -> Option<&Mass> {
@@ -174,12 +173,9 @@ mod food {
                     let consumed = food.request(consumption);
 
                     let hunger_value = 1.0 - consumed / consumption;
-                    hunger_ema.mul_add_assign(1.0 - Self::HUNGER_EMA_MULTIPLIER, hunger_value * Self::HUNGER_EMA_MULTIPLIER);
+                    hunger_ema.add_next(hunger_value);
                 });
         }
-
-        const HUNGER_EMA_MULTIPLIER: f64 = 2.0 / (Self::HUNGER_EMA_PERIOD + 1.0);
-        const HUNGER_EMA_PERIOD: f64 = 15.0;
     }
 }
 
