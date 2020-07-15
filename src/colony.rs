@@ -135,19 +135,27 @@ mod production {
                 .zip(self.nation.iter())
                 .zip(self.body.iter())
                 .for_each(|(((production, population), nation_id), body_id)| {
+                    let consumption = population.get_food_requirement();
+                    let self_sufficiency = *production / consumption;
+
                     let target = nation.get_food_production_target(nation_id)
                         .copied()
                         .unwrap_or(FoodProductionTarget::Stable);
 
                     let habitability = body.properties.get(body_id).get_habitability();
 
-                    let multiplier = Self::get_production_rate_multiplier(target, habitability);
+                    let multiplier = Self::get_production_rate_multiplier(target, habitability, self_sufficiency);
 
                     *production += population.get_food_requirement() * year_fraction * multiplier;
                 });
         }
 
-        fn get_production_rate_multiplier(target: FoodProductionTarget, habitability: Habitability) -> f64 {
+        fn get_production_rate_multiplier(mut target: FoodProductionTarget, habitability: Habitability, self_sufficiency: f64) -> f64 {
+            // expand production if colony is well-suited to do so and is not largely self-sufficient
+            if self_sufficiency < 0.8 && habitability == Habitability::Optimal {
+                target = FoodProductionTarget::Expand;
+            }
+
             let habitability_multiplier = match target {
                 FoodProductionTarget::Expand => habitability.get_food_production_expansion_multiplier(),
                 FoodProductionTarget::Stable => 0.0,

@@ -264,7 +264,7 @@ impl Mul<Fraction> for Fraction {
     type Output = Fraction;
 
     fn mul(self, rhs: Fraction) -> Self::Output {
-        Self::new(self.0 * rhs.0)
+        Self(self.0 * rhs.0)
     }
 }
 

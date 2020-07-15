@@ -99,7 +99,7 @@ impl Surface {
     pub fn get_habitability(&self) -> Habitability {
         match self {
             Gaseous => Uninhabitable,
-            Volcanic => Hostile,
+            Volcanic => Uninhabitable,
             Frozen => Hostile,
             Barren => Marginal,
             Oceanic => Marginal,
