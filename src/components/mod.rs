@@ -224,6 +224,8 @@ scalar_div!(MassRate, Population, MassRatePerPerson);
 #[derive(Debug, Default, Copy, Clone, PartialOrd, PartialEq)]
 pub struct Fraction(f64);
 
+impl Eq for Fraction {}
+
 impl Into<f64> for Fraction {
     fn into(self) -> f64 {
         self.0
@@ -231,8 +233,8 @@ impl Into<f64> for Fraction {
 }
 
 impl Fraction {
-    pub fn new(value: f64) -> Self {
-        if value == f64::NEG_INFINITY || value.is_nan() {
+    pub const fn new(value: f64) -> Self {
+        if value == f64::NEG_INFINITY || value != value {
             return Self(0.0)
         }
 
@@ -250,10 +252,6 @@ impl Fraction {
     pub fn value(&self) -> f64 {
         self.0
     }
-}
-
-impl Eq for Fraction {
-
 }
 
 impl Distribution<Fraction> for Standard {
