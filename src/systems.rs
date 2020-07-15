@@ -29,6 +29,7 @@ pub enum System {
     NationFoodTargets,
     ColonyFoodProductionRate,
     ColonyPopulation,
+    PrintState
 }
 
 impl System {
@@ -38,6 +39,7 @@ impl System {
             System::NationFoodTargets,
             System::ColonyFoodProductionRate,
             System::ColonyPopulation,
+            System::PrintState,
         ]
             .into_iter()
     }
@@ -48,12 +50,13 @@ impl System {
             System::ColonyFoodProductionRate => state.colony.update_food_production_rate(&state.nation, &state.body),
             System::ColonyFoodProduction => state.colony.produce_and_consume_food(),
             System::ColonyPopulation => state.colony.update_population(&state.body),
+            System::PrintState => state.print(),
         }
     }
 
-    fn get_first_token(self) -> UpdateToken {
+    fn get_first_token(self, start: DateTime) -> UpdateToken {
         UpdateToken {
-            next_update: crate::time::starting_date(),
+            next_update: start,
             system: self
         }
     }
@@ -64,6 +67,7 @@ impl System {
             System::ColonyFoodProductionRate => Duration::days(5),
             System::ColonyFoodProduction => Duration::days(1),
             System::ColonyPopulation => Duration::days(5),
+            System::PrintState => Duration::days(90),
         }
     }
 
@@ -83,15 +87,20 @@ pub struct Systems {
 
 impl Default for Systems {
     fn default() -> Self {
-        let queue = System::iter()
-            .map(System::get_first_token)
-            .collect();
-
-        Self { queue }
+        let start_date = crate::time::starting_date();
+        Self::new(start_date)
     }
 }
 
 impl Systems {
+    pub fn new(start_date: DateTime) -> Self {
+        let queue = System::iter()
+            .map(|system| system.get_first_token(start_date))
+            .collect();
+
+        Self { queue }
+    }
+
     pub fn update(&mut self, state: &mut State, target: DateTime) {
         while !self.target_reached(target) {
             let current_update = self.pop().expect("system queue should never be empty");
@@ -162,7 +171,8 @@ mod tests {
 
     #[test]
     fn system_ord() {
-        assert!(System::ColonyFoodProduction.get_first_token() < System::ColonyFoodProductionRate.get_first_token());
-        assert!(System::NationFoodTargets.get_first_token() < System::ColonyFoodProductionRate.get_first_token());
+        let next_update = crate::time::starting_date();
+        assert!(System::ColonyFoodProduction.get_first_token(next_update) < System::ColonyFoodProductionRate.get_first_token(next_update));
+        assert!(System::NationFoodTargets.get_first_token(next_update) < System::ColonyFoodProductionRate.get_first_token(next_update));
     }
 }

@@ -270,6 +270,7 @@ mod tests {
         dbg!(population_after);
 
         assert!(population_after < population_before);
+        panic!();
     }
 
     fn get_hungry_colony_system_state() -> (SystemState, Id<Colony>) {

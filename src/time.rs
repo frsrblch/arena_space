@@ -9,9 +9,18 @@ type StdDuration = std::time::Duration;
 pub struct TimeState {
     game_time: DateTime,
     time_float: TimeFloat,
+    start_date: DateTime,
 }
 
 impl TimeState {
+    pub fn new(start_date: DateTime) -> Self {
+        TimeState {
+            game_time: start_date,
+            time_float: TimeFloat::in_s(0.0),
+            start_date,
+        }
+    }
+
     pub fn set_date_time(&mut self, date_time: DateTime) {
         debug_assert!(date_time >= self.game_time);
         self.game_time = date_time;
@@ -42,10 +51,7 @@ impl AddAssign<StdDuration> for TimeState {
 
 impl Default for TimeState {
     fn default() -> Self {
-        TimeState {
-            game_time: starting_date(),
-            time_float: TimeFloat::in_s(0.0),
-        }
+        Self::new(starting_date())
     }
 }
 

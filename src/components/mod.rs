@@ -15,6 +15,7 @@ use rand::Rng;
 use rand::distributions::{Distribution, Standard};
 use std::iter::Sum;
 use chrono::Duration;
+use num_format::{Locale, ToFormattedString};
 
 mod orbit;
 
@@ -79,7 +80,8 @@ pub struct Tons(Mass);
 
 impl Display for Tons {
     fn fmt(&self, f: &mut Formatter) -> Result {
-        write!(f, "{:.0} t", self.0.value / 1e3)
+        let tons = (self.0.value / 1e3) as i64;
+        write!(f, "{} t", tons.to_formatted_string(&Locale::en))
     }
 }
 
@@ -161,7 +163,8 @@ pub struct Millions(Population);
 
 impl Display for Millions {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        write!(f, "{:.0}M", self.0.value / 1e6)
+        let millions = (self.0.value / 1e6) as i64;
+        write!(f, "{} M", millions.to_formatted_string(&Locale::en))
     }
 }
 
@@ -212,7 +215,8 @@ pub struct TonsPerDay(MassRate);
 
 impl Display for TonsPerDay {
     fn fmt(&self, f: &mut Formatter) -> Result {
-        write!(f, "{:.0} t/day", self.0.value)
+        let tons_per_day = (self.0.value / 1e3 * DurationFloat::SECONDS_PER_DAY) as i64;
+        write!(f, "{} t/day", tons_per_day.to_formatted_string(&Locale::en))
     }
 }
 
