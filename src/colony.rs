@@ -227,14 +227,12 @@ mod tests {
         let colony = &mut state.state.colony;
 
         let population_before = *colony.get_population(id).unwrap();
-        dbg!(population_before);
 
         let end_time = state.state.time.get_time() + chrono::Duration::days(3653);
         state.update(end_time);
 
         let colony = &mut state.state.colony;
         let population_after = *colony.get_population(id).unwrap();
-        dbg!(population_after);
 
         assert!(population_after > population_before);
     }
@@ -260,14 +258,12 @@ mod tests {
         let colony = &mut state.state.colony;
 
         let population_before = *colony.get_population(id).unwrap();
-        dbg!(population_before);
 
         let end_time = state.state.time.get_time() + chrono::Duration::days(3653);
         state.update(end_time);
 
         let colony = &mut state.state.colony;
         let population_after = *colony.get_population(id).unwrap();
-        dbg!(population_after);
 
         assert!(population_after < population_before);
         panic!();
@@ -294,14 +290,12 @@ mod tests {
         let colony = &mut state.state.colony;
 
         let population_before = *colony.get_population(id).unwrap();
-        dbg!(population_before);
 
         let end_time = state.state.time.get_time() + chrono::Duration::days(365);
         state.update(end_time);
 
         let colony = &mut state.state.colony;
         let population_after = *colony.get_population(id).unwrap();
-        dbg!(population_after);
 
         assert!(population_after < population_before);
     }

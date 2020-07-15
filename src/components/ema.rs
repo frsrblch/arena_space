@@ -1,24 +1,39 @@
 use std::ops::Mul;
 use num_traits::MulAddAssign;
 
-#[derive(Debug, Default, Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct ExpMovingAvg<T, const PERIOD: f64> {
     value: T,
 }
 
+impl<T: Default, const PERIOD: f64> Default for ExpMovingAvg<T, PERIOD> {
+    fn default() -> Self {
+        assert!(PERIOD >= 2.0, "ExpMovingAvg::PERIOD must be 2.0 or larger");
+        Self {
+            value: Default::default(),
+        }
+    }
+}
+
 impl<T, const PERIOD: f64> ExpMovingAvg<T, PERIOD>
-    where T: Mul<f64,Output=T> + Copy + MulAddAssign<f64, T>,
+    where
+        T: Mul<f64,Output=T> + Copy + MulAddAssign<f64, T>,
 {
     pub fn value(&self) -> T {
         self.value
     }
 
     pub fn add_next(&mut self, value: T) {
-        self.value.mul_add_assign(1.0 - Self::multiplier(), value * Self::multiplier());
+        self.value.mul_add_assign(Self::one_sub_multiplier(), value * Self::multiplier());
     }
 
     const fn multiplier() -> f64 {
+        assert!(PERIOD >= 2.0);
         2.0 / (1.0 + PERIOD)
+    }
+
+    const fn one_sub_multiplier() -> f64 {
+        1.0 - Self::multiplier()
     }
 }
 
@@ -36,4 +51,10 @@ fn test() {
     let expected_second = expected_first * 1.0/(PERIOD + 1.0) + 2.0;
 
     assert_eq!(expected_second, ema.value());
+}
+
+#[test]
+#[should_panic]
+fn a() {
+    let e = ExpMovingAvg::<f64, 1.0>::default();
 }

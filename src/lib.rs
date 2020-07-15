@@ -2,6 +2,7 @@
 
 #![feature(const_fn)]
 #![feature(const_generics)]
+#![feature(const_panic)]
 #![feature(map_first_last)]
 
 use arena_ecs::*;
