@@ -17,12 +17,21 @@ pub enum Habitability {
 }
 
 impl Habitability {
-    pub fn get_food_production_multiplier(&self) -> f64 {
+    pub fn get_food_production_expansion_multiplier(&self) -> f64 {
         match self {
             Uninhabitable => 0.0,
             Hostile => 0.1,
             Marginal => 0.4,
             Optimal => 1.0,
+        }
+    }
+
+    pub fn get_food_production_contraction_multiplier(&self) -> f64 {
+        match self {
+            Uninhabitable => 1.0,
+            Hostile => 0.8,
+            Marginal => 0.4,
+            Optimal => 0.2,
         }
     }
 }

@@ -123,6 +123,8 @@ mod population {
 
 mod production {
     use super::*;
+    use crate::nation::FoodProductionTarget;
+    use crate::body::Habitability;
 
     impl Colonies {
         pub fn update_food_production_rate(&mut self, nation: &Nations, body: &Bodies) {
@@ -133,17 +135,28 @@ mod production {
                 .zip(self.nation.iter())
                 .zip(self.body.iter())
                 .for_each(|(((production, population), nation_id), body_id)| {
+                    let target = nation.get_food_production_target(nation_id)
+                        .copied()
+                        .unwrap_or(FoodProductionTarget::Stable);
 
-                    let habitability_multiplier = body.properties.get(body_id)
-                        .get_habitability()
-                        .get_food_production_multiplier();
+                    let habitability = body.properties.get(body_id).get_habitability();
 
-                    let target_multiplier = nation.get_food_production_target(nation_id)
-                        .map(|t| t.get_multiplier())
-                        .unwrap_or(0.0);
+                    let multiplier = Self::get_production_rate_multiplier(target, habitability);
 
-                    *production += population.get_food_requirement() * year_fraction * target_multiplier * habitability_multiplier;
+                    *production += population.get_food_requirement() * year_fraction * multiplier;
                 });
+        }
+
+        fn get_production_rate_multiplier(target: FoodProductionTarget, habitability: Habitability) -> f64 {
+            let habitability_multiplier = match target {
+                FoodProductionTarget::Expand => habitability.get_food_production_expansion_multiplier(),
+                FoodProductionTarget::Stable => 0.0,
+                FoodProductionTarget::Contract => habitability.get_food_production_contraction_multiplier(),
+            };
+
+            let target_multiplier = target.get_multiplier();
+
+            habitability_multiplier * target_multiplier
         }
     }
 }
