@@ -170,14 +170,12 @@ mod food {
                     let consumption_rate = pop.get_food_requirement();
                     let consumption = consumption_rate * interval;
 
-                    *food += production - consumption;
+                    *food += production;
+                    let consumed = food.request(consumption);
 
-                    let hunger_value = food.min(Mass::zero()) / consumption; // value between -1.0 and 0.0
-
-                    *hunger_ema *= (1.0 - Self::HUNGER_EMA_MULTIPLIER);
-                    *hunger_ema -= hunger_value * Self::HUNGER_EMA_MULTIPLIER;
-
-                    *food = food.max(Mass::zero());
+                    let hunger_value = 1.0 - consumed / consumption;
+                    *hunger_ema *= 1.0 - Self::HUNGER_EMA_MULTIPLIER;
+                    *hunger_ema += hunger_value * Self::HUNGER_EMA_MULTIPLIER;
                 });
         }
 

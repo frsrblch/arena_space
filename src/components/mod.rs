@@ -20,6 +20,38 @@ mod macros;
 
 scalar!(Mass, kilograms, kg);
 
+impl Mass {
+    pub fn request(&mut self, amount: Self) -> Self {
+        let result = self.min(amount);
+        *self = (*self - amount).max(Self::zero());
+        result
+    }
+}
+
+#[test]
+fn request_enough() {
+    let mut mass = Mass::in_kg(3.0);
+    let amount = Mass::in_kg(2.0);
+
+    let actual = mass.request(amount);
+    let expected = Mass::in_kg(2.0);
+
+    assert_eq!(mass, Mass::in_kg(1.0));
+    assert_eq!(actual, expected);
+}
+
+#[test]
+fn request_insufficient() {
+    let mut mass = Mass::in_kg(2.0);
+    let amount = Mass::in_kg(3.0);
+
+    let actual = mass.request(amount);
+    let expected = Mass::in_kg(2.0);
+
+    assert_eq!(mass, Mass::zero());
+    assert_eq!(actual, expected);
+}
+
 impl Display for Mass {
     fn fmt(&self, f: &mut Formatter) -> Result {
         write!(f, "{:.0} kg", self.value)
