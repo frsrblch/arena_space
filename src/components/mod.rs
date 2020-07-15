@@ -21,9 +21,12 @@ mod macros;
 scalar!(Mass, kilograms, kg);
 
 impl Mass {
-    pub fn request(&mut self, amount: Self) -> Self {
+    pub fn request(&mut self, amount: Mass) -> Mass {
+        debug_assert!(*self >= Mass::zero());
+        debug_assert!(amount >= Mass::zero());
+
         let result = self.min(amount);
-        *self = (*self - amount).max(Self::zero());
+        *self = (*self - amount).max(Mass::zero());
         result
     }
 }

@@ -150,6 +150,7 @@ mod production {
 
 mod food {
     use super::*;
+    use num_traits::MulAddAssign;
 
     impl Colonies {
         pub fn get_food(&self, id: Id<Colony>) -> Option<&Mass> {
@@ -166,16 +167,14 @@ mod food {
                 .zip(self.population.iter())
                 .for_each(|(((food, hunger_ema), production_rate), pop)| {
                     let production = production_rate * interval;
+                    *food += production;
 
                     let consumption_rate = pop.get_food_requirement();
                     let consumption = consumption_rate * interval;
-
-                    *food += production;
                     let consumed = food.request(consumption);
 
                     let hunger_value = 1.0 - consumed / consumption;
-                    *hunger_ema *= 1.0 - Self::HUNGER_EMA_MULTIPLIER;
-                    *hunger_ema += hunger_value * Self::HUNGER_EMA_MULTIPLIER;
+                    hunger_ema.mul_add_assign(1.0 - Self::HUNGER_EMA_MULTIPLIER, hunger_value * Self::HUNGER_EMA_MULTIPLIER);
                 });
         }
 
