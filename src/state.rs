@@ -33,17 +33,17 @@ impl State {
 
 impl TimeState {
     fn print(&self) {
-        println!("{}\n", self.get_time().format("%b %d, %Y"));
+        println!("{}\n", self.get_time().format("%Y-%m-%d"));
     }
 }
 
 impl Nations {
     fn print(&self) {
+        println!("\t- NATIONS -\n");
+
         let iter = self.name.iter()
             .zip(self.population.iter())
             .zip(self.agriculture.iter());
-
-        println!("\t- NATIONS -\n");
 
         self.alloc
             .zip_id_and_filter(iter)
@@ -56,13 +56,13 @@ impl Nations {
 
 impl Colonies {
     fn print(&self, nations: &Nations) {
+        println!("\t- COLONIES -\n");
+
         let iter = self.name.iter()
             .zip(self.nation.iter())
             .zip(self.population.iter())
             .zip(self.food.iter())
             .zip(self.food_production.iter());
-
-        println!("\t- COLONIES -\n");
 
         self.alloc
             .zip_id_and_filter(iter)
