@@ -56,5 +56,5 @@ fn test() {
 #[test]
 #[should_panic]
 fn a() {
-    let e = ExpMovingAvg::<f64, 1.0>::default();
+    let _ema = ExpMovingAvg::<f64, 1.0>::default();
 }

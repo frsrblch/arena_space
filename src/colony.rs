@@ -266,7 +266,6 @@ mod tests {
         let population_after = *colony.get_population(id).unwrap();
 
         assert!(population_after < population_before);
-        panic!();
     }
 
     fn get_hungry_colony_system_state() -> (SystemState, Id<Colony>) {
