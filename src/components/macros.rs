@@ -642,6 +642,34 @@ macro_rules! scalar_div {
             }
         }
 
+        
+        impl Div<$res> for $num {
+            type Output = $den;
+            fn div(self, rhs: $res) -> Self::Output {
+                Self::Output::new(self.value / rhs.value)
+            }
+        }
+        
+        impl Div<$res> for &$num {
+            type Output = $den;
+            fn div(self, rhs: $res) -> Self::Output {
+                Self::Output::new(self.value / rhs.value)
+            }
+        }
+        impl Div<&$res> for $num {
+            type Output = $den;
+            fn div(self, rhs: &$res) -> Self::Output {
+                Self::Output::new(self.value / rhs.value)
+            }
+        }
+        
+        impl Div<&$res> for &$num {
+            type Output = $den;
+            fn div(self, rhs: &$res) -> Self::Output {
+                Self::Output::new(self.value / rhs.value)
+            }
+        }
+
 
         impl Mul<$den> for $res {
             type Output = $num;
@@ -709,7 +737,8 @@ macro_rules! scalar_div {
             
                 assert_eq!(result, numerator / denominator);
                 assert_eq!(numerator, result * denominator);
-                assert_eq!(numerator, denominator * result);                
+                assert_eq!(numerator, denominator * result);
+                assert_eq!(denominator, numerator / result);
             }
         }
     }
