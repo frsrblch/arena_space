@@ -19,8 +19,9 @@ pub mod system_state;
 pub mod time;
 pub mod star;
 pub mod body;
-pub mod colony;
 pub mod nation;
+pub mod colony;
+pub mod spaceport;
 pub mod geometry;
 
 #[allow(dead_code)]

@@ -42,7 +42,9 @@ impl Colonies {
         self.population.insert(id, row.population);
         self.food.insert(id, row.food);
 
-        let food_production = row.food_production_override.unwrap_or(row.population.get_food_requirement());
+        let food_production = row.food_production_override
+            .unwrap_or(row.population.get_food_requirement());
+
         self.food_production.insert(id, food_production);
 
         self.hunger_ema.insert(id, ExpMovingAvg::default());
