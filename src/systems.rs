@@ -29,6 +29,7 @@ pub enum System {
     NationFoodTargets,
     ColonyFoodProductionRate,
     ColonyPopulation,
+    ColonyFoodDecay,
     PrintState
 }
 
@@ -39,6 +40,7 @@ impl System {
             System::NationFoodTargets,
             System::ColonyFoodProductionRate,
             System::ColonyPopulation,
+            System::ColonyFoodDecay,
             System::PrintState,
         ]
             .into_iter()
@@ -50,6 +52,7 @@ impl System {
             System::ColonyFoodProductionRate => state.colony.update_food_production_rate(&state.nation, &state.body),
             System::ColonyFoodProduction => state.colony.produce_and_consume_food(),
             System::ColonyPopulation => state.colony.update_population(&state.body),
+            System::ColonyFoodDecay => state.colony.food_decay(),
             System::PrintState => state.print(),
         }
     }
@@ -67,16 +70,24 @@ impl System {
             System::ColonyFoodProductionRate => Duration::days(5),
             System::ColonyFoodProduction => Duration::days(1),
             System::ColonyPopulation => Duration::days(5),
+            System::ColonyFoodDecay => Duration::days(30),
             System::PrintState => Duration::days(90),
         }
     }
 
-    pub fn get_interval_float(self) -> DurationFloat {
-        self.get_interval().into()
+    pub const fn get_interval_float(self) -> DurationFloat {
+        match self {
+            System::NationFoodTargets => DurationFloat::in_days(30.0),
+            System::ColonyFoodProductionRate => DurationFloat::in_days(5.0),
+            System::ColonyFoodProduction => DurationFloat::in_days(1.0),
+            System::ColonyPopulation => DurationFloat::in_days(5.0),
+            System::ColonyFoodDecay => DurationFloat::in_days(30.0),
+            System::PrintState => DurationFloat::in_days(90.0),
+        }
     }
 
-    pub fn get_interval_as_year_fraction(self) -> f64 {
-        self.get_interval_float() / DurationFloat::in_days(365.25)
+    pub const fn get_interval_as_year_fraction(self) -> f64 {
+        self.get_interval_float().value / DurationFloat::in_days(365.25).value
     }
 }
 

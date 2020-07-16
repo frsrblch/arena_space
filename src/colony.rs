@@ -199,6 +199,16 @@ mod food {
                     hunger_ema.add_next(hunger_value);
                 });
         }
+
+        pub fn food_decay(&mut self) {
+            let year_fraction = System::ColonyFoodDecay.get_interval_as_year_fraction();
+            let multiplier = Self::ANNUAL_FOOD_DECAY.powf(year_fraction);
+
+            self.food.iter_mut()
+                .for_each(|food| *food *= multiplier);
+        }
+
+        const ANNUAL_FOOD_DECAY: f64 = 0.925; // seems to maintain a reserve of 4 months
     }
 }
 
@@ -214,7 +224,7 @@ mod tests {
 
         let population_before = *colony.get_population(id).unwrap();
 
-        let end_time = state.state.time.get_time() + chrono::Duration::days(30);
+        let end_time = state.state.time.get_time() + chrono::Duration::days(365);
         state.update(end_time);
 
         let colony = &mut state.state.colony;
@@ -230,7 +240,7 @@ mod tests {
 
         let population_before = *colony.get_population(id).unwrap();
 
-        let end_time = state.state.time.get_time() + chrono::Duration::days(3653);
+        let end_time = state.state.time.get_time() + chrono::Duration::days(365*10);
         state.update(end_time);
 
         let colony = &mut state.state.colony;
@@ -261,7 +271,7 @@ mod tests {
 
         let population_before = *colony.get_population(id).unwrap();
 
-        let end_time = state.state.time.get_time() + chrono::Duration::days(3653);
+        let end_time = state.state.time.get_time() + chrono::Duration::days(365 * 10);
         state.update(end_time);
 
         let colony = &mut state.state.colony;

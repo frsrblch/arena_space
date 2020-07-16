@@ -181,8 +181,12 @@ scalar_div!(Population, Area, PopulationDensity);
 scalar!(DurationFloat, seconds, s);
 
 impl DurationFloat {
-    pub fn in_days(days: f64) -> Self {
+    pub const fn in_days(days: f64) -> Self {
         Self::in_s(days * Self::SECONDS_PER_DAY)
+    }
+
+    pub fn days(&self) -> Days {
+        Days(*self)
     }
 
     pub const SECONDS_PER_DAY: f64 = 3600.0 * 24.0;
@@ -192,6 +196,22 @@ impl From<chrono::Duration> for DurationFloat {
     fn from(duration: Duration) -> Self {
         let seconds = duration.num_milliseconds() as f64 / 1e3;
         DurationFloat::in_s(seconds)
+    }
+}
+
+impl From<DurationFloat> for chrono::Duration {
+    fn from(duration: DurationFloat) -> Self {
+        let microseconds = (duration.value * 1e6) as i64;
+        Duration::microseconds(microseconds)
+    }
+}
+
+pub struct Days(DurationFloat);
+
+impl Display for Days {
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        let days = self.0 / DurationFloat::in_days(1.0);
+        write!(f, "{:.1} days", days)
     }
 }
 

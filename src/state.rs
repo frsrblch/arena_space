@@ -78,6 +78,7 @@ impl Colonies {
                 println!("  Food:      {}", food.tons());
                 println!("  Food Prod: {}", food_prod.tons_per_day());
                 println!("  Food Cons: {}", food_cons.tons_per_day());
+                println!("  Food Rsrv: {}", (food / food_cons).days());
                 println!();
             });
     }
