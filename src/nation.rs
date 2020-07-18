@@ -108,10 +108,17 @@ mod food {
                 });
         }
 
-        pub fn get_food_production_target<ID>(&self, id: ID) -> Option<&FoodProductionTarget>
-        where
-            <Nation as Arena>::Allocator: Validates<ID, Nation>
-        {
+        fn determine_food_production_target(food_production: MassRate, population: Population) -> FoodProductionTarget {
+            let food_demand = population.get_food_requirement();
+
+            match food_production / food_demand {
+                ratio if ratio > 1.1 => FoodProductionTarget::Contract,
+                ratio if ratio < 1.02 => FoodProductionTarget::Expand,
+                _ => FoodProductionTarget::Stable,
+            }
+        }
+
+        pub fn get_food_production_target(&self, id: Id<Nation>) -> Option<&FoodProductionTarget> {
             self.alloc
                 .validate(id)
                 .map(|id| self.agriculture.get(id))

@@ -140,7 +140,8 @@ mod production {
                     let consumption = population.get_food_requirement();
                     let self_sufficiency = *production / consumption;
 
-                    let target = nation.get_food_production_target(nation_id)
+                    let target = nation_id
+                        .and_then(|n| nation.get_food_production_target(n))
                         .copied()
                         .unwrap_or(FoodProductionTarget::Stable);
 
