@@ -26,6 +26,8 @@ pub struct Spaceports {
 
     pub orbit: Component<Spaceport, OrbitParams>,
 
+    pub food: Component<Spaceport, Mass>,
+
     pub nation: Component<Spaceport, Option<Id<Nation>>>,
     pub body: Component<Spaceport, Option<Id<Body>>>,
     pub star: Component<Spaceport, Id<Star>>,
@@ -36,6 +38,8 @@ impl Spaceports {
         let id = self.alloc.create();
 
         self.orbit.insert(id, spaceport.orbit);
+
+        self.food.insert(id, Mass::zero());
 
         self.nation.insert(id, links.nation);
         self.body.insert(id, links.body);

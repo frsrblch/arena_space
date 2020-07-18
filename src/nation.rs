@@ -68,7 +68,7 @@ mod food {
         pub fn update_food_targets(&mut self, colony: &Colonies) {
             self.sum_population(colony);
             self.sum_food_production(colony);
-            self.set_agriculture_directive();
+            self.set_food_production_target();
         }
 
         pub fn sum_food_production(&mut self, colony: &Colonies) {
@@ -93,18 +93,12 @@ mod food {
                 });
         }
 
-        fn set_agriculture_directive(&mut self) {
+        fn set_food_production_target(&mut self) {
             self.agriculture.iter_mut()
                 .zip(self.food_production.iter())
                 .zip(self.population.iter())
                 .for_each(|((agri, food_production), pop)| {
-                    let food_demand = pop.get_food_requirement();
-
-                    *agri = match food_production / food_demand {
-                        ratio if ratio > 1.1 => FoodProductionTarget::Contract,
-                        ratio if ratio < 1.02 => FoodProductionTarget::Expand,
-                        _ => FoodProductionTarget::Stable,
-                    };
+                    *agri = Self::determine_food_production_target(*food_production, *pop);
                 });
         }
 
