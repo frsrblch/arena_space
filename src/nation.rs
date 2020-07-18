@@ -71,7 +71,7 @@ mod food {
             self.set_food_production_target();
         }
 
-        pub fn sum_food_production(&mut self, colony: &Colonies) {
+        fn sum_food_production(&mut self, colony: &Colonies) {
             self.zero_food_production();
             self.add_production_from_colonies(colony);
         }
