@@ -12,7 +12,8 @@ impl Sphere<Length> {
     }
 
     pub fn get_area(&self) -> Area {
-        FOUR_PI * self.dim * self.dim
+        let r_squared = self.dim * self.dim;
+        FOUR_PI * r_squared
     }
 }
 
