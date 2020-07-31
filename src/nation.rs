@@ -112,7 +112,9 @@ mod food {
             }
         }
 
-        pub fn get_food_production_target(&self, id: Id<Nation>) -> Option<&FoodProductionTarget> {
+        pub fn get_food_production_target<ID>(&self, id: ID) -> Option<&FoodProductionTarget>
+            where <Nation as Arena>::Allocator: Validates<ID, Nation>
+        {
             self.alloc
                 .validate(id)
                 .map(|id| self.agriculture.get(id))

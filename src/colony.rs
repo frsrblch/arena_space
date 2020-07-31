@@ -127,38 +127,54 @@ mod production {
     use super::*;
     use crate::nation::FoodProductionTarget;
     use crate::body::Habitability;
+    use std::cell::RefCell;
 
     impl Colonies {
-        pub fn update_food_production_rate(&mut self, nation: &Nations, body: &Bodies) {
-            let year_fraction = System::ColonyFoodProductionRate.get_interval_as_year_fraction();
-
+        pub fn update_food_production_rate(&mut self, nations: &Nations, bodies: &Bodies) {
             self.food_production.iter_mut()
                 .zip(self.population.iter())
                 .zip(self.nation.iter())
                 .zip(self.body.iter())
                 .for_each(|(((production, population), nation_id), body_id)| {
-                    let consumption = population.get_food_requirement();
-                    let self_sufficiency = *production / consumption;
-
-                    let target = nation_id
-                        .and_then(|n| nation.get_food_production_target(n))
-                        .copied()
-                        .unwrap_or(FoodProductionTarget::Stable);
-
-                    let habitability = body.properties.get(body_id).get_habitability();
-
-                    let multiplier = Self::get_production_rate_multiplier(target, habitability, self_sufficiency);
-
-                    *production += population.get_food_requirement() * year_fraction * multiplier;
+                    *production += Self::get_new_food_production(production, population, nation_id, body_id, nations, bodies);
                 });
         }
 
-        fn get_production_rate_multiplier(mut target: FoodProductionTarget, habitability: Habitability, self_sufficiency: f64) -> f64 {
-            // expand production if colony is well-suited to do so and is not largely self-sufficient
-            if self_sufficiency < 0.8 && habitability == Habitability::Optimal {
-                target = FoodProductionTarget::Expand;
-            }
+        fn get_new_food_production(
+            production: &MassRate,
+            population: &Population,
+            nation_id: &Option<Id<Nation>>,
+            body_id: &Id<Body>,
+            nations: &Nations,
+            bodies: &Bodies,
+        ) -> MassRate {
+            let consumption = population.get_food_requirement();
 
+            let habitability = bodies.get_habitability(body_id);
+
+            let national_target = *nations
+                .get_food_production_target(nation_id)
+                .unwrap_or(&FoodProductionTarget::Stable);
+
+            let target = Self::get_food_production_target(national_target, production, consumption, habitability);
+
+            let production_multiplier = Self::get_production_rate_multiplier(habitability, target);
+
+            consumption * Self::YEAR_FRACTION * production_multiplier
+        }
+
+        fn get_food_production_target(national_target: FoodProductionTarget, production: &MassRate, consumption: MassRate, habitability: Habitability) -> FoodProductionTarget {
+            let self_sufficiency = production / consumption;
+
+            // expand production if colony is not self-sufficient and is well-suited to do so
+            if self_sufficiency < 1.02 && habitability == Habitability::Optimal {
+                FoodProductionTarget::Expand
+            } else {
+                national_target
+            }
+        }
+
+        fn get_production_rate_multiplier(habitability: Habitability, target: FoodProductionTarget) -> f64 {
             let habitability_multiplier = match target {
                 FoodProductionTarget::Expand => habitability.get_food_production_expansion_multiplier(),
                 FoodProductionTarget::Stable => 0.0,
@@ -169,6 +185,8 @@ mod production {
 
             habitability_multiplier * target_multiplier
         }
+
+        const YEAR_FRACTION: f64 = System::ColonyFoodProductionRate.get_interval_as_year_fraction();
     }
 }
 
@@ -182,18 +200,18 @@ mod food {
         }
 
         pub fn produce_and_consume_food(&mut self) {
-            let interval = System::ColonyFoodProduction.get_interval_float();
+            const INTERVAL: DurationFloat = System::ColonyFoodProduction.get_interval_float();
 
             self.food.iter_mut()
                 .zip(self.hunger_ema.iter_mut())
                 .zip(self.food_production.iter())
                 .zip(self.population.iter())
-                .for_each(|(((food, hunger_ema), production_rate), pop)| {
-                    let production = production_rate * interval;
+                .for_each(|(((food, hunger_ema), production_rate), population)| {
+                    let production = production_rate * INTERVAL;
                     *food += production;
 
-                    let consumption_rate = pop.get_food_requirement();
-                    let consumption = consumption_rate * interval;
+                    let consumption_rate = population.get_food_requirement();
+                    let consumption = consumption_rate * INTERVAL;
                     let consumed = food.request(consumption);
 
                     let hunger_value = 1.0 - consumed / consumption;
