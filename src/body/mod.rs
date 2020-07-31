@@ -33,6 +33,8 @@ pub struct Bodies {
     pub orbit: Component<Body, Orbit>,
     pub properties: Component<Body, BodyProperties>,
 
+    pub population: HashMap<Id<Body>, Population>,
+
     pub star: Component<Body, Id<Star>>,
 }
 
@@ -131,6 +133,31 @@ impl Bodies {
         }
 
         planet
+    }
+}
+
+pub mod population {
+    use super::*;
+    use crate::colony::Colonies;
+    use std::ops::AddAssign;
+
+    impl Bodies {
+        pub fn sum_population(&mut self, colonies: &Colonies) {
+            self.population.clear();
+            self.add_colony_population(colonies);
+        }
+
+        fn add_colony_population(&mut self, colonies: &Colonies) {
+            colonies.population.iter()
+                .zip(colonies.body.iter())
+                .zip(colonies.alloc.living())
+                .filter(|(_, live)| *live)
+                .for_each(|((colony_population, body), _)| {
+                    self.population.entry(*body)
+                        .or_insert(Population::zero())
+                        .add_assign(colony_population)
+                });
+        }
     }
 }
 

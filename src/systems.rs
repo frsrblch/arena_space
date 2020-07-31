@@ -51,7 +51,7 @@ impl System {
             System::NationFoodTargets => state.nation.update_food_targets(&state.colony),
             System::ColonyFoodProductionRate => state.colony.update_food_production_rate(&state.nation, &state.body),
             System::ColonyFoodProduction => state.colony.produce_and_consume_food(),
-            System::ColonyPopulation => state.colony.update_population(&state.body),
+            System::ColonyPopulation => state.colony.update_population(&mut state.body),
             System::ColonyFoodDecay => state.colony.food_decay(),
             System::PrintState => state.print(),
         }

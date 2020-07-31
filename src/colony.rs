@@ -19,6 +19,8 @@ pub struct ColonyLinks {
     pub nation: Id<Nation>,
 }
 
+type Hunger = ExpMovingAvg<f64, 15.0>;
+
 #[derive(Debug, Default)]
 pub struct Colonies {
     pub alloc: Allocator<Colony>,
@@ -28,7 +30,7 @@ pub struct Colonies {
 
     pub food: Component<Colony, Mass>,
     pub food_production: Component<Colony, MassRate>,
-    pub hunger_ema: Component<Colony, ExpMovingAvg<f64, 15.0>>,
+    pub hunger_ema: Component<Colony, Hunger>,
 
     pub body: Component<Colony, Id<Body>>,
     pub nation: Component<Colony, Option<Id<Nation>>>,
@@ -90,37 +92,42 @@ mod population {
         //                      ρ_max = 12 billion / 104 million sq km
         //
         //                      land usage: https://ourworldindata.org/land-use
-        pub fn update_population(&mut self, bodies: &Bodies) {
-            // TODO: bodies have population sum so that multiple colonies on one planet limit growth (e.g., Earth)
-
-            let year_fraction = System::ColonyPopulation.get_interval_as_year_fraction();
+        pub fn update_population(&mut self, bodies: &mut Bodies) {
+            bodies.sum_population(self);
 
             self.population.iter_mut()
                 .zip(self.hunger_ema.iter())
                 .zip(self.body.iter())
-                .for_each(|((pop, hunger), body)| {
-                    let area = bodies.get_land_area(body);
-                    let max_pop = area * Self::MAX_POPULATION_DENSITY;
-                    let k = max_pop * (Self::BASE_GROWTH_MULTIPLIER / Self::BASE_GROWTH_RATE);
-
-                    let mut k_factor = (k - *pop) / k;
-                    k_factor = k_factor.max(0.01);
-
-                    let hunger_multiplier = 1.0 - hunger.value();
-
-                    let annual_growth_rate = Self::BASE_GROWTH_MULTIPLIER * k_factor * hunger_multiplier;
-                    let population_multiplier = annual_growth_rate.powf(year_fraction);
-
-                    *pop *= population_multiplier;
-                });
+                .for_each(|((pop, hunger), body)|
+                    *pop *= Self::get_population_multiplier(pop, hunger, body, bodies)
+                );
         }
 
-        const BASE_GROWTH_RATE: f64 = 0.025;
-        const BASE_GROWTH_MULTIPLIER: f64 = 1.0 + Self::BASE_GROWTH_RATE;
+        fn get_population_multiplier(pop: &Population, hunger: &Hunger, body: &Id<Body>, bodies: &Bodies) -> f64 {
+            let area = bodies.get_land_area(body);
+            let max_pop = area * MAX_POPULATION_DENSITY;
+            let k = max_pop * (BASE_GROWTH_MULTIPLIER / BASE_GROWTH_RATE);
 
-        /// 12 billion / 104e6 sq km
-        const MAX_POPULATION_DENSITY: PopulationDensity = PopulationDensity::in_people_per_square_km(12e9 / 104e6);
+            let body_population = bodies.population.get(body).unwrap_or(pop);
+            let mut k_factor = (k - *body_population) / k;
+            k_factor = k_factor.max(0.01);
+
+            let hunger_multiplier = 1.0 - hunger.value();
+
+            let annual_growth_rate = BASE_GROWTH_MULTIPLIER * k_factor * hunger_multiplier;
+
+            annual_growth_rate.powf(YEAR_FRACTION)
+        }
+
+        // fn get_k_factor(body: &Id<Body>, bodies: &Bodies)
     }
+
+    const YEAR_FRACTION: f64 = System::ColonyPopulation.get_interval_as_year_fraction();
+    const BASE_GROWTH_RATE: f64 = 0.025;
+    const BASE_GROWTH_MULTIPLIER: f64 = 1.0 + BASE_GROWTH_RATE;
+
+    /// 12 billion / 104e6 sq km
+    const MAX_POPULATION_DENSITY: PopulationDensity = PopulationDensity::in_people_per_square_km(12e9 / 104e6);
 }
 
 mod production {
@@ -159,7 +166,7 @@ mod production {
 
             let production_multiplier = Self::get_production_rate_multiplier(habitability, target);
 
-            consumption * Self::YEAR_FRACTION * production_multiplier
+            consumption * YEAR_FRACTION * production_multiplier
         }
 
         fn get_food_production_target(national_target: FoodProductionTarget, production: &MassRate, consumption: MassRate, habitability: Habitability) -> FoodProductionTarget {
@@ -184,9 +191,9 @@ mod production {
 
             habitability_multiplier * target_multiplier
         }
-
-        const YEAR_FRACTION: f64 = System::ColonyFoodProductionRate.get_interval_as_year_fraction();
     }
+
+    const YEAR_FRACTION: f64 = System::ColonyFoodProductionRate.get_interval_as_year_fraction();
 }
 
 mod food {
