@@ -87,11 +87,11 @@ impl Bodies {
         }
     }
 
-    pub fn get_habitability<ID: Indexes<Body>>(&self, id: ID) -> Habitability {
+    pub fn get_habitability(&self, id: impl Indexes<Body>) -> Habitability {
         self.properties.get(id).get_habitability()
     }
 
-    pub fn get_land_area<ID: Indexes<Body> + Copy>(&self, id: ID) -> Area {
+    pub fn get_land_area(&self, id: impl Indexes<Body> + Copy) -> Area {
         let radius = self.radius.get(id);
         let area = Sphere::with_radius(*radius).get_area();
 

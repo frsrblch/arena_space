@@ -81,7 +81,7 @@ mod population {
         // Logistic function:   dN/dt = r * N
         //                      dN/dt = r_max * (K - N) / K * N
         //
-        // wherer:              N = population
+        // where:               N = population
         //                      r = growth rate (zero growth = 1.0)
         // where:               K = N_max * r_max / (r_max - 1)
         //                      N_max = ρ_max * surface area * land fraction * habitable fraction
@@ -127,7 +127,6 @@ mod production {
     use super::*;
     use crate::nation::FoodProductionTarget;
     use crate::body::Habitability;
-    use std::cell::RefCell;
 
     impl Colonies {
         pub fn update_food_production_rate(&mut self, nations: &Nations, bodies: &Bodies) {

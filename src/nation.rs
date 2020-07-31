@@ -31,6 +31,12 @@ impl Nations {
 
         id.id
     }
+
+    pub fn get_food_production_target(&self, id: impl TryIndexes<Nation>) -> Option<&FoodProductionTarget> {
+        id.id()
+            .and_then(|id| self.alloc.validate(id))
+            .map(|id| self.agriculture.get(id))
+    }
 }
 
 mod population {
@@ -51,12 +57,16 @@ mod population {
         fn add_population_from_colonies(&mut self, colony: &Colonies) {
             colony.population.iter()
                 .zip(colony.nation.iter())
-                .for_each(|(pop, govt)| {
-                    if let Some(govt) = self.alloc.validate(govt) {
-                        let govt_pop = self.population.get_mut(govt);
-                        *govt_pop += pop;
-                    }
+                .for_each(|(population, nation)| {
+                    self.add_population(population, nation);
                 });
+        }
+
+        fn add_population(&mut self, population: &Population, nation: &Option<Id<Nation>>) {
+            if let Some(nation) = self.alloc.validate(nation) {
+                let national_population = self.population.get_mut(nation);
+                *national_population += population;
+            }
         }
     }
 }
@@ -110,14 +120,6 @@ mod food {
                 ratio if ratio < 1.02 => FoodProductionTarget::Expand,
                 _ => FoodProductionTarget::Stable,
             }
-        }
-
-        pub fn get_food_production_target<ID>(&self, id: ID) -> Option<&FoodProductionTarget>
-            where <Nation as Arena>::Allocator: Validates<ID, Nation>
-        {
-            self.alloc
-                .validate(id)
-                .map(|id| self.agriculture.get(id))
         }
     }
 }
