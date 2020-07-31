@@ -152,11 +152,16 @@ pub mod population {
                 .zip(colonies.body.iter())
                 .zip(colonies.alloc.living())
                 .filter(|(_, live)| *live)
-                .for_each(|((colony_population, body), _)| {
-                    self.population.entry(*body)
-                        .or_insert(Population::zero())
-                        .add_assign(colony_population)
-                });
+                .for_each(|((colony_population, body), _)|
+                    self.add_population(colony_population, body)
+                );
+        }
+
+        fn add_population(&mut self, colony_population: &Population, body: &Id<Body>) {
+            self.population
+                .entry(*body)
+                .or_insert(Population::zero())
+                .add_assign(colony_population)
         }
     }
 }
