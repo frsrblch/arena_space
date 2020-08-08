@@ -298,6 +298,11 @@ macro_rules! scalar {
             }
         }
 
+        impl<'a> Sum<&'a Self> for $scalar {
+            fn sum<I: Iterator<Item=&'a Self>>(iter: I) -> Self {
+                iter.copied().sum()
+            }
+        }
     };
     ($scalar:ident, $unit:ident, $abrev:ident, $base:ty) => {
         scalar!($scalar, $base);
