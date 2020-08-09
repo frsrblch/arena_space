@@ -145,8 +145,8 @@ impl Population {
         Self::new(mm_people * 1e6)
     }
 
-    pub fn get_food_requirement(&self) -> MassRate {
-        self * Self::FOOD_PER_PERSON
+    pub const fn get_food_requirement(&self) -> MassRate {
+        MassRate::new(self.value * Self::FOOD_PER_PERSON.value)
     }
 
     /// 2 kg per person per day
@@ -157,6 +157,13 @@ impl Population {
     pub fn millions(self) -> Millions {
         Millions(self)
     }
+}
+
+#[test]
+fn get_food_requirement() {
+    let p = Population::in_millions(1.0);
+
+    assert_eq!(p.get_food_requirement(), p * Population::FOOD_PER_PERSON);
 }
 
 pub struct Millions(Population);
