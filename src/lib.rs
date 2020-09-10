@@ -4,6 +4,7 @@
 #![feature(const_generics)]
 #![feature(const_panic)]
 #![feature(map_first_last)]
+#![feature(const_float_classify)]
 
 use arena_ecs::*;
 use components::*;

@@ -288,7 +288,7 @@ impl Into<f64> for Fraction {
 
 impl Fraction {
     pub const fn new(value: f64) -> Self {
-        if value == f64::NEG_INFINITY || value != value {
+        if value == f64::NEG_INFINITY || value.is_nan() {
             return Self(0.0)
         }
 

@@ -160,7 +160,7 @@ pub mod population {
         fn add_population(&mut self, colony_population: &Population, body: &Id<Body>) {
             self.population
                 .entry(*body)
-                .or_insert(Population::zero())
+                .or_insert_with(Population::zero)
                 .add_assign(colony_population)
         }
     }

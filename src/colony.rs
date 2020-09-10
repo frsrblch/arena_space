@@ -40,12 +40,12 @@ impl Colonies {
     pub fn create(&mut self, row: Colony, links: ColonyLinks) -> Id<Colony> {
         let id = self.alloc.create();
 
+        let food_production = row.food_production_override
+            .unwrap_or_else(|| row.population.get_food_requirement());
+
         self.name.insert(id, row.name);
         self.population.insert(id, row.population);
         self.food.insert(id, row.food);
-
-        let food_production = row.food_production_override
-            .unwrap_or(row.population.get_food_requirement());
 
         self.food_production.insert(id, food_production);
 
