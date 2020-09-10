@@ -2,7 +2,8 @@ use crate::components::DurationFloat;
 use crate::state::State;
 use crate::time::DateTime;
 use chrono::Duration;
-use std::collections::BTreeSet;
+use std::cmp::Reverse;
+use std::collections::BinaryHeap;
 
 #[derive(Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub struct UpdateToken {
@@ -95,7 +96,7 @@ impl System {
 
 #[derive(Debug)]
 pub struct Systems {
-    pub queue: BTreeSet<UpdateToken>,
+    pub queue: BinaryHeap<Reverse<UpdateToken>>,
 }
 
 impl Default for Systems {
@@ -109,6 +110,7 @@ impl Systems {
     pub fn new(start_date: DateTime) -> Self {
         let queue = System::iter()
             .map(|system| system.get_first_token(start_date))
+            .map(Reverse)
             .collect();
 
         Self { queue }
@@ -131,15 +133,15 @@ impl Systems {
     }
 
     fn peek(&self) -> Option<&UpdateToken> {
-        self.queue.first()
+        self.queue.peek().map(|rev| &rev.0)
     }
 
     fn pop(&mut self) -> Option<UpdateToken> {
-        self.queue.pop_first()
+        self.queue.pop().map(|rev| rev.0)
     }
 
     fn push(&mut self, token: UpdateToken) {
-        self.queue.insert(token);
+        self.queue.push(Reverse(token));
     }
 }
 
