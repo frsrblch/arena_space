@@ -1,4 +1,4 @@
-use crate::components::{Length, Area};
+use crate::components::{Area, Length};
 
 pub struct Sphere<D> {
     dim: D,
@@ -6,9 +6,7 @@ pub struct Sphere<D> {
 
 impl Sphere<Length> {
     pub fn with_radius(radius: Length) -> Self {
-        Sphere {
-            dim: radius,
-        }
+        Sphere { dim: radius }
     }
 
     pub fn get_area(&self) -> Area {

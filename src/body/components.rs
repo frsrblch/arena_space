@@ -1,7 +1,7 @@
-use Surface::*;
-use Pressure::*;
-use Habitability::*;
 use crate::components::Fraction;
+use Habitability::*;
+use Pressure::*;
+use Surface::*;
 
 /// The ability of an environment to support human life.
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
@@ -88,9 +88,7 @@ pub enum Surface {
     /// A barren, rocky surface, e.g., Mars, the Moon
     Barren,
     /// A mix of land mass and ocean
-    Continental {
-        land: Fraction,
-    },
+    Continental { land: Fraction },
     /// A planet dominated by water
     Oceanic,
 }
@@ -229,7 +227,9 @@ pub mod examples {
 
     pub fn earth() -> BodyProperties {
         BodyProperties {
-            surface: Surface::Continental { land: Fraction::new(0.29) },
+            surface: Surface::Continental {
+                land: Fraction::new(0.29),
+            },
             pressure: Pressure::Ideal,
             oxygen: AtmosphericOxygen::Ideal,
             hydrosphere: Hydrosphere::Dynamic,
@@ -250,7 +250,7 @@ pub mod examples {
             oxygen: AtmosphericOxygen::None,
             hydrosphere: Hydrosphere::None,
             biosphere: Biosphere::None,
-            magnetosphere: Magnetosphere::Present
+            magnetosphere: Magnetosphere::Present,
         }
     }
 
@@ -258,7 +258,7 @@ pub mod examples {
     fn jupiter_habitability() {
         assert_eq!(Uninhabitable, jupiter().get_habitability());
     }
-    
+
     pub fn venus() -> BodyProperties {
         BodyProperties {
             surface: Surface::Volcanic,

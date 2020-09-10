@@ -3,7 +3,9 @@ use std::cmp::Ordering;
 
 /// Elapsed game time in seconds. Distinct from Duration, which is a relative amount of time.
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
-pub struct TimeFloat { pub value: f64 }
+pub struct TimeFloat {
+    pub value: f64,
+}
 
 impl TimeFloat {
     pub fn in_s(seconds: f64) -> Self {
@@ -70,8 +72,6 @@ impl PartialOrd for TimeFloat {
 
 impl Ord for TimeFloat {
     fn cmp(&self, other: &Self) -> Ordering {
-        self.value
-            .partial_cmp(&other.value)
-            .unwrap()
+        self.value.partial_cmp(&other.value).unwrap()
     }
 }

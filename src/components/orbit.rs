@@ -58,7 +58,7 @@ mod tests {
         let time = TimeFloat::in_s(orbit.params.period.value / 4.0);
 
         let quarter = orbit.calculate_position(time);
-        
+
         assert_eq!(Length::in_m(-1000.0), quarter.x);
         assert!(nearly_zero(quarter.y));
     }

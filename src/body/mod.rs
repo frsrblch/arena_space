@@ -1,8 +1,8 @@
+use crate::star::{Star, Stars};
 use crate::*;
-use crate::star::{Stars, Star};
 
-pub use components::*;
 use crate::geometry::Sphere;
+pub use components::*;
 
 mod components;
 
@@ -61,18 +61,20 @@ impl Bodies {
                 orbit.params
             });
 
-        Orbit {
-            params,
-            parent,
-        }
+        Orbit { params, parent }
     }
 
     pub fn get_position(&self, id: Id<Body>, time: TimeFloat) -> Position {
-        self.orbit.get(id)
-            .calculate_position(time)
+        self.orbit.get(id).calculate_position(time)
     }
 
-    pub fn get_distance(&self, from: Id<Body>, to: Id<Body>, time: TimeFloat, star: &Stars) -> Distance {
+    pub fn get_distance(
+        &self,
+        from: Id<Body>,
+        to: Id<Body>,
+        time: TimeFloat,
+        star: &Stars,
+    ) -> Distance {
         let system_from = self.star.get(from);
         let system_to = self.star.get(to);
 
@@ -116,10 +118,7 @@ pub struct Planet {
 
 impl Bodies {
     pub fn create_planet(&mut self, row: Planet, star: Id<Star>) -> Id<Body> {
-        let links = BodyLinks {
-            star,
-            parent: None,
-        };
+        let links = BodyLinks { star, parent: None };
 
         let planet = self.create(row.body, links);
 
@@ -152,9 +151,9 @@ pub mod population {
                 .zip(colonies.body.iter())
                 .zip(colonies.alloc.living())
                 .filter(|(_, live)| *live)
-                .for_each(|((colony_population, body), _)|
+                .for_each(|((colony_population, body), _)| {
                     self.add_population(colony_population, body)
-                );
+                });
         }
 
         fn add_population(&mut self, colony_population: &Population, body: &Id<Body>) {
@@ -177,16 +176,18 @@ pub mod examples {
             orbit: OrbitParams {
                 radius: Length::in_m(149.60e9),
                 period: DurationFloat::in_days(365.25),
-                offset: Default::default()
+                offset: Default::default(),
             },
             conditions: BodyProperties {
-                surface: Surface::Continental { land: Fraction::new(0.204) },
+                surface: Surface::Continental {
+                    land: Fraction::new(0.204),
+                },
                 pressure: Pressure::Ideal,
                 oxygen: AtmosphericOxygen::Ideal,
                 hydrosphere: Hydrosphere::Dynamic,
                 biosphere: Biosphere::Advanced,
-                magnetosphere: Magnetosphere::Present
-            }
+                magnetosphere: Magnetosphere::Present,
+            },
         }
     }
 
@@ -198,7 +199,7 @@ pub mod examples {
             orbit: OrbitParams {
                 radius: Length::in_m(384_400e3),
                 period: DurationFloat::in_days(27.322),
-                offset: Default::default()
+                offset: Default::default(),
             },
             conditions: BodyProperties {
                 surface: Surface::Barren,
@@ -206,7 +207,7 @@ pub mod examples {
                 oxygen: AtmosphericOxygen::None,
                 hydrosphere: Hydrosphere::None,
                 biosphere: Biosphere::None,
-                magnetosphere: Magnetosphere::Absent
+                magnetosphere: Magnetosphere::Absent,
             },
         }
     }

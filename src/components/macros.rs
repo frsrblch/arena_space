@@ -1,7 +1,9 @@
 macro_rules! scalar {
     ($scalar:ident, $base:ty) => {
         #[derive(Debug, Default, Copy, Clone, PartialEq, PartialOrd)]
-        pub struct $scalar { pub value: $base }
+        pub struct $scalar {
+            pub value: $base,
+        }
 
         impl $scalar {
             #[allow(dead_code)]
@@ -293,13 +295,13 @@ macro_rules! scalar {
         }
 
         impl Sum<$scalar> for $scalar {
-            fn sum<I: Iterator<Item=Self>>(iter: I) -> Self {
+            fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
                 Self::new(iter.map(|v| v.value).sum())
             }
         }
 
         impl<'a> Sum<&'a Self> for $scalar {
-            fn sum<I: Iterator<Item=&'a Self>>(iter: I) -> Self {
+            fn sum<I: Iterator<Item = &'a Self>>(iter: I) -> Self {
                 iter.copied().sum()
             }
         }
@@ -317,7 +319,7 @@ macro_rules! scalar {
     };
     ($scalar:ident, $unit:ident, $abrev:ident) => {
         scalar!($scalar, $unit, $abrev, f64);
-    }
+    };
 }
 
 macro_rules! vector {
@@ -615,7 +617,7 @@ macro_rules! vector_and_scalar {
     };
     ($vector:ident, $scalar:ident, $unit:ident, $abrev:ident) => {
         vector_and_scalar!($vector, $scalar, $unit, $abrev, f64);
-    }
+    };
 }
 
 macro_rules! scalar_div {
@@ -626,7 +628,7 @@ macro_rules! scalar_div {
                 Self::Output::new(self.value / rhs.value)
             }
         }
-        
+
         impl Div<$den> for &$num {
             type Output = $res;
             fn div(self, rhs: $den) -> Self::Output {
@@ -639,7 +641,7 @@ macro_rules! scalar_div {
                 Self::Output::new(self.value / rhs.value)
             }
         }
-        
+
         impl Div<&$den> for &$num {
             type Output = $res;
             fn div(self, rhs: &$den) -> Self::Output {
@@ -647,14 +649,13 @@ macro_rules! scalar_div {
             }
         }
 
-        
         impl Div<$res> for $num {
             type Output = $den;
             fn div(self, rhs: $res) -> Self::Output {
                 Self::Output::new(self.value / rhs.value)
             }
         }
-        
+
         impl Div<$res> for &$num {
             type Output = $den;
             fn div(self, rhs: $res) -> Self::Output {
@@ -667,14 +668,13 @@ macro_rules! scalar_div {
                 Self::Output::new(self.value / rhs.value)
             }
         }
-        
+
         impl Div<&$res> for &$num {
             type Output = $den;
             fn div(self, rhs: &$res) -> Self::Output {
                 Self::Output::new(self.value / rhs.value)
             }
         }
-
 
         impl Mul<$den> for $res {
             type Output = $num;
@@ -703,7 +703,6 @@ macro_rules! scalar_div {
                 Self::Output::new(self.value * rhs.value)
             }
         }
-
 
         impl Mul<$res> for $den {
             type Output = $num;
@@ -739,12 +738,12 @@ macro_rules! scalar_div {
                 let numerator = $num::new(6.0);
                 let denominator = $den::new(2.0);
                 let result = $res::new(3.0);
-            
+
                 assert_eq!(result, numerator / denominator);
                 assert_eq!(numerator, result * denominator);
                 assert_eq!(numerator, denominator * result);
                 assert_eq!(denominator, numerator / result);
             }
         }
-    }
+    };
 }

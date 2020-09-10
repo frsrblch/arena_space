@@ -1,8 +1,8 @@
-use std::collections::BTreeSet;
+use crate::components::DurationFloat;
+use crate::state::State;
 use crate::time::DateTime;
 use chrono::Duration;
-use crate::state::State;
-use crate::components::DurationFloat;
+use std::collections::BTreeSet;
 
 #[derive(Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub struct UpdateToken {
@@ -30,11 +30,11 @@ pub enum System {
     ColonyFoodProductionRate,
     ColonyPopulation,
     ColonyFoodDecay,
-    PrintState
+    PrintState,
 }
 
 impl System {
-    fn iter() -> impl Iterator<Item=Self> {
+    fn iter() -> impl Iterator<Item = Self> {
         vec![
             System::ColonyFoodProduction,
             System::NationFoodTargets,
@@ -43,13 +43,15 @@ impl System {
             System::ColonyFoodDecay,
             System::PrintState,
         ]
-            .into_iter()
+        .into_iter()
     }
 
     fn run(self, state: &mut State) {
         match self {
             System::NationFoodTargets => state.nation.update_food_targets(&state.colony),
-            System::ColonyFoodProductionRate => state.colony.update_food_production_rate(&state.nation, &state.body),
+            System::ColonyFoodProductionRate => {
+                state.colony.update_food_production_rate(&state.nation, &state.body)
+            },
             System::ColonyFoodProduction => state.colony.produce_and_consume_food(),
             System::ColonyPopulation => state.colony.update_population(&mut state.body),
             System::ColonyFoodDecay => state.colony.food_decay(),
@@ -60,7 +62,7 @@ impl System {
     fn get_first_token(self, start: DateTime) -> UpdateToken {
         UpdateToken {
             next_update: start,
-            system: self
+            system: self,
         }
     }
 
@@ -183,7 +185,13 @@ mod tests {
     #[test]
     fn system_ord() {
         let next_update = crate::time::starting_date();
-        assert!(System::ColonyFoodProduction.get_first_token(next_update) < System::ColonyFoodProductionRate.get_first_token(next_update));
-        assert!(System::NationFoodTargets.get_first_token(next_update) < System::ColonyFoodProductionRate.get_first_token(next_update));
+        assert!(
+            System::ColonyFoodProduction.get_first_token(next_update)
+                < System::ColonyFoodProductionRate.get_first_token(next_update)
+        );
+        assert!(
+            System::NationFoodTargets.get_first_token(next_update)
+                < System::ColonyFoodProductionRate.get_first_token(next_update)
+        );
     }
 }

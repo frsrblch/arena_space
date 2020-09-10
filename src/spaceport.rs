@@ -1,7 +1,7 @@
 use super::*;
-use crate::body::{Body, Bodies};
-use crate::star::Star;
+use crate::body::{Bodies, Body};
 use crate::nation::Nation;
+use crate::star::Star;
 
 #[derive(Debug)]
 pub struct Spaceport {
@@ -48,20 +48,37 @@ impl Spaceports {
         id.id
     }
 
-    pub fn get_position(&self, spaceport: Id<Spaceport>, time: TimeFloat, bodies: &Bodies) -> Option<Position> {
-        self.alloc.validate(spaceport)
+    pub fn get_position(
+        &self,
+        spaceport: Id<Spaceport>,
+        time: TimeFloat,
+        bodies: &Bodies,
+    ) -> Option<Position> {
+        self.alloc
+            .validate(spaceport)
             .map(|spaceport| self.get_position_validated(spaceport, time, bodies))
     }
 
-    pub fn get_position_validated(&self, spaceport: Valid<Spaceport>, time: TimeFloat, bodies: &Bodies) -> Position {
+    pub fn get_position_validated(
+        &self,
+        spaceport: Valid<Spaceport>,
+        time: TimeFloat,
+        bodies: &Bodies,
+    ) -> Position {
         let body_position = self.get_body_position(spaceport, time, bodies);
         let relative_position = self.get_relative_position(spaceport, time);
 
         body_position + relative_position
     }
 
-    fn get_body_position(&self, spaceport: Valid<Spaceport>, time: TimeFloat, bodies: &Bodies) -> Position {
-        self.body.get(spaceport)
+    fn get_body_position(
+        &self,
+        spaceport: Valid<Spaceport>,
+        time: TimeFloat,
+        bodies: &Bodies,
+    ) -> Position {
+        self.body
+            .get(spaceport)
             .map(|body| bodies.get_position(body, time))
             .unwrap_or_default()
     }

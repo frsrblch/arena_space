@@ -32,7 +32,7 @@ impl Nations {
         id.id
     }
 
-    pub fn get_food_production_target(&self, id: impl TryIndexes<Nation>) -> Option<&FoodProductionTarget> {
+    pub fn get_food_production_target<ID: TryIndexes<Nation>>(&self, id: ID) -> Option<&FoodProductionTarget> {
         id.id()
             .and_then(|id| self.alloc.validate(id))
             .map(|id| self.agriculture.get(id))
@@ -93,7 +93,9 @@ mod food {
         }
 
         fn add_production_from_colonies(&mut self, colony: &Colonies) {
-            colony.food_production.iter()
+            colony
+                .food_production
+                .iter()
                 .zip(colony.nation.iter())
                 .for_each(|(production, govt)| {
                     if let Some(govt) = self.alloc.validate(*govt) {
@@ -104,7 +106,8 @@ mod food {
         }
 
         fn set_food_production_target(&mut self) {
-            self.agriculture.iter_mut()
+            self.agriculture
+                .iter_mut()
                 .zip(self.food_production.iter())
                 .zip(self.population.iter())
                 .for_each(|((agri, food_production), pop)| {
@@ -112,7 +115,10 @@ mod food {
                 });
         }
 
-        fn determine_food_production_target(food_production: MassRate, population: Population) -> FoodProductionTarget {
+        fn determine_food_production_target(
+            food_production: MassRate,
+            population: Population,
+        ) -> FoodProductionTarget {
             let food_demand = population.get_food_requirement();
 
             match food_production / food_demand {
@@ -144,8 +150,8 @@ impl FoodProductionTarget {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::colony::{Colony, ColonyLinks};
     use crate::body::BodyLinks;
+    use crate::colony::{Colony, ColonyLinks};
     use crate::star::{Star, StarType};
 
     #[allow(dead_code)]
@@ -160,7 +166,7 @@ mod tests {
 
         let earth = state.state.body.create(
             crate::body::examples::earth(),
-            BodyLinks { star, parent: None }
+            BodyLinks { star, parent: None },
         );
 
         let moon = state.state.body.create(
@@ -171,7 +177,9 @@ mod tests {
         let nation = &mut state.state.nation;
         let colony = &mut state.state.colony;
 
-        let nation_id = nation.create(Nation { name: "Nation".to_string() });
+        let nation_id = nation.create(Nation {
+            name: "Nation".to_string(),
+        });
 
         let population = Population::in_millions(10.0);
         let five_days_worth = population.get_food_requirement() * DurationFloat::in_days(5.0);
@@ -185,8 +193,8 @@ mod tests {
             },
             ColonyLinks {
                 body: moon,
-                nation: nation_id
-            }
+                nation: nation_id,
+            },
         );
 
         let fed = colony.create(
@@ -198,12 +206,13 @@ mod tests {
             },
             ColonyLinks {
                 body: earth,
-                nation: nation_id
-            }
+                nation: nation_id,
+            },
         );
 
         if let Some(fed) = colony.alloc.validate(fed) {
-            colony.food_production.insert(fed, population.get_food_requirement());
+            let food = population.get_food_requirement();
+            colony.food_production.insert(fed, food);
         }
 
         (state, nation_id)
@@ -215,7 +224,7 @@ pub mod examples {
 
     pub fn humanity() -> Nation {
         Nation {
-            name: "Humanity".to_string()
+            name: "Humanity".to_string(),
         }
     }
 }

@@ -1,5 +1,5 @@
-use chrono::{NaiveDate, NaiveTime, NaiveDateTime, Duration};
 use crate::components::TimeFloat;
+use chrono::{Duration, NaiveDate, NaiveDateTime, NaiveTime};
 use std::ops::AddAssign;
 
 pub type DateTime = NaiveDateTime;
@@ -44,7 +44,8 @@ impl TimeState {
 
 impl AddAssign<StdDuration> for TimeState {
     fn add_assign(&mut self, rhs: StdDuration) {
-        let new_date_time = self.game_time + Duration::from_std(rhs).expect("invalid DateTime after adding Duration");
+        let duration = Duration::from_std(rhs).expect("invalid DateTime after adding Duration");
+        let new_date_time = self.game_time + duration;
         self.set_date_time(new_date_time);
     }
 }

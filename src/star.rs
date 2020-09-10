@@ -1,5 +1,5 @@
-use crate::*;
 use crate::body::Planet;
+use crate::*;
 
 #[derive(Debug, Clone)]
 pub struct Star {
@@ -49,7 +49,7 @@ impl State {
 
 #[derive(Debug, Copy, Clone)]
 pub enum StarType {
-    G(Fraction)
+    G(Fraction),
 }
 
 impl StarType {

@@ -1,4 +1,4 @@
-use std::fmt::{Display, Result, Formatter};
+use std::fmt::{Display, Formatter, Result};
 use std::ops::*;
 
 pub use position::*;
@@ -10,12 +10,12 @@ mod time;
 pub use ema::*;
 mod ema;
 
-pub use orbit::*;
-use rand::Rng;
-use rand::distributions::{Distribution, Standard};
-use std::iter::Sum;
 use chrono::Duration;
 use num_format::{Locale, ToFormattedString};
+pub use orbit::*;
+use rand::distributions::{Distribution, Standard};
+use rand::Rng;
+use std::iter::Sum;
 
 mod orbit;
 
@@ -150,9 +150,8 @@ impl Population {
     }
 
     /// 2 kg per person per day
-    const FOOD_PER_PERSON: MassRatePerPerson = MassRatePerPerson::in_kg_per_s_person(
-        2.0 / DurationFloat::SECONDS_PER_DAY
-    );
+    const FOOD_PER_PERSON: MassRatePerPerson =
+        MassRatePerPerson::in_kg_per_s_person(2.0 / DurationFloat::SECONDS_PER_DAY);
 
     pub fn millions(self) -> Millions {
         Millions(self)
@@ -274,7 +273,6 @@ scalar_div!(CreditsPerSecondPerPerson, MassRatePerPerson, CreditsPerKilogram);
 // credits/s/person - wage
 // credits/kg       - price
 
-
 #[derive(Debug, Default, Copy, Clone, PartialOrd, PartialEq)]
 pub struct Fraction(f64);
 
@@ -289,17 +287,17 @@ impl Into<f64> for Fraction {
 impl Fraction {
     pub const fn new(value: f64) -> Self {
         if value == f64::NEG_INFINITY || value.is_nan() {
-            return Self(0.0)
+            return Self(0.0);
         }
 
         if value == f64::INFINITY {
-            return Self(1.0)
+            return Self(1.0);
         }
 
         match value {
             value if value < 0.0 => Self(0.0),
             value if value > 1.0 => Self(1.0),
-            value => Self(value)
+            value => Self(value),
         }
     }
 
