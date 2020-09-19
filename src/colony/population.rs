@@ -1,7 +1,7 @@
 use super::*;
 
 impl Colonies {
-    pub fn get_population(&self, id: Id<Colony>) -> Option<&Population> {
+    pub fn get_population<I: TryIndexes<Colony>>(&self, id: I) -> Option<&Population> {
         self.alloc.validate(id).map(|id| self.population.get(id))
     }
 
@@ -19,39 +19,39 @@ impl Colonies {
             .zip(land_area)
             .for_each(|(((pop, hunger), body_pop), land_area)| {
                 let body_pop = body_pop.copied().unwrap_or(*pop);
-                *pop *= Self::get_population_multiplier(*hunger, land_area, body_pop);
+                *pop *= get_population_multiplier(*hunger, land_area, body_pop);
             });
     }
+}
 
-    // Logistic function:   dN/dt = r * N
-    //                      dN/dt = r_max * (K - N) / K * N
-    //
-    // where:               N = population
-    //                      r = growth rate (zero growth = 1.0)
-    // where:               K = N_max * r_max / (r_max - 1)
-    //                      N_max = ρ_max * surface area * land fraction * habitable fraction
-    //                      land fraction = land area / total area
-    //                      habitable fraction = habitable area / land area
-    //                      ρ_max = 12 billion / 104 million sq km
-    //
-    //                      land usage: https://ourworldindata.org/land-use
-    fn get_population_multiplier(
-        hunger: Hunger,
-        land_area: Area,
-        body_population: Population,
-    ) -> f64 {
-        let max_pop = land_area * MAX_POPULATION_DENSITY;
-        let k = max_pop * (BASE_GROWTH_MULTIPLIER / BASE_GROWTH_RATE);
+// Logistic function:   dN/dt = r * N
+//                      dN/dt = r_max * (K - N) / K * N
+//
+// where:               N = population
+//                      r = growth rate (zero growth = 1.0)
+// where:               K = N_max * r_max / (r_max - 1)
+//                      N_max = ρ_max * surface area * land fraction * habitable fraction
+//                      land fraction = land area / total area
+//                      habitable fraction = habitable area / land area
+//                      ρ_max = 12 billion / 104 million sq km
+//
+//                      land usage: https://ourworldindata.org/land-use
+fn get_population_multiplier(
+    hunger: Hunger,
+    land_area: Area,
+    body_population: Population,
+) -> f64 {
+    let max_pop = land_area * MAX_POPULATION_DENSITY;
+    let k = max_pop * (BASE_GROWTH_MULTIPLIER / BASE_GROWTH_RATE);
 
-        let mut k_factor = 1.0 - (body_population / k);
-        k_factor = k_factor.max(0.01);
+    let mut k_factor = 1.0 - (body_population / k);
+    k_factor = k_factor.max(0.01);
 
-        let hunger_factor = 1.0 - hunger.value();
+    let hunger_factor = 1.0 - hunger.value();
 
-        let annual_growth_rate = BASE_GROWTH_MULTIPLIER * k_factor * hunger_factor;
+    let annual_growth_rate = BASE_GROWTH_MULTIPLIER * k_factor * hunger_factor;
 
-        annual_growth_rate.powf(YEAR_FRACTION)
-    }
+    annual_growth_rate.powf(YEAR_FRACTION)
 }
 
 const YEAR_FRACTION: f64 = System::ColonyPopulation.get_interval_as_year_fraction();

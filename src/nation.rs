@@ -44,13 +44,13 @@ mod food_production_targets {
     use super::*;
 
     impl Nations {
-        pub fn update_food_targets(&mut self, colony: &Colonies) {
-            self.sum_population(colony);
-            self.sum_food_production(colony);
+        pub fn update_food_targets(&mut self, colonies: &Colonies) {
+            self.sum_population_from(colonies);
+            self.sum_food_production(colonies);
             self.set_food_production_target();
         }
 
-        fn sum_population(&mut self, colonies: &Colonies) {
+        fn sum_population_from(&mut self, colonies: &Colonies) {
             self.population.sum_from(&colonies.population, &colonies.nation, &self.alloc);
         }
 
