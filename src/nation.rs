@@ -69,21 +69,8 @@ mod food {
                 .zip(self.food_production.iter())
                 .zip(self.population.iter())
                 .for_each(|((agri, food_production), pop)| {
-                    *agri = Self::determine_food_production_target(*food_production, *pop);
+                    *agri = FoodProductionTarget::new(*food_production, *pop);
                 });
-        }
-
-        fn determine_food_production_target(
-            food_production: MassRate,
-            population: Population,
-        ) -> FoodProductionTarget {
-            let food_demand = population.get_food_requirement();
-
-            match food_production / food_demand {
-                ratio if ratio > 1.1 => FoodProductionTarget::Contract,
-                ratio if ratio < 1.02 => FoodProductionTarget::Expand,
-                _ => FoodProductionTarget::Stable,
-            }
         }
     }
 }
@@ -96,6 +83,16 @@ pub enum FoodProductionTarget {
 }
 
 impl FoodProductionTarget {
+    pub fn new(food_production: MassRate, population: Population) -> Self {
+        let food_demand = population.get_food_requirement();
+
+        match food_production / food_demand {
+            ratio if ratio > 1.1 => FoodProductionTarget::Contract,
+            ratio if ratio < 1.02 => FoodProductionTarget::Expand,
+            _ => FoodProductionTarget::Stable,
+        }
+    }
+
     pub fn get_multiplier(&self) -> f64 {
         match self {
             FoodProductionTarget::Expand => 0.2,
@@ -174,6 +171,31 @@ mod tests {
         }
 
         (state, nation_id)
+    }
+
+    use FoodProductionTarget::*;
+    #[test]
+    fn food_production_target_if_well_fed() {
+        let population = Population::in_millions(1.0);
+        let food_production = population.get_food_requirement();
+
+        assert_eq!(Stable, FoodProductionTarget::new(food_production * 1.05, population));
+    }
+
+    #[test]
+    fn food_production_target_if_under_fed() {
+        let population = Population::in_millions(1.0);
+        let food_production = population.get_food_requirement();
+
+        assert_eq!(Expand, FoodProductionTarget::new(food_production * 0.5, population));
+    }
+
+    #[test]
+    fn food_production_target_if_over_fed() {
+        let population = Population::in_millions(1.0);
+        let food_production = population.get_food_requirement();
+
+        assert_eq!(Contract, FoodProductionTarget::new(food_production * 1.5, population));
     }
 }
 
