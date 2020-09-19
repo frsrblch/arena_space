@@ -13,7 +13,8 @@ impl Colonies {
         let body_pop = self.body.iter().map(|b| bodies.population.get(b));
         let land_area = self.body.iter().map(|b| bodies.get_land_area(b));
 
-        self.population.iter_mut()
+        self.population
+            .iter_mut()
             .zip(self.hunger_ema.iter())
             .zip(body_pop)
             .zip(land_area)
@@ -36,11 +37,7 @@ impl Colonies {
 //                      ρ_max = 12 billion / 104 million sq km
 //
 //                      land usage: https://ourworldindata.org/land-use
-fn get_population_multiplier(
-    hunger: Hunger,
-    land_area: Area,
-    body_population: Population,
-) -> f64 {
+fn get_population_multiplier(hunger: Hunger, land_area: Area, body_population: Population) -> f64 {
     let max_pop = land_area * MAX_POPULATION_DENSITY;
     let k = max_pop * (BASE_GROWTH_MULTIPLIER / BASE_GROWTH_RATE);
 

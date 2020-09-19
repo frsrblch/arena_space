@@ -1,8 +1,8 @@
 use crate::components::Fraction;
+use crate::nation::FoodProductionTarget;
 use Habitability::*;
 use Pressure::*;
 use Surface::*;
-use crate::nation::FoodProductionTarget;
 
 /// The ability of an environment to support human life.
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]

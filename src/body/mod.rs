@@ -57,7 +57,10 @@ impl Bodies {
         let parent = parent
             .map(|parent| self.orbit.get(parent))
             .map(|orbit| {
-                assert!(orbit.parent.is_none(), "Cannot use a moon as a parent body.");
+                assert!(
+                    orbit.parent.is_none(),
+                    "Cannot use a moon as a parent body."
+                );
                 orbit.params
             });
 
@@ -156,7 +159,10 @@ pub mod population {
         }
 
         fn add_population(&mut self, body: &Id<Body>, colony_population: &Population) {
-            let pop = self.population.entry(*body).or_insert_with(Population::zero);
+            let pop = self.population
+                .entry(*body)
+                .or_insert_with(Population::zero);
+
             *pop += colony_population;
         }
     }

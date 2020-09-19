@@ -84,8 +84,6 @@ impl Spaceports {
     }
 
     fn get_relative_position(&self, spaceport: Valid<Spaceport>, time: TimeFloat) -> Distance {
-        self.orbit
-            .get(spaceport)
-            .calculate_position(time)
+        self.orbit.get(spaceport).calculate_position(time)
     }
 }

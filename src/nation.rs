@@ -32,7 +32,10 @@ impl Nations {
         id.id
     }
 
-    pub fn get_food_production_target<ID: TryIndexes<Nation>>(&self, id: ID) -> Option<FoodProductionTarget> {
+    pub fn get_food_production_target<ID: TryIndexes<Nation>>(
+        &self,
+        id: ID,
+    ) -> Option<FoodProductionTarget> {
         id.id()
             .and_then(|id| self.alloc.validate(id))
             .map(|id| self.agriculture.get(id))
@@ -62,8 +65,7 @@ mod food_production_targets {
             let food_consumption = self.population.iter()
                 .map(Population::get_food_requirement);
 
-            self.agriculture
-                .iter_mut()
+            self.agriculture.iter_mut()
                 .zip(self.food_production.iter())
                 .zip(food_consumption)
                 .for_each(|((agri, food_production), food_consumption)| {
@@ -175,7 +177,10 @@ mod tests {
         let food_consumption = MassRate::in_kg_per_s(1.0);
         let food_production = food_consumption * 1.05;
 
-        assert_eq!(Stable, FoodProductionTarget::new(food_production, food_consumption));
+        assert_eq!(
+            Stable,
+            FoodProductionTarget::new(food_production, food_consumption)
+        );
     }
 
     #[test]
@@ -183,7 +188,10 @@ mod tests {
         let food_consumption = MassRate::in_kg_per_s(1.0);
         let food_production = food_consumption * 0.5;
 
-        assert_eq!(Expand, FoodProductionTarget::new(food_production, food_consumption));
+        assert_eq!(
+            Expand,
+            FoodProductionTarget::new(food_production, food_consumption)
+        );
     }
 
     #[test]
@@ -191,7 +199,10 @@ mod tests {
         let food_consumption = MassRate::in_kg_per_s(1.0);
         let food_production = food_consumption * 1.5;
 
-        assert_eq!(Contract, FoodProductionTarget::new(food_production, food_consumption));
+        assert_eq!(
+            Contract,
+            FoodProductionTarget::new(food_production, food_consumption)
+        );
     }
 }
 

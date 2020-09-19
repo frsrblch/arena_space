@@ -3,9 +3,9 @@ use crate::nation::{Nation, Nations};
 use crate::systems::System;
 use crate::*;
 
-mod population;
-mod food_production;
 mod food_consumption;
+mod food_production;
+mod population;
 
 #[derive(Debug, Clone)]
 pub struct Colony {
@@ -71,7 +71,6 @@ impl Colonies {
             self.food.insert(id, Mass::zero());
             self.food_production.insert(id, MassRate::zero());
             self.hunger_ema.insert(id, Hunger::default());
-
 
             self.nation.insert(id, None);
 

@@ -11,9 +11,17 @@ impl Colonies {
             .zip(self.hunger_ema.iter_mut())
             .zip(self.food_production.iter())
             .zip(food_consumption)
-            .for_each(|(((food, hunger_ema), production_rate), food_consumption)| {
-                produce_and_consume_food(food, hunger_ema, *production_rate, food_consumption, INTERVAL);
-            });
+            .for_each(
+                |(((food, hunger_ema), production_rate), food_consumption)| {
+                    produce_and_consume_food(
+                        food,
+                        hunger_ema,
+                        *production_rate,
+                        food_consumption,
+                        INTERVAL,
+                    );
+                },
+            );
     }
 
     pub fn food_decay(&mut self) {
@@ -26,7 +34,13 @@ impl Colonies {
     }
 }
 
-fn produce_and_consume_food(food: &mut Mass, hunger_ema: &mut Hunger, food_production: MassRate, food_consumption: MassRate, interval: DurationFloat) {
+fn produce_and_consume_food(
+    food: &mut Mass,
+    hunger_ema: &mut Hunger,
+    food_production: MassRate,
+    food_consumption: MassRate,
+    interval: DurationFloat,
+) {
     let production = food_production * interval;
     *food += production;
 
