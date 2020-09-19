@@ -138,7 +138,6 @@ impl Bodies {
 pub mod population {
     use super::*;
     use crate::colony::Colonies;
-    use std::ops::AddAssign;
 
     impl Bodies {
         pub fn sum_population(&mut self, colonies: &Colonies) {
@@ -152,15 +151,13 @@ pub mod population {
                 .zip(colonies.alloc.living())
                 .filter(|(_, live)| *live)
                 .for_each(|((colony_population, body), _)| {
-                    self.add_population(colony_population, body)
+                    self.add_population(body, colony_population);
                 });
         }
 
-        fn add_population(&mut self, colony_population: &Population, body: &Id<Body>) {
-            self.population
-                .entry(*body)
-                .or_insert_with(Population::zero)
-                .add_assign(colony_population)
+        fn add_population(&mut self, body: &Id<Body>, colony_population: &Population) {
+            let pop = self.population.entry(*body).or_insert_with(Population::zero);
+            *pop += colony_population;
         }
     }
 }

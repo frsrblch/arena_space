@@ -1,0 +1,63 @@
+use super::*;
+
+impl Colonies {
+    pub fn get_population(&self, id: Id<Colony>) -> Option<&Population> {
+        self.alloc.validate(id).map(|id| self.population.get(id))
+    }
+
+    /// Sums the population on each body so that multiple colonies on the same body
+    /// will have the effect of crowding each other out
+    pub fn update_population(&mut self, bodies: &mut Bodies) {
+        bodies.sum_population(self);
+
+        let body_pop = self.body.iter().map(|b| bodies.population.get(b));
+        let land_area = self.body.iter().map(|b| bodies.get_land_area(b));
+
+        self.population.iter_mut()
+            .zip(self.hunger_ema.iter())
+            .zip(body_pop)
+            .zip(land_area)
+            .for_each(|(((pop, hunger), body_pop), land_area)| {
+                let body_pop = body_pop.copied().unwrap_or(*pop);
+                *pop *= Self::get_population_multiplier(*hunger, land_area, body_pop);
+            });
+    }
+
+    // Logistic function:   dN/dt = r * N
+    //                      dN/dt = r_max * (K - N) / K * N
+    //
+    // where:               N = population
+    //                      r = growth rate (zero growth = 1.0)
+    // where:               K = N_max * r_max / (r_max - 1)
+    //                      N_max = ρ_max * surface area * land fraction * habitable fraction
+    //                      land fraction = land area / total area
+    //                      habitable fraction = habitable area / land area
+    //                      ρ_max = 12 billion / 104 million sq km
+    //
+    //                      land usage: https://ourworldindata.org/land-use
+    fn get_population_multiplier(
+        hunger: Hunger,
+        land_area: Area,
+        body_population: Population,
+    ) -> f64 {
+        let max_pop = land_area * MAX_POPULATION_DENSITY;
+        let k = max_pop * (BASE_GROWTH_MULTIPLIER / BASE_GROWTH_RATE);
+
+        let mut k_factor = 1.0 - (body_population / k);
+        k_factor = k_factor.max(0.01);
+
+        let hunger_factor = 1.0 - hunger.value();
+
+        let annual_growth_rate = BASE_GROWTH_MULTIPLIER * k_factor * hunger_factor;
+
+        annual_growth_rate.powf(YEAR_FRACTION)
+    }
+}
+
+const YEAR_FRACTION: f64 = System::ColonyPopulation.get_interval_as_year_fraction();
+const BASE_GROWTH_RATE: f64 = 0.025;
+const BASE_GROWTH_MULTIPLIER: f64 = 1.0 + BASE_GROWTH_RATE;
+
+/// 12 billion / 104e6 sq km
+const MAX_POPULATION_DENSITY: PopulationDensity =
+    PopulationDensity::in_people_per_square_km(12e9 / 104e6);

@@ -32,24 +32,15 @@ impl Nations {
         id.id
     }
 
-    pub fn get_food_production_target<ID: TryIndexes<Nation>>(&self, id: ID) -> Option<&FoodProductionTarget> {
+    pub fn get_food_production_target<ID: TryIndexes<Nation>>(&self, id: ID) -> Option<FoodProductionTarget> {
         id.id()
             .and_then(|id| self.alloc.validate(id))
             .map(|id| self.agriculture.get(id))
+            .copied()
     }
 }
 
-mod population {
-    use super::*;
-
-    impl Nations {
-        pub(super) fn sum_population(&mut self, colonies: &Colonies) {
-            self.population.sum_from(&colonies.population, &colonies.nation, &self.alloc);
-        }
-    }
-}
-
-mod food {
+mod food_production_targets {
     use super::*;
 
     impl Nations {
@@ -59,17 +50,24 @@ mod food {
             self.set_food_production_target();
         }
 
+        fn sum_population(&mut self, colonies: &Colonies) {
+            self.population.sum_from(&colonies.population, &colonies.nation, &self.alloc);
+        }
+
         fn sum_food_production(&mut self, colony: &Colonies) {
             self.food_production.sum_from(&colony.food_production, &colony.nation, &self.alloc);
         }
 
         fn set_food_production_target(&mut self) {
+            let food_consumption = self.population.iter()
+                .map(Population::get_food_requirement);
+
             self.agriculture
                 .iter_mut()
                 .zip(self.food_production.iter())
-                .zip(self.population.iter())
-                .for_each(|((agri, food_production), pop)| {
-                    *agri = FoodProductionTarget::new(*food_production, *pop);
+                .zip(food_consumption)
+                .for_each(|((agri, food_production), food_consumption)| {
+                    *agri = FoodProductionTarget::new(*food_production, food_consumption);
                 });
         }
     }
@@ -83,10 +81,8 @@ pub enum FoodProductionTarget {
 }
 
 impl FoodProductionTarget {
-    pub fn new(food_production: MassRate, population: Population) -> Self {
-        let food_demand = population.get_food_requirement();
-
-        match food_production / food_demand {
+    pub fn new(food_production: MassRate, consumption: MassRate) -> Self {
+        match food_production / consumption {
             ratio if ratio > 1.1 => FoodProductionTarget::Contract,
             ratio if ratio < 1.02 => FoodProductionTarget::Expand,
             _ => FoodProductionTarget::Stable,
@@ -176,26 +172,26 @@ mod tests {
     use FoodProductionTarget::*;
     #[test]
     fn food_production_target_if_well_fed() {
-        let population = Population::in_millions(1.0);
-        let food_production = population.get_food_requirement();
+        let food_consumption = MassRate::in_kg_per_s(1.0);
+        let food_production = food_consumption * 1.05;
 
-        assert_eq!(Stable, FoodProductionTarget::new(food_production * 1.05, population));
+        assert_eq!(Stable, FoodProductionTarget::new(food_production, food_consumption));
     }
 
     #[test]
     fn food_production_target_if_under_fed() {
-        let population = Population::in_millions(1.0);
-        let food_production = population.get_food_requirement();
+        let food_consumption = MassRate::in_kg_per_s(1.0);
+        let food_production = food_consumption * 0.5;
 
-        assert_eq!(Expand, FoodProductionTarget::new(food_production * 0.5, population));
+        assert_eq!(Expand, FoodProductionTarget::new(food_production, food_consumption));
     }
 
     #[test]
     fn food_production_target_if_over_fed() {
-        let population = Population::in_millions(1.0);
-        let food_production = population.get_food_requirement();
+        let food_consumption = MassRate::in_kg_per_s(1.0);
+        let food_production = food_consumption * 1.5;
 
-        assert_eq!(Contract, FoodProductionTarget::new(food_production * 1.5, population));
+        assert_eq!(Contract, FoodProductionTarget::new(food_production, food_consumption));
     }
 }
 

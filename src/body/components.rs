@@ -2,6 +2,7 @@ use crate::components::Fraction;
 use Habitability::*;
 use Pressure::*;
 use Surface::*;
+use crate::nation::FoodProductionTarget;
 
 /// The ability of an environment to support human life.
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
@@ -17,6 +18,14 @@ pub enum Habitability {
 }
 
 impl Habitability {
+    pub fn get_food_production_factor(&self, target: FoodProductionTarget) -> f64 {
+        match target {
+            FoodProductionTarget::Stable => 1.0,
+            FoodProductionTarget::Contract => self.get_food_production_contraction_multiplier(),
+            FoodProductionTarget::Expand => self.get_food_production_contraction_multiplier(),
+        }
+    }
+
     pub fn get_food_production_expansion_multiplier(&self) -> f64 {
         match self {
             Uninhabitable => 0.0,
