@@ -44,29 +44,7 @@ mod population {
 
     impl Nations {
         pub(super) fn sum_population(&mut self, colonies: &Colonies) {
-            self.zero_population();
-            self.add_population_from_colonies(colonies);
-        }
-
-        fn zero_population(&mut self) {
-            self.population
-                .iter_mut()
-                .for_each(|v| *v = Population::zero());
-        }
-
-        fn add_population_from_colonies(&mut self, colony: &Colonies) {
-            colony.population.iter()
-                .zip(colony.nation.iter())
-                .for_each(|(population, nation)| {
-                    self.add_population(population, nation);
-                });
-        }
-
-        fn add_population(&mut self, population: &Population, nation: &Option<Id<Nation>>) {
-            if let Some(nation) = self.alloc.validate(nation) {
-                let national_population = self.population.get_mut(nation);
-                *national_population += population;
-            }
+            self.population.sum_from(&colonies.population, &colonies.nation, &self.alloc);
         }
     }
 }
@@ -82,27 +60,7 @@ mod food {
         }
 
         fn sum_food_production(&mut self, colony: &Colonies) {
-            self.zero_food_production();
-            self.add_production_from_colonies(colony);
-        }
-
-        fn zero_food_production(&mut self) {
-            self.food_production
-                .iter_mut()
-                .for_each(|v| *v = MassRate::zero());
-        }
-
-        fn add_production_from_colonies(&mut self, colony: &Colonies) {
-            colony
-                .food_production
-                .iter()
-                .zip(colony.nation.iter())
-                .for_each(|(production, govt)| {
-                    if let Some(govt) = self.alloc.validate(*govt) {
-                        let govt_production = self.food_production.get_mut(govt);
-                        *govt_production += production;
-                    }
-                });
+            self.food_production.sum_from(&colony.food_production, &colony.nation, &self.alloc);
         }
 
         fn set_food_production_target(&mut self) {
