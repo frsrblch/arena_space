@@ -10,6 +10,13 @@ mod time;
 pub use ema::*;
 mod ema;
 
+pub use macros::*;
+#[macro_use]
+mod macros;
+
+pub use economy::*;
+mod economy;
+
 use chrono::Duration;
 use num_format::{Locale, ToFormattedString};
 pub use orbit::*;
@@ -18,9 +25,6 @@ use rand::Rng;
 use std::iter::Sum;
 
 mod orbit;
-
-#[macro_use]
-mod macros;
 
 scalar!(Mass, kilograms, kg);
 

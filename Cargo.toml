@@ -8,10 +8,10 @@ edition = "2018"
 
 [dependencies]
 arena_ecs = { path = "C:/Users/Farseer/IdeaProjects/arena_ecs" }
-fnv = "*"
-paste = "*"
-rand = "*"
-time = "*"
-chrono = "*"
-num-traits = "*"
-num-format = "*"
+fnv = "1.0"
+paste = "1.0"
+rand = "0.7"
+time = "0.2"
+chrono = "0.4"
+num-traits = "0.2"
+num-format = "0.4"

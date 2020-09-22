@@ -747,3 +747,34 @@ macro_rules! scalar_div {
         }
     };
 }
+
+macro_rules! array_enum {
+    ($name:ident { $($enum_type:ident),+ $(,)?}) => {
+        #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+        pub enum $name {
+            $(
+                $enum_type ,
+            )*
+        }
+
+        impl $name {
+            pub const fn array() -> &'static [Self] {
+                &[
+                    $(
+                        Self::$enum_type,
+                    )*
+                ]
+            }
+
+            pub const fn len() -> usize {
+                Self::array().len()
+            }
+        }
+
+        impl From<$name> for usize {
+            fn from(value: $name) -> usize {
+                value as usize
+            }
+        }
+    };
+}

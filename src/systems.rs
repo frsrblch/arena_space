@@ -24,31 +24,22 @@ impl UpdateToken {
     }
 }
 
-#[derive(Debug, Eq, PartialEq, Ord, PartialOrd, Copy, Clone)]
-pub enum System {
-    ColonyFoodProduction,
-    NationFoodTargets,
-    ColonyFoodProductionRate,
-    ColonyPopulation,
-    ColonyFoodDecay,
-    PrintState,
-}
+array_enum!(
+    System {
+        ColonyProductionCycle,
+        ColonyFoodProduction, // remove
+        NationFoodTargets,
+        ColonyFoodProductionRate,
+        ColonyPopulation,
+        ColonyFoodDecay,
+        PrintState,
+    }
+);
 
 impl System {
-    fn iter() -> impl Iterator<Item = Self> {
-        vec![
-            System::ColonyFoodProduction,
-            System::NationFoodTargets,
-            System::ColonyFoodProductionRate,
-            System::ColonyPopulation,
-            System::ColonyFoodDecay,
-            System::PrintState,
-        ]
-        .into_iter()
-    }
-
     fn run(self, state: &mut State) {
         match self {
+            System::ColonyProductionCycle => state.colony.economy.production_cycle(&state.colony.alloc),
             System::NationFoodTargets => state.nation.update_food_targets(&state.colony),
             System::ColonyFoodProductionRate => {
                 state.colony.update_food_production_rate(&state.nation, &state.body)
@@ -68,18 +59,12 @@ impl System {
     }
 
     pub fn get_interval(self) -> Duration {
-        match self {
-            System::NationFoodTargets => Duration::days(30),
-            System::ColonyFoodProductionRate => Duration::days(5),
-            System::ColonyFoodProduction => Duration::days(1),
-            System::ColonyPopulation => Duration::days(5),
-            System::ColonyFoodDecay => Duration::days(30),
-            System::PrintState => Duration::days(90),
-        }
+        self.get_interval_float().into()
     }
 
     pub const fn get_interval_float(self) -> DurationFloat {
         match self {
+            System::ColonyProductionCycle => DurationFloat::in_days(1.0),
             System::NationFoodTargets => DurationFloat::in_days(30.0),
             System::ColonyFoodProductionRate => DurationFloat::in_days(5.0),
             System::ColonyFoodProduction => DurationFloat::in_days(1.0),
@@ -108,7 +93,8 @@ impl Default for Systems {
 
 impl Systems {
     pub fn new(start_date: DateTime) -> Self {
-        let queue = System::iter()
+        let queue = System::array()
+            .iter()
             .map(|system| system.get_first_token(start_date))
             .map(Reverse)
             .collect();

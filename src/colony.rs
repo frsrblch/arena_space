@@ -2,10 +2,12 @@ use crate::body::{Bodies, Body};
 use crate::nation::{Nation, Nations};
 use crate::systems::System;
 use crate::*;
+use crate::colony::economy::Economy;
 
 mod food_consumption;
 mod food_production;
 mod population;
+mod economy;
 
 #[derive(Debug, Clone)]
 pub struct Colony {
@@ -37,6 +39,8 @@ pub struct Colonies {
     pub food_production: Component<Colony, MassRate>,
     pub hunger_ema: Component<Colony, Hunger>,
 
+    pub economy: Economy,
+
     pub body: Component<Colony, Id<Body>>,
     pub nation: Component<Colony, Option<Id<Nation>>>,
 }
@@ -55,6 +59,8 @@ impl Colonies {
         self.food.insert(id, row.food);
         self.food_production.insert(id, food_production);
         self.hunger_ema.insert(id, ExpMovingAvg::default());
+
+        self.economy.insert(id);
 
         self.body.insert(id, links.body);
         self.nation.insert(id, Some(links.nation));

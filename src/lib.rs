@@ -13,6 +13,7 @@ use system_state::SystemState;
 
 pub mod body;
 pub mod colony;
+#[macro_use]
 pub mod components;
 pub mod geometry;
 pub mod nation;
