@@ -74,7 +74,7 @@ impl Economy {
         for (production, facility) in self.production.iter_mut() {
             let production = production.validate(alloc);
 
-            let min_fulfillment = Self::get_min_fulfillment(&production, &self.fulfillment, *facility);
+            let min_fulfillment = Self::get_min_fulfillment(&production, facility, &self.fulfillment);
 
             Self::consume_inputs(&production, facility, &mut self.stockpile, &min_fulfillment);
             Self::add_output(&production, facility, &mut self.stockpile, &min_fulfillment);
@@ -119,10 +119,13 @@ impl Economy {
 
     fn get_min_fulfillment(
         production: &ValidMap<Colony, MassRate>,
+        facility: &Facility,
         fulfillment: &ResourceComponent<Colony, f64>,
-        facility: Facility
     ) -> Vec<f64> {
-        let input_fulfillment = Self::get_input_fulfillment(fulfillment, facility);
+        let input_fulfillment: Vec<_> = facility.get_inputs()
+            .iter()
+            .map(|input| fulfillment.get(input.resource))
+            .collect();
 
         let get_min_fulfillment = |colony: ValidRef<Colony>| input_fulfillment.iter()
             .fold(1.0f64, |min, f| f.get(colony).min(min));
@@ -130,13 +133,6 @@ impl Economy {
         production.iter()
             .map(|(c, _)| c)
             .map(get_min_fulfillment)
-            .collect()
-    }
-
-    fn get_input_fulfillment(fulfillment: &ResourceComponent<Colony, f64>, facility: Facility) -> Vec<&Component<Colony, f64>> {
-        facility.get_inputs()
-            .iter()
-            .map(|input| fulfillment.get(input.resource))
             .collect()
     }
 
