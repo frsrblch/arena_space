@@ -8,9 +8,6 @@ use arena_ecs::*;
 use components::*;
 use state::State;
 
-#[cfg(test)]
-use system_state::SystemState;
-
 pub mod body;
 pub mod colony;
 #[macro_use]

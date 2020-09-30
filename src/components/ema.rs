@@ -6,19 +6,14 @@ pub struct ExpMovingAvg<T, const PERIOD: f64> {
     value: T,
 }
 
-impl<T: Default, const PERIOD: f64> Default for ExpMovingAvg<T, PERIOD> {
-    fn default() -> Self {
-        assert!(PERIOD >= 2.0, "ExpMovingAvg::PERIOD must be 2.0 or larger");
-        Self {
-            value: Default::default(),
-        }
-    }
-}
-
 impl<T, const PERIOD: f64> ExpMovingAvg<T, PERIOD>
 where
     T: Mul<f64, Output = T> + Copy + MulAddAssign<f64, T>,
 {
+    pub fn new(value: T) -> Self {
+        Self { value }
+    }
+
     pub fn value(&self) -> T {
         self.value
     }
@@ -38,24 +33,23 @@ where
     }
 }
 
-#[test]
-fn test() {
-    const PERIOD: f64 = 2.0;
-    let mut ema = ExpMovingAvg::<f64, PERIOD>::default();
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-    ema.add_next(1.0);
-    let expected_first = 2.0 / (PERIOD + 1.0);
+    #[test]
+    fn test() {
+        const PERIOD: f64 = 2.0;
+        let mut ema = ExpMovingAvg::<f64, PERIOD>::new(0.0);
 
-    assert_eq!(expected_first, ema.value());
+        ema.add_next(1.0);
+        let expected_first = 2.0 / (PERIOD + 1.0);
 
-    ema.add_next(3.0);
-    let expected_second = expected_first * 1.0 / (PERIOD + 1.0) + 2.0;
+        assert_eq!(expected_first, ema.value());
 
-    assert_eq!(expected_second, ema.value());
-}
+        ema.add_next(3.0);
+        let expected_second = expected_first * 1.0 / (PERIOD + 1.0) + 2.0;
 
-#[test]
-#[should_panic]
-fn a() {
-    let _ema = ExpMovingAvg::<f64, 1.0>::default();
+        assert_eq!(expected_second, ema.value());
+    }
 }

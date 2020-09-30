@@ -236,6 +236,10 @@ fn duration_float_from_duration() {
 scalar!(MassRate, kg_per_second, kg_per_s);
 
 impl MassRate {
+    pub fn in_tons_per_day(tons: f64) -> Self {
+        Self::in_kg_per_s(tons * 1000.0 / (24.0 * 3600.0))
+    }
+
     pub fn tons_per_day(self) -> TonsPerDay {
         TonsPerDay(self)
     }

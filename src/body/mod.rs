@@ -149,7 +149,7 @@ pub mod population {
         }
 
         fn add_colony_population(&mut self, colonies: &Colonies) {
-            colonies.population.iter()
+            colonies.people.population.iter()
                 .zip(colonies.body.iter())
                 .zip(colonies.alloc.living())
                 .filter(|(_, live)| *live)

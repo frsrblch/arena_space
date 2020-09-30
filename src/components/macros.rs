@@ -769,11 +769,102 @@ macro_rules! array_enum {
             pub const fn len() -> usize {
                 Self::array().len()
             }
+
+            pub const fn index(&self) -> usize {
+                *self as usize
+            }
+        }
+    };
+}
+
+
+macro_rules! component_array {
+    ($name:ident, $enum:ty) => {
+        #[derive(Debug)]
+        pub struct $name <ID, T> {
+            components: [Component<ID, T>; <$enum>::len()],
         }
 
-        impl From<$name> for usize {
-            fn from(value: $name) -> usize {
-                value as usize
+        impl<ID, T> Default for $name <ID, T> {
+            fn default() -> Self {
+                Self {
+                    components: Default::default(),
+                }
+            }
+        }
+
+        impl<ID, T: Default + Clone> $name <ID, T> {
+            pub fn get(&self, index: $enum) -> &Component<ID, T> {
+                &self.components[index.index()]
+            }
+
+            pub fn get_mut(&mut self, index: Resource) -> &mut Component<ID, T> {
+                &mut self.components[index.index()]
+            }
+
+            pub fn insert<I: Indexes<ID>>(&mut self, id: I, value: T) {
+                self.components
+                    .iter_mut()
+                    .for_each(|comp| comp.insert(id, value.clone()));
+            }
+
+            pub fn iter(&self) -> Iter<Component<ID, T>> {
+                self.components.iter()
+            }
+
+            pub fn iter_mut(&mut self) -> IterMut<Component<ID, T>> {
+                self.components.iter_mut()
+            }
+
+            pub fn fill_with<F: Fn() -> T + Copy>(&mut self, f: F) {
+                self.components
+                    .iter_mut()
+                    .for_each(|comp| comp.fill_with(f));
+            }
+        }
+    };
+}
+
+macro_rules! component_map {
+    ($name:ident, $enum:ty) => {
+        #[derive(Debug)]
+        pub struct $name <ID, T> {
+            map: [IdMap<ID, T>; <$enum>::len()],
+        }
+
+        impl<ID, T> Default for $name <ID, T> {
+            fn default() -> Self {
+                Self {
+                    map: Default::default(),
+                }
+            }
+        }
+
+        impl<ID, T> $name <ID, T> {
+            pub fn get(&self, value: $enum) -> &IdMap<ID, T> {
+                &self.map[value.index()]
+            }
+
+            pub fn get_mut(&mut self, value: $enum) -> &mut IdMap<ID, T> {
+                &mut self.map[value.index()]
+            }
+
+            pub fn iter(&self) -> Iter<IdMap<ID, T>> {
+                self.map.iter()
+            }
+
+            pub fn iter_mut(&mut self) -> IterMut<IdMap<ID, T>> {
+                self.map.iter_mut()
+            }
+
+            pub fn iter_enum(&self) -> Zip<Iter<IdMap<ID, T>>, Iter<$enum>> {
+                self.map.iter()
+                    .zip(Facility::array())
+            }
+
+            pub fn iter_enum_mut(&mut self) -> Zip<IterMut<IdMap<ID, T>>, Iter<$enum>> {
+                self.map.iter_mut()
+                    .zip(Facility::array())
             }
         }
     };
