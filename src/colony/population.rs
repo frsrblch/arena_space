@@ -39,10 +39,6 @@ impl People {
 const INTERVAL: DurationFloat = crate::systems::System::ColonyProductionCycle.get_interval_float();
 
 impl Colonies {
-    pub fn get_population<I: TryIndexes<Colony>>(&self, id: I) -> Option<&Population> {
-        self.alloc.validate(id).map(|id| self.people.population.get(id))
-    }
-
     /// Sums the population on each body so that multiple colonies on the same body
     /// will have the effect of crowding each other out
     pub fn update_population(&mut self, bodies: &mut Bodies) {

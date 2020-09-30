@@ -25,7 +25,7 @@ impl Nations {
 
         self.population.insert(id, Population::default());
 
-        id.id
+        id.value
     }
 }
 
@@ -39,7 +39,7 @@ mod food_production_targets {
         }
 
         fn sum_population_from(&mut self, colonies: &Colonies) {
-            self.population.sum_from(&colonies.people.population, &colonies.nation, &self.alloc);
+            self.population.sum_from_opt(&colonies.people.population, &colonies.nation, &self.alloc);
         }
     }
 }

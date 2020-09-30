@@ -113,6 +113,7 @@ impl Production {
             .iter_enum_mut()
             .for_each(|(production, facility)| {
                 let production = production.validate(alloc);
+
                 facility.get_inputs()
                     .iter()
                     .for_each(|input| {
@@ -132,9 +133,9 @@ impl Production {
         self.data
             .iter_enum_mut()
             .for_each(|(production, facility)| {
-                let mut production = production.validate(alloc);
+                let production = &mut production.validate_mut(alloc);
 
-                Self::reset_fulfillment(&mut production);
+                Self::reset_fulfillment(production);
 
                 facility.get_inputs()
                     .iter()
@@ -151,8 +152,8 @@ impl Production {
             });
     }
 
-    fn reset_fulfillment(map: &mut ValidMap<Colony, ProductionUnit>) {
-        map
+    fn reset_fulfillment(map: &mut Valid<&mut IdMap<Colony, ProductionUnit>>) {
+        map.value
             .iter_mut()
             .for_each(|(_, unit)| unit.fulfillment = 1.0);
     }
@@ -161,7 +162,7 @@ impl Production {
         self.data
             .iter_enum_mut()
             .for_each(|(production, facility)| {
-                let mut production = production.validate(alloc);
+                let mut production = production.validate_mut(alloc);
 
                 for input in facility.get_inputs() {
                     let stockpile = resources.stockpile.get_mut(input.resource);
@@ -203,4 +204,27 @@ impl ProductionUnit {
     pub fn get_output(&self) -> MassRate {
         self.capacity * self.fulfillment
     }
+}
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
+pub struct Edge<> {
+    pub from: Id<Colony>,
+    pub to: Id<Colony>,
+}
+
+pub struct Shipping {
+    pub graph: Graph<Colony, ShippingUnit>,
+    pub queue: Component<Colony, Mass>,
+}
+
+// impl Shipping {
+//     pub fn request_resources(&mut self, resources: &mut Resources, alloc: &Allocator<Colony>) {
+//         let graph = self.graph.validate(alloc);
+//     }
+// }
+
+pub struct ShippingUnit {
+    pub flow: MassRate,
+    pub fulfillment: f64,
+    pub queue: Mass,
 }

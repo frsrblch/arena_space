@@ -52,7 +52,7 @@ impl Colonies {
         self.body.insert(id, links.body);
         self.nation.insert(id, Some(links.nation));
 
-        id.id
+        id.value
     }
 
     pub fn kill(&mut self, id: Id<Colony>) {
@@ -62,11 +62,11 @@ impl Colonies {
 
             self.people.insert(id, Population::zero());
             self.resources.insert(id);
-            self.production.kill(id.id);
+            self.production.kill(id.value);
 
             self.nation.insert(id, None);
 
-            let id = id.id;
+            let id = id.value;
             self.alloc.kill(id);
         }
     }
