@@ -1,6 +1,6 @@
 use Resource::*;
 use Facility::*;
-use arena_ecs::{Component, Indexes, IdMap};
+use arena_ecs::{Component, ValidId, IdMap};
 use std::slice::{Iter, IterMut};
 use std::iter::Zip;
 

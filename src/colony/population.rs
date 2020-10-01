@@ -8,7 +8,7 @@ pub struct People {
 }
 
 impl People {
-    pub fn insert<I: Indexes<Colony>>(&mut self, id: I, population: Population) {
+    pub fn insert<I: ValidId<Colony>>(&mut self, id: I, population: Population) {
         self.population.insert(id, population);
         self.satiation.insert(id, Satiation::new(1.0));
     }
@@ -45,7 +45,7 @@ impl Colonies {
         bodies.sum_population(self);
 
         let body_pop = self.body.iter().map(|b| bodies.population.get(b));
-        let land_area = self.body.iter().map(|b| bodies.get_land_area(b));
+        let land_area = self.body.iter().map(|b| bodies.get_land_area(*b));
 
         self.people.population.iter_mut()
             .zip(self.people.satiation.iter())

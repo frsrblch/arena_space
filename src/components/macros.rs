@@ -802,7 +802,7 @@ macro_rules! component_array {
                 &mut self.components[index.index()]
             }
 
-            pub fn insert<I: Indexes<ID>>(&mut self, id: I, value: T) {
+            pub fn insert<I: ValidId<ID>>(&mut self, id: I, value: T) {
                 self.components
                     .iter_mut()
                     .for_each(|comp| comp.insert(id, value.clone()));

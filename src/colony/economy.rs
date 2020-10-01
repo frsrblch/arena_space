@@ -46,7 +46,7 @@ pub struct Resources {
 }
 
 impl Resources {
-    pub fn insert<I: Indexes<Colony>>(&mut self, id: I) {
+    pub fn insert<I: ValidId<Colony>>(&mut self, id: I) {
         self.stockpile.insert(id, Mass::zero());
         self.requested.insert(id, MassRate::zero());
         self.fulfillment.insert(id, 0.0);
