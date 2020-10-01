@@ -1,7 +1,9 @@
-use crate::components::{Mass, ResourceComponent, FacilityMap, MassRate, DurationFloat};
+use crate::components::{Mass, ResourceComponent, FacilityMap, MassRate, DurationFloat, Facility};
 use crate::colony::{Colony, Colonies};
 use arena_ecs::*;
 use crate::systems::System;
+use std::slice::{Iter, IterMut};
+use std::iter::Zip;
 
 const INTERVAL: DurationFloat = crate::systems::System::ColonyProductionCycle.get_interval_float();
 
@@ -116,6 +118,22 @@ pub struct Production {
 }
 
 impl Production {
+    pub fn iter(&self) -> std::slice::Iter<IdMap<Colony, ProductionUnit>> {
+        self.data.iter()
+    }
+
+    pub fn iter_mut(&mut self) -> std::slice::IterMut<IdMap<Colony, ProductionUnit>> {
+        self.data.iter_mut()
+    }
+
+    pub fn iter_enum(&self) -> Zip<Iter<IdMap<Colony, ProductionUnit>>, Iter<Facility>> {
+        self.data.iter_enum()
+    }
+
+    pub fn iter_enum_mut(&mut self) -> Zip<IterMut<IdMap<Colony, ProductionUnit>>, Iter<Facility>> {
+        self.data.iter_enum_mut()
+    }
+
     pub fn kill(&mut self, id: Id<Colony>) {
         self.data
             .iter_mut()
