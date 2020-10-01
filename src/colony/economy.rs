@@ -98,14 +98,6 @@ impl Resources {
     }
 }
 
-#[test]
-fn calculate_fulfillment() {
-    assert_eq!(1.0, Resources::calculate_fulfillment(Mass::in_kg(1.0), MassRate::in_kg_per_s(1.0), DurationFloat::in_s(1.0)));
-    assert_eq!(1.0, Resources::calculate_fulfillment(Mass::in_kg(2.0), MassRate::in_kg_per_s(1.0), DurationFloat::in_s(1.0)));
-    assert_eq!(0.5, Resources::calculate_fulfillment(Mass::in_kg(1.0), MassRate::in_kg_per_s(2.0), DurationFloat::in_s(1.0)));
-    assert_eq!(0.5, Resources::calculate_fulfillment(Mass::in_kg(1.0), MassRate::in_kg_per_s(1.0), DurationFloat::in_s(2.0)));
-}
-
 impl Resources {
     fn reset_requests(&mut self) {
         self.requested.fill_with(MassRate::zero);
@@ -249,14 +241,21 @@ pub struct Shipping {
     pub queue: Component<Colony, Mass>,
 }
 
-// impl Shipping {
-//     pub fn request_resources(&mut self, resources: &mut Resources, alloc: &Allocator<Colony>) {
-//         let graph = self.graph.validate(alloc);
-//     }
-// }
-
 pub struct ShippingUnit {
     pub flow: MassRate,
     pub fulfillment: f64,
     pub queue: Mass,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn calculate_fulfillment() {
+        assert_eq!(1.0, Resources::calculate_fulfillment(Mass::in_kg(1.0), MassRate::in_kg_per_s(1.0), DurationFloat::in_s(1.0)));
+        assert_eq!(1.0, Resources::calculate_fulfillment(Mass::in_kg(2.0), MassRate::in_kg_per_s(1.0), DurationFloat::in_s(1.0)));
+        assert_eq!(0.5, Resources::calculate_fulfillment(Mass::in_kg(1.0), MassRate::in_kg_per_s(2.0), DurationFloat::in_s(1.0)));
+        assert_eq!(0.5, Resources::calculate_fulfillment(Mass::in_kg(1.0), MassRate::in_kg_per_s(1.0), DurationFloat::in_s(2.0)));
+    }
 }
