@@ -50,7 +50,7 @@ impl Colonies {
         self.resources.insert(id);
 
         self.body.insert(id, links.body);
-        self.nation.insert_invalid(id, Some(links.nation));
+        self.nation.insert_unvalidated(id, Some(links.nation));
 
         id.value
     }
