@@ -76,11 +76,13 @@ mod economy {
             let iter = self.production.iter_mut()
                 .zip(colonies.production.iter_mut());
 
+            let colony_nation = colonies.nation.validate(allocator);
+
             for (national_production, colony_production) in iter {
                 let colony_production = colony_production.validate(&colonies.alloc);
 
                 for (colony, unit) in colony_production.iter() {
-                    if let Some(nation) = colonies.nation.get(colony).and_then(|n| allocator.validate(n)) {
+                    if let Some(nation) = colony_nation.get(colony) {
                         let production = national_production.get_mut(nation);
                         *production += unit.capacity;
                     }
@@ -88,22 +90,21 @@ mod economy {
             }
         }
 
-        fn sum_consumption(&mut self, colonies: &Colonies, allocator: &Allocator<Nation>) {
+        fn sum_consumption(&mut self, colonies: &mut Colonies, allocator: &Allocator<Nation>) {
             self.consumption.fill_with(MassRate::zero);
+
+            let colony_nation = colonies.nation.validate(allocator);
 
             let iter = self.consumption.iter_mut()
                 .zip(colonies.resources.requested.iter());
 
             for (consumption, requested) in iter {
                 let iter = requested.iter()
-                    .zip(colonies.nation.iter());
+                    .zip(colony_nation.iter());
 
                 for (requested, nation) in iter {
-                    let consumption = nation
-                        .and_then(|n| allocator.validate(n))
-                        .map(|n| consumption.get_mut(n));
-
-                    if let Some(consumption) = consumption {
+                    if let Some(nation) = nation {
+                        let consumption = consumption.get_mut(nation);
                         *consumption += requested;
                     }
                 }

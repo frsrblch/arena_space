@@ -37,7 +37,7 @@ pub struct Colonies {
     pub production: Production,
 
     pub body: Component<Colony, Id<Body>>,
-    pub nation: Component<Colony, Option<Id<Nation>>>,
+    pub nation: IdLink<Colony, Nation>,
 }
 
 impl Colonies {
@@ -50,7 +50,7 @@ impl Colonies {
         self.resources.insert(id);
 
         self.body.insert(id, links.body);
-        self.nation.insert(id, Some(links.nation));
+        self.nation.insert_invalid(id, Some(links.nation));
 
         id.value
     }
@@ -58,13 +58,11 @@ impl Colonies {
     pub fn kill(&mut self, id: Id<Colony>) {
         if let Some(id) = self.alloc.validate(id) {
             self.name.get_mut(id).clear();
-
-
             self.people.insert(id, Population::zero());
             self.resources.insert(id);
             self.production.kill(id.value);
 
-            self.nation.insert(id, None);
+            self.nation.remove(id);
 
             let id = id.value;
             self.alloc.kill(id);
