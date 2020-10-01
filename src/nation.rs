@@ -66,35 +66,31 @@ mod economy {
         }
 
         pub fn sum_from(&mut self, colonies: &mut Colonies, allocator: &Allocator<Nation>) {
-            self.clear();
             self.sum_production(colonies, allocator);
             self.sum_consumption(colonies, allocator);
         }
 
-        fn clear(&mut self) {
-            self.production.fill_with(MassRate::zero);
-            self.consumption.fill_with(MassRate::zero);
-        }
-
         fn sum_production(&mut self, colonies: &mut Colonies, allocator: &Allocator<Nation>) {
-            let colony_alloc = &colonies.alloc;
-            let colony_nation = &colonies.nation;
+            self.production.fill_with(MassRate::zero);
 
-            self.production.iter_mut()
-                .zip(colonies.production.iter_mut())
-                .for_each(|(national_production, colony_production)| {
-                    let colony_production = colony_production.validate(colony_alloc);
+            let iter = self.production.iter_mut()
+                .zip(colonies.production.iter_mut());
 
-                    for (colony, unit) in colony_production.iter() {
-                        if let Some(nation) = colony_nation.get(colony).and_then(|n| allocator.validate(n)) {
-                            let production = national_production.get_mut(nation);
-                            *production += unit.capacity;
-                        }
+            for (national_production, colony_production) in iter {
+                let colony_production = colony_production.validate(&colonies.alloc);
+
+                for (colony, unit) in colony_production.iter() {
+                    if let Some(nation) = colonies.nation.get(colony).and_then(|n| allocator.validate(n)) {
+                        let production = national_production.get_mut(nation);
+                        *production += unit.capacity;
                     }
-                });
+                }
+            }
         }
 
         fn sum_consumption(&mut self, colonies: &Colonies, allocator: &Allocator<Nation>) {
+            self.consumption.fill_with(MassRate::zero);
+
             let iter = self.consumption.iter_mut()
                 .zip(colonies.resources.requested.iter());
 
