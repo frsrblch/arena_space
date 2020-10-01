@@ -118,11 +118,11 @@ pub struct Production {
 }
 
 impl Production {
-    pub fn iter(&self) -> std::slice::Iter<IdMap<Colony, ProductionUnit>> {
+    pub fn iter(&self) -> Iter<IdMap<Colony, ProductionUnit>> {
         self.data.iter()
     }
 
-    pub fn iter_mut(&mut self) -> std::slice::IterMut<IdMap<Colony, ProductionUnit>> {
+    pub fn iter_mut(&mut self) -> IterMut<IdMap<Colony, ProductionUnit>> {
         self.data.iter_mut()
     }
 
