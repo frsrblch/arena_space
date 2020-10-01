@@ -816,6 +816,18 @@ macro_rules! component_array {
                 self.components.iter_mut()
             }
 
+            pub fn iter_enum(&self) -> Zip<Iter<Component<ID, T>>, Iter<$enum>> {
+                self.components
+                    .iter()
+                    .zip(<$enum>::array())
+            }
+
+            pub fn iter_enum_mut(&mut self) -> Zip<IterMut<Component<ID, T>>, Iter<$enum>> {
+                self.components
+                    .iter_mut()
+                    .zip(<$enum>::array())
+            }
+
             pub fn fill_with<F: Fn() -> T + Copy>(&mut self, f: F) {
                 self.components
                     .iter_mut()
@@ -859,12 +871,12 @@ macro_rules! component_map {
 
             pub fn iter_enum(&self) -> Zip<Iter<IdMap<ID, T>>, Iter<$enum>> {
                 self.map.iter()
-                    .zip(Facility::array())
+                    .zip(<$enum>::array())
             }
 
             pub fn iter_enum_mut(&mut self) -> Zip<IterMut<IdMap<ID, T>>, Iter<$enum>> {
                 self.map.iter_mut()
-                    .zip(Facility::array())
+                    .zip(<$enum>::array())
             }
         }
     };

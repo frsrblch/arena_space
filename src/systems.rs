@@ -29,7 +29,7 @@ array_enum!(
         ColonyProductionCycle,
         NationFoodTargets,
         ColonyPopulation,
-        // TODO ResourceDecay
+        ResourceDecay,
         PrintState,
     }
 );
@@ -40,6 +40,7 @@ impl System {
             System::ColonyProductionCycle => state.colony.production_cycle(),
             System::NationFoodTargets => state.nation.update_food_targets(&state.colony),
             System::ColonyPopulation => state.colony.update_population(&mut state.body),
+            System::ResourceDecay => state.colony.resources.decay(),
             System::PrintState => {
                 // state.print()
             },
@@ -62,6 +63,7 @@ impl System {
             System::ColonyProductionCycle => DurationFloat::in_days(1.0),
             System::NationFoodTargets => DurationFloat::in_days(30.0),
             System::ColonyPopulation => DurationFloat::in_days(5.0),
+            System::ResourceDecay => DurationFloat::in_days(30.0),
             System::PrintState => DurationFloat::in_days(90.0),
         }
     }

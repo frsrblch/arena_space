@@ -1,6 +1,7 @@
 use crate::components::{Mass, ResourceComponent, FacilityMap, MassRate, DurationFloat};
 use crate::colony::{Colony, Colonies};
 use arena_ecs::*;
+use crate::systems::System;
 
 const INTERVAL: DurationFloat = crate::systems::System::ColonyProductionCycle.get_interval_float();
 
@@ -60,9 +61,7 @@ impl Resources {
                     .for_each(|amount| *amount = amount.max(Mass::zero()));
             });
     }
-}
 
-impl Resources {
     fn set_fulfillment(&mut self) {
         self.fulfillment.iter_mut()
             .zip(self.stockpile.iter())
@@ -79,6 +78,21 @@ impl Resources {
 
     fn calculate_fulfillment(stockpile: Mass, requested: MassRate, interval: DurationFloat) -> f64 {
         (stockpile / interval / requested).min(1.0)
+    }
+
+    pub fn decay(&mut self) {
+        const YEAR_FRACTION: f64 = System::ResourceDecay.get_interval_as_year_fraction();
+
+        for (component, resource) in self.stockpile.iter_enum_mut() {
+            if let Some(annual_decay) = resource.get_annual_decay() {
+                let decay = annual_decay.powf(YEAR_FRACTION);
+                component
+                    .iter_mut()
+                    .for_each(|value| {
+                        *value *= decay;
+                    });
+            }
+        }
     }
 }
 
