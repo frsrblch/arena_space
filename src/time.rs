@@ -44,7 +44,7 @@ impl TimeState {
 
 impl AddAssign<StdDuration> for TimeState {
     fn add_assign(&mut self, rhs: StdDuration) {
-        let duration = Duration::from_std(rhs).expect("invalid DateTime after adding Duration");
+        let duration = Duration::from_std(rhs).unwrap();
         let new_date_time = self.game_time + duration;
         self.set_date_time(new_date_time);
     }
@@ -57,7 +57,11 @@ impl Default for TimeState {
 }
 
 pub fn starting_date() -> DateTime {
-    let date = NaiveDate::from_ymd(2050, 1, 1);
+    get_date(2050, 1, 1)
+}
+
+pub fn get_date(year: i32, month: u32, day: u32) -> DateTime {
+    let date = NaiveDate::from_ymd(year, month, day);
     let time = NaiveTime::from_hms(0, 0, 0);
     NaiveDateTime::new(date, time)
 }

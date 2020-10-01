@@ -40,7 +40,9 @@ impl System {
             System::ColonyProductionCycle => state.colony.production_cycle(),
             System::NationFoodTargets => state.nation.update_food_targets(&state.colony),
             System::ColonyPopulation => state.colony.update_population(&mut state.body),
-            System::PrintState => state.print(),
+            System::PrintState => {
+                // state.print()
+            },
         }
     }
 
