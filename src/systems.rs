@@ -98,19 +98,31 @@ impl Systems {
 
     pub fn update(&mut self, state: &mut State, target: DateTime) {
         while !self.target_reached(target) {
-            let current_update = self.queue.pop().unwrap(); // SAFETY: system queue should never be empty
+            let current_update = self.pop();
             let next_update = current_update.run(state);
-            self.queue.push(next_update);
+            self.push(next_update);
         }
 
         state.time.set_date_time(target);
     }
 
     fn target_reached(&self, target: DateTime) -> bool {
-        self.queue
-            .peek()
-            .map(|token| token.next_update > target)
-            .unwrap_or(true)
+        let next_update = self.peek().next_update;
+        next_update > target
+    }
+
+    fn peek(&self) -> &UpdateToken {
+        // SAFETY: system queue will never be empty
+        self.queue.peek().unwrap()
+    }
+
+    fn pop(&mut self) -> UpdateToken {
+        // SAFETY: system queue will never be empty
+        self.queue.pop().unwrap()
+    }
+
+    fn push(&mut self, token: UpdateToken) {
+        self.queue.push(token);
     }
 }
 
