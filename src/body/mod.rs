@@ -111,6 +111,14 @@ impl Bodies {
             Surface::Oceanic => Area::zero(),
         }
     }
+
+    pub fn get_by_name(&self, name: &str) -> Option<Id<Body>> {
+        self.alloc.ids()
+            .zip(self.name.iter())
+            .filter(|(_id, n)| *n == name)
+            .map(|(id, _)| id)
+            .next()
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -170,6 +178,13 @@ pub mod population {
 
 pub mod examples {
     use super::*;
+
+    pub fn planet_earth() -> Planet {
+        Planet {
+            body: earth(),
+            moons: vec![luna()],
+        }
+    }
 
     pub fn earth() -> Body {
         Body {
