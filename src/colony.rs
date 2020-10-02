@@ -12,8 +12,6 @@ pub mod economy;
 pub struct Colony {
     pub name: String,
     pub population: Population,
-    pub food: Mass,
-    pub food_production_override: Option<MassRate>,
 }
 
 dynamic_arena!(Colony);
@@ -21,7 +19,7 @@ dynamic_arena!(Colony);
 #[derive(Debug, Copy, Clone)]
 pub struct ColonyLinks {
     pub body: Id<Body>,
-    pub nation: Id<Nation>,
+    pub nation: Option<Id<Nation>>,
 }
 
 type Satiation = ExpMovingAvg<f64, 15.0>;
@@ -50,7 +48,7 @@ impl Colonies {
         self.resources.insert(id);
 
         self.body.insert(id, links.body);
-        self.nation.insert_unvalidated(id, Some(links.nation));
+        self.nation.insert_unvalidated(id, links.nation);
 
         id.value
     }
@@ -67,5 +65,18 @@ impl Colonies {
             let id = id.value;
             self.alloc.kill(id);
         }
+    }
+
+    pub fn print(&self) {
+        println!(" == COLONIES ==");
+        self.alloc.ids()
+            .filter_map(|id| id)
+            .for_each(|id | self.print_colony(id));
+    }
+
+    fn print_colony<I: ValidId<Colony>>(&self, id: I) {
+        println!("{}: {}", self.name.get(id), self.people.population.get(id).millions());
+        self.resources.print_colony(id);
+        self.production.print_colony(id);
     }
 }

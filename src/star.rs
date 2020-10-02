@@ -1,4 +1,4 @@
-use crate::body::Planet;
+use crate::body::{Planet, Body};
 use crate::*;
 
 #[derive(Debug, Clone)]
@@ -33,17 +33,20 @@ impl Stars {
 
 #[derive(Debug, Clone)]
 pub struct StarSystem {
-    star: Star,
-    planets: Vec<Planet>,
+    pub star: Star,
+    pub planets: Vec<Planet>,
 }
 
 impl State {
-    pub fn create(&mut self, star_system: StarSystem) {
+    pub fn create(&mut self, star_system: StarSystem) -> (Id<Star>, Vec<Id<Body>>) {
         let star = self.star.create(star_system.star);
 
-        for planet in star_system.planets {
-            self.body.create_planet(planet, star);
-        }
+        let planets = star_system.planets
+            .into_iter()
+            .map(|p| self.body.create_planet(p, star))
+            .collect();
+
+        (star, planets)
     }
 }
 
@@ -83,6 +86,16 @@ const SOLAR_RADIUS: Length = Length::in_m(695_700e3);
 
 pub mod examples {
     use super::*;
+    use crate::body::examples::*;
+
+    pub fn sol_system() -> StarSystem {
+        StarSystem {
+            star: sol(),
+            planets: vec![
+                planet_earth(),
+            ],
+        }
+    }
 
     pub fn sol() -> Star {
         Star {

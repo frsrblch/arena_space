@@ -2,13 +2,11 @@ use crate::body::Bodies;
 use crate::colony::Colonies;
 use crate::nation::Nations;
 use crate::star::Stars;
-use crate::systems::Systems;
 use crate::time::{DateTime, TimeState};
 
 #[derive(Debug, Default)]
 pub struct State {
     pub time: TimeState,
-    pub systems: Systems,
     pub star: Stars,
     pub body: Bodies,
     pub nation: Nations,
@@ -25,6 +23,8 @@ impl State {
 
     pub fn print(&self) {
         self.time.print();
+        self.colony.print();
+        println!();
     }
 }
 

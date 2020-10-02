@@ -38,7 +38,7 @@ mod food_production_targets {
     impl Nations {
         pub fn update_food_targets(&mut self, colonies: &Colonies) {
             self.sum_population_from(colonies);
-            unimplemented!();
+            // unimplemented!();
         }
 
         fn sum_population_from(&mut self, colonies: &Colonies) {

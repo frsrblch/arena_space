@@ -3,6 +3,7 @@ use Facility::*;
 use arena_ecs::{Component, ValidId, IdMap};
 use std::slice::{Iter, IterMut};
 use std::iter::Zip;
+use std::fmt::{Display, Formatter};
 
 array_enum!(
     Resource {
@@ -43,6 +44,17 @@ impl Resource {
     }
 }
 
+impl Display for Resource {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let s = match self {
+            Food => "Food",
+            Ore => "Ore",
+            Metal => "Metal",
+        };
+        write!(f, "{}", s)
+    }
+}
+
 impl Facility {
     pub const fn get_inputs(&self) -> &'static [Input] {
         match self {
@@ -57,6 +69,18 @@ impl Facility {
             Mine => Ore,
             Foundry => Metal,
         }
+    }
+}
+
+impl Display for Facility {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let s = match self {
+            Farmland => "Farmland",
+            Hydroponics => "Hydroponics",
+            Mine => "Mine",
+            Foundry => "Foundry",
+        };
+        write!(f, "{}", s)
     }
 }
 

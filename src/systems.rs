@@ -42,7 +42,7 @@ impl System {
             System::ColonyPopulation => state.colony.update_population(&mut state.body),
             System::ResourceDecay => state.colony.resources.decay(),
             System::PrintState => {
-                // state.print()
+                state.print()
             },
         }
     }
