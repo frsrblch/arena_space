@@ -4,6 +4,7 @@ use crate::time::DateTime;
 use chrono::Duration;
 use std::cmp::Reverse;
 use std::collections::BinaryHeap;
+use std::iter::FromIterator;
 
 #[derive(Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub struct UpdateToken {
@@ -75,7 +76,7 @@ impl System {
 
 #[derive(Debug)]
 pub struct Systems {
-    pub queue: BinaryHeap<Reverse<UpdateToken>>,
+    pub queue: MinHeap<UpdateToken>,
 }
 
 impl Default for Systems {
@@ -90,7 +91,6 @@ impl Systems {
         let queue = System::array()
             .iter()
             .map(|system| system.get_first_token(start_date))
-            .map(Reverse)
             .collect();
 
         Self { queue }
@@ -98,29 +98,44 @@ impl Systems {
 
     pub fn update(&mut self, state: &mut State, target: DateTime) {
         while !self.target_reached(target) {
-            let current_update = self.pop().expect("system queue should never be empty");
+            let current_update = self.queue.pop().unwrap(); // SAFETY: system queue should never be empty
             let next_update = current_update.run(state);
-            self.push(next_update);
+            self.queue.push(next_update);
         }
 
         state.time.set_date_time(target);
     }
 
     fn target_reached(&self, target: DateTime) -> bool {
-        self.peek()
+        self.queue
+            .peek()
             .map(|token| token.next_update > target)
             .unwrap_or(true)
     }
+}
 
-    fn peek(&self) -> Option<&UpdateToken> {
-        self.queue.peek().map(|rev| &rev.0)
+#[derive(Debug, Default)]
+pub struct MinHeap<T: Ord> {
+    heap: BinaryHeap<Reverse<T>>,
+}
+
+impl<T: Ord> MinHeap<T> {
+    pub fn push(&mut self, value: T) {
+        self.heap.push(Reverse(value));
     }
 
-    fn pop(&mut self) -> Option<UpdateToken> {
-        self.queue.pop().map(|rev| rev.0)
+    pub fn pop(&mut self) -> Option<T> {
+        self.heap.pop().map(|rev| rev.0)
     }
 
-    fn push(&mut self, token: UpdateToken) {
-        self.queue.push(Reverse(token));
+    pub fn peek(&self) -> Option<&T> {
+        self.heap.peek().map(|rev| &rev.0)
+    }
+}
+
+impl<T: Ord> FromIterator<T> for MinHeap<T> {
+    fn from_iter<I: IntoIterator<Item=T>>(iter: I) -> Self {
+        let heap = BinaryHeap::from_iter(iter.into_iter().map(Reverse));
+        Self { heap }
     }
 }
