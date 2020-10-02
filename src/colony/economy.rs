@@ -49,6 +49,20 @@ pub struct Resources {
 }
 
 impl Resources {
+    pub fn print_colony<I: ValidId<Colony>>(&self, id: I) {
+        println!("  Stockpile:");
+        self.stockpile
+            .iter_enum()
+            .for_each(|(stockpile, resource)| {
+                let amount = stockpile.get(id);
+                if *amount > Mass::zero() {
+                    println!("    {}: {}", resource, amount.tons());
+                }
+            });
+    }
+}
+
+impl Resources {
     pub fn insert<I: ValidId<Colony>>(&mut self, id: I) {
         self.stockpile.insert(id, Mass::zero());
         self.requested.insert(id, MassRate::zero());
@@ -110,6 +124,25 @@ pub struct Production {
 }
 
 impl Production {
+    pub fn print_colony<I: ValidId<Colony>>(&self, id: I) {
+        println!("  Production:");
+        for (map, facility) in self.data.iter_enum() {
+            if let Some(unit) = map.get(id) {
+                println!("    {}: {}", facility, unit.get_output().tons_per_day());
+            }
+        }
+    }
+}
+
+impl Production {
+    pub fn get(&self, facility: Facility) -> &IdMap<Colony, ProductionUnit> {
+        self.data.get(facility)
+    }
+
+    pub fn get_mut(&mut self, facility: Facility) -> &mut IdMap<Colony, ProductionUnit> {
+        self.data.get_mut(facility)
+    }
+
     pub fn iter(&self) -> Iter<IdMap<Colony, ProductionUnit>> {
         self.data.iter()
     }
@@ -177,44 +210,36 @@ impl Production {
     }
 
     fn reset_fulfillment(map: &mut Valid<&mut IdMap<Colony, ProductionUnit>>) {
-        map.value
-            .iter_mut()
-            .for_each(|(_, unit)| unit.fulfillment = 1.0);
+        for (_, unit) in map.iter_mut() {
+            unit.fulfillment = 1.0;
+        }
     }
 
     fn take_inputs(&mut self, resources: &mut Resources, alloc: &Allocator<Colony>) {
-        self.data
-            .iter_enum_mut()
-            .for_each(|(production, facility)| {
-                let mut production = production.validate_mut(alloc);
+        for (production, facility) in self.iter_enum_mut() {
+            let production = production.validate(alloc);
 
-                for input in facility.get_inputs() {
-                    let stockpile = resources.stockpile.get_mut(input.resource);
+            for input in facility.get_inputs() {
+                let stockpile = resources.stockpile.get_mut(input.resource);
 
-                    production
-                        .iter_mut()
-                        .for_each(|(colony, unit)| {
-                            let stockpile = stockpile.get_mut(colony);
-
-                            *stockpile -= unit.get_output() * input.multiplier * INTERVAL;
-                        });
+                for (colony, unit) in production.iter() {
+                    let stockpile = stockpile.get_mut(colony);
+                    *stockpile -= unit.get_output() * input.multiplier * INTERVAL;
                 }
-            });
+            }
+        }
     }
 
     fn output(&mut self, resources: &mut Resources, alloc: &Allocator<Colony>) {
-        resources.stockpile.iter_mut()
-            .zip(self.data.iter_mut())
-            .for_each(|(stockpile, production)| {
-                let production = production.validate(alloc);
+        for (production, facility) in self.iter_enum_mut() {
+            let production = production.validate(alloc);
+            let stockpile = resources.stockpile.get_mut(facility.get_output());
 
-                production
-                    .iter()
-                    .for_each(|(colony, unit)| {
-                        let stockpile = stockpile.get_mut(colony);
-                        *stockpile += unit.get_output() * INTERVAL;
-                    });
-            });
+            for (colony, unit) in production.iter() {
+                let stockpile = stockpile.get_mut(colony);
+                *stockpile += unit.get_output() * INTERVAL;
+            }
+        }
     }
 }
 
@@ -225,6 +250,13 @@ pub struct ProductionUnit {
 }
 
 impl ProductionUnit {
+    pub fn new(capacity: MassRate) -> Self {
+        Self {
+            capacity,
+            fulfillment: 0.0,
+        }
+    }
+
     pub fn get_output(&self) -> MassRate {
         self.capacity * self.fulfillment
     }
