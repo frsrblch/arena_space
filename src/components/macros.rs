@@ -321,32 +321,30 @@ macro_rules! scalar {
 }
 
 macro_rules! vector {
-    ($vector:ident, $scalar:ident, $unit:ident, $abrev:ident) => {
-        vector!($vector, $scalar, $unit, $abrev, f64);
+    ($vector:ident, $scalar:ident, $unit:ident, $in_unit:ident) => {
+        vector!($vector, $scalar, $unit, $in_unit, f64);
     };
-    ($vector:ident, $scalar:ident, $unit:ident, $abrev:ident, $base:ty) => {
+    ($vector:ident, $scalar:ident, $unit:ident, $in_unit:ident, $base:ty) => {
         #[derive(Debug, Default, Copy, Clone, PartialEq, PartialOrd)]
         pub struct $vector {
             pub x: $scalar,
             pub y: $scalar,
         }
 
-        paste::item! {
-            impl $vector {
-                pub const fn [<in_ $abrev>](x: $base, y: $base) -> Self {
-                    Self {
-                        x: $scalar::new(x),
-                        y: $scalar::new(y),
-                    }
+        impl $vector {
+            pub const fn $in_unit (x: $base, y: $base) -> Self {
+                Self {
+                    x: $scalar::new(x),
+                    y: $scalar::new(y),
                 }
+            }
 
-                pub fn magnitude(self) -> $scalar {
-                    $scalar::new(self.magnitude_squared_float().sqrt())
-                }
+            pub fn magnitude(self) -> $scalar {
+                $scalar::new(self.magnitude_squared_float().sqrt())
+            }
 
-                fn magnitude_squared_float(self) -> $base {
-                    self.x.value * self.x.value + self.y.value * self.y.value
-                }
+            fn magnitude_squared_float(self) -> $base {
+                self.x.value * self.x.value + self.y.value * self.y.value
             }
         }
 
@@ -774,7 +772,6 @@ macro_rules! array_enum {
         }
     };
 }
-
 
 macro_rules! component_array {
     ($name:ident, $enum:ty) => {

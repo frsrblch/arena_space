@@ -1,6 +1,6 @@
 use super::*;
 
-vector_and_scalar!(TestVector, TestScalar, test, test);
+vector_and_scalar!(TestVector, TestScalar, test, in_test);
 
 #[test]
 fn scalar_add_tests() {
@@ -123,9 +123,9 @@ fn scalar_div_assign_test() {
     assert_eq!(expected, a);
 }
 
-scalar!(Num, test, test);
-scalar!(Den, test, test);
-scalar!(Res, test, test);
+scalar!(Num, test, in_test);
+scalar!(Den, test, in_test);
+scalar!(Res, test, in_test);
 
 scalar_div!(Num, Den, Res); // Num / Den = Res
 
