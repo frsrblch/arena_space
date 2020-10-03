@@ -306,19 +306,17 @@ macro_rules! scalar {
             }
         }
     };
-    ($scalar:ident, $unit:ident, $abrev:ident, $base:ty) => {
+    ($scalar:ident, $unit:ident, $in_unit:ident, $base:ty) => {
         scalar!($scalar, $base);
 
-        paste::item! {
-            impl $scalar {
-                pub const fn [<in_ $abrev>] ($unit: $base) -> Self {
-                    Self::new($unit)
-                }
+        impl $scalar {
+            pub const fn $in_unit ($unit: $base) -> Self {
+                Self::new($unit)
             }
         }
     };
-    ($scalar:ident, $unit:ident, $abrev:ident) => {
-        scalar!($scalar, $unit, $abrev, f64);
+    ($scalar:ident, $unit:ident, $in_unit:ident) => {
+        scalar!($scalar, $unit, $in_unit, f64);
     };
 }
 

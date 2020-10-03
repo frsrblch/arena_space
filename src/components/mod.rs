@@ -26,7 +26,7 @@ use std::iter::Sum;
 
 mod orbit;
 
-scalar!(Mass, kilograms, kg);
+scalar!(Mass, kilograms, in_kg);
 
 impl Mass {
     pub fn request(&mut self, amount: Mass) -> Mass {
@@ -89,9 +89,9 @@ impl Display for Tons {
     }
 }
 
-scalar!(Temperature, kelvin, k);
+scalar!(Temperature, kelvin, in_k);
 
-scalar!(Angle, radians, rad);
+scalar!(Angle, radians, in_rad);
 
 impl Angle {
     pub fn in_deg(degrees: f64) -> Self {
@@ -109,7 +109,7 @@ impl Angle {
     const RAD_PER_DEG: f64 = std::f64::consts::PI / 180.0;
 }
 
-vector_and_scalar!(Distance, Length, meters, m);
+vector_and_scalar!(Distance, Length, meters, in_m);
 
 impl Distance {
     /// Returns the position vector given an angle and a radius
@@ -125,7 +125,7 @@ impl Distance {
     }
 }
 
-scalar!(Area, square_meters, m2);
+scalar!(Area, square_meters, in_m2);
 
 impl Area {
     pub fn in_square_km(value: f64) -> Self {
@@ -140,7 +140,7 @@ impl Mul<Length> for Length {
     }
 }
 
-scalar!(PixelScale, meters_per_pixel, m_per_px, f32);
+scalar!(PixelScale, meters_per_pixel, in_m_per_px, f32);
 
 scalar!(Population, f64);
 
@@ -188,7 +188,7 @@ impl PopulationDensity {
 
 scalar_div!(Population, Area, PopulationDensity);
 
-scalar!(DurationFloat, seconds, s);
+scalar!(DurationFloat, seconds, in_s);
 
 impl DurationFloat {
     pub const fn in_days(days: f64) -> Self {
@@ -233,7 +233,7 @@ fn duration_float_from_duration() {
     assert_eq!(DurationFloat::in_s(1.0), one_second);
 }
 
-scalar!(MassRate, kg_per_second, kg_per_s);
+scalar!(MassRate, kg_per_second, in_kg_per_s);
 
 impl MassRate {
     pub fn in_tons_per_day(tons: f64) -> Self {
@@ -256,28 +256,28 @@ impl Display for TonsPerDay {
 
 scalar_div!(Mass, DurationFloat, MassRate);
 
-scalar!(MassRatePerPerson, kg_per_person_second, kg_per_s_person);
+scalar!(MassRatePerPerson, kg_per_person_second, in_kg_per_s_person);
 pub type Productivity = MassRatePerPerson;
 scalar_div!(MassRate, Population, MassRatePerPerson);
 
-scalar!(Credits, credits, credits);
+scalar!(Credits, credits, in_credits);
 
-scalar!(CreditRate, credits_per_second, credits_per_s);
+scalar!(CreditRate, credits_per_second, in_credits_per_s);
 scalar_div!(Credits, DurationFloat, CreditRate);
 
-scalar!(CreditsPerPerson, credits_per_person, credits_per_person);
+scalar!(CreditsPerPerson, credits_per_person, in_credits_per_person);
 scalar_div!(Credits, Population, CreditsPerPerson);
 
 scalar!(
     CreditsPerSecondPerPerson,
     credits_per_second_person,
-    credits_per_s_person
+    in_credits_per_s_person
 );
 pub type Wage = CreditsPerSecondPerPerson;
 scalar_div!(CreditRate, Population, CreditsPerSecondPerPerson);
 scalar_div!(CreditsPerPerson, DurationFloat, CreditsPerSecondPerPerson);
 
-scalar!(CreditsPerKilogram, credits_per_kilogram, credits_per_kg);
+scalar!(CreditsPerKilogram, credits_per_kilogram, in_credits_per_kg);
 pub type Price = CreditsPerKilogram;
 scalar_div!(
     CreditsPerSecondPerPerson,

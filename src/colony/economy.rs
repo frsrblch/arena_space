@@ -270,7 +270,6 @@ pub struct Edge<> {
 
 pub struct Shipping {
     pub graph: Graph<Colony, ShippingUnit>,
-    pub queue: Component<Colony, Mass>,
 }
 
 pub struct ShippingUnit {
