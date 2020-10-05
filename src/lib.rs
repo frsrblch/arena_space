@@ -3,6 +3,7 @@
 #![feature(const_generics)]
 #![feature(const_panic)]
 #![feature(const_float_classify)]
+#![feature(iterator_fold_self)]
 
 use arena_ecs::*;
 use components::*;

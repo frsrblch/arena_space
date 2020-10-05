@@ -1,4 +1,4 @@
-use crate::components::{Mass, ResourceComponent, FacilityMap, MassRate, DurationFloat, Facility};
+use crate::components::{Mass, ResourceComponent, FacilityMap, MassRate, DurationFloat, Facility, Price};
 use crate::colony::{Colony, Colonies};
 use arena_ecs::*;
 use crate::systems::System;
@@ -46,6 +46,7 @@ pub struct Resources {
     pub stockpile: ResourceComponent<Colony, Mass>,
     pub requested: ResourceComponent<Colony, MassRate>,
     pub fulfillment: ResourceComponent<Colony, f64>,
+    pub price: ResourceComponent<Colony, Price>,
 }
 
 impl Resources {
@@ -260,12 +261,6 @@ impl ProductionUnit {
     pub fn get_output(&self) -> MassRate {
         self.capacity * self.fulfillment
     }
-}
-
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
-pub struct Edge<> {
-    pub from: Id<Colony>,
-    pub to: Id<Colony>,
 }
 
 pub struct Shipping {
