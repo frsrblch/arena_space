@@ -135,7 +135,7 @@ mod tests {
     }
 
     #[test]
-    fn resouce_get_default_price() {
+    fn resource_get_default_price() {
         assert_eq!(Price::in_credits_per_kg(1.0), Food.get_default_price());
         assert_eq!(Price::in_credits_per_kg(1.0), Ore.get_default_price());
         assert_eq!(Price::in_credits_per_kg(4.0), Metal.get_default_price());
