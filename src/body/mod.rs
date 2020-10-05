@@ -43,9 +43,14 @@ impl Bodies {
         let id = self.alloc.create();
 
         self.name.insert(id, row.name);
+
         self.mass.insert(id, row.mass);
+
         self.radius.insert(id, row.radius);
-        self.orbit.insert(id, self.get_orbit(links.parent, row.orbit));
+
+        let orbit = self.get_orbit(links.parent, row.orbit);
+        self.orbit.insert(id, orbit);
+
         self.properties.insert(id, row.conditions);
 
         self.star.insert(id, links.star);
@@ -54,15 +59,13 @@ impl Bodies {
     }
 
     fn get_orbit(&self, parent: Option<Id<Body>>, params: OrbitParams) -> Orbit {
-        let parent = parent
-            .map(|parent| self.orbit.get(parent))
-            .map(|orbit| {
-                assert!(
-                    orbit.parent.is_none(),
-                    "Cannot use a moon as a parent body."
-                );
-                orbit.params
-            });
+        let parent = parent.map(|parent| self.orbit.get(parent)).map(|orbit| {
+            assert!(
+                orbit.parent.is_none(),
+                "Cannot use a moon as a parent body."
+            );
+            orbit.params
+        });
 
         Orbit { params, parent }
     }
@@ -113,7 +116,8 @@ impl Bodies {
     }
 
     pub fn get_by_name(&self, name: &str) -> Option<Id<Body>> {
-        self.alloc.ids()
+        self.alloc
+            .ids()
             .zip(self.name.iter())
             .filter(|(_id, n)| *n == name)
             .map(|(id, _)| id)
@@ -157,7 +161,10 @@ pub mod population {
         }
 
         fn add_colony_population(&mut self, colonies: &Colonies) {
-            colonies.people.population.iter()
+            colonies
+                .people
+                .population
+                .iter()
                 .zip(colonies.body.iter())
                 .zip(colonies.alloc.living())
                 .filter(|(_, live)| *live)
@@ -167,7 +174,8 @@ pub mod population {
         }
 
         fn add_population(&mut self, body: &Id<Body>, colony_population: &Population) {
-            let pop = self.population
+            let pop = self
+                .population
                 .entry(*body)
                 .or_insert_with(Population::zero);
 

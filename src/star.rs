@@ -1,4 +1,4 @@
-use crate::body::{Planet, Body};
+use crate::body::{Body, Planet};
 use crate::*;
 
 #[derive(Debug, Clone)]
@@ -41,7 +41,8 @@ impl State {
     pub fn create(&mut self, star_system: StarSystem) -> (Id<Star>, Vec<Id<Body>>) {
         let star = self.star.create(star_system.star);
 
-        let planets = star_system.planets
+        let planets = star_system
+            .planets
             .into_iter()
             .map(|p| self.body.create_planet(p, star))
             .collect();
@@ -91,9 +92,7 @@ pub mod examples {
     pub fn sol_system() -> StarSystem {
         StarSystem {
             star: sol(),
-            planets: vec![
-                planet_earth(),
-            ],
+            planets: vec![planet_earth()],
         }
     }
 

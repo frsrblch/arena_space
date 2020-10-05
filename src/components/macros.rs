@@ -310,7 +310,7 @@ macro_rules! scalar {
         scalar!($scalar, $base);
 
         impl $scalar {
-            pub const fn $in_unit ($unit: $base) -> Self {
+            pub const fn $in_unit($unit: $base) -> Self {
                 Self::new($unit)
             }
         }
@@ -332,7 +332,7 @@ macro_rules! vector {
         }
 
         impl $vector {
-            pub const fn $in_unit (x: $base, y: $base) -> Self {
+            pub const fn $in_unit(x: $base, y: $base) -> Self {
                 Self {
                     x: $scalar::new(x),
                     y: $scalar::new(y),
@@ -776,11 +776,11 @@ macro_rules! array_enum {
 macro_rules! component_array {
     ($name:ident, $enum:ty) => {
         #[derive(Debug)]
-        pub struct $name <ID, T> {
+        pub struct $name<ID, T> {
             components: [Component<ID, T>; <$enum>::len()],
         }
 
-        impl<ID, T> Default for $name <ID, T> {
+        impl<ID, T> Default for $name<ID, T> {
             fn default() -> Self {
                 Self {
                     components: Default::default(),
@@ -788,7 +788,7 @@ macro_rules! component_array {
             }
         }
 
-        impl<ID, T: Default + Clone> $name <ID, T> {
+        impl<ID, T: Default + Clone> $name<ID, T> {
             pub fn get(&self, index: $enum) -> &Component<ID, T> {
                 &self.components[index.index()]
             }
@@ -812,15 +812,11 @@ macro_rules! component_array {
             }
 
             pub fn iter_enum(&self) -> Zip<Iter<Component<ID, T>>, Iter<$enum>> {
-                self.components
-                    .iter()
-                    .zip(<$enum>::array())
+                self.components.iter().zip(<$enum>::array())
             }
 
             pub fn iter_enum_mut(&mut self) -> Zip<IterMut<Component<ID, T>>, Iter<$enum>> {
-                self.components
-                    .iter_mut()
-                    .zip(<$enum>::array())
+                self.components.iter_mut().zip(<$enum>::array())
             }
 
             pub fn fill_with<F: Fn() -> T + Copy>(&mut self, f: F) {
@@ -835,11 +831,11 @@ macro_rules! component_array {
 macro_rules! component_map {
     ($name:ident, $enum:ty) => {
         #[derive(Debug)]
-        pub struct $name <ID, T> {
+        pub struct $name<ID, T> {
             map: [IdMap<ID, T>; <$enum>::len()],
         }
 
-        impl<ID, T> Default for $name <ID, T> {
+        impl<ID, T> Default for $name<ID, T> {
             fn default() -> Self {
                 Self {
                     map: Default::default(),
@@ -847,7 +843,7 @@ macro_rules! component_map {
             }
         }
 
-        impl<ID, T> $name <ID, T> {
+        impl<ID, T> $name<ID, T> {
             pub fn get(&self, value: $enum) -> &IdMap<ID, T> {
                 &self.map[value.index()]
             }
@@ -865,13 +861,11 @@ macro_rules! component_map {
             }
 
             pub fn iter_enum(&self) -> Zip<Iter<IdMap<ID, T>>, Iter<$enum>> {
-                self.map.iter()
-                    .zip(<$enum>::array())
+                self.map.iter().zip(<$enum>::array())
             }
 
             pub fn iter_enum_mut(&mut self) -> Zip<IterMut<IdMap<ID, T>>, Iter<$enum>> {
-                self.map.iter_mut()
-                    .zip(<$enum>::array())
+                self.map.iter_mut().zip(<$enum>::array())
             }
         }
     };

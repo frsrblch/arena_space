@@ -1,12 +1,12 @@
 use crate::body::{Bodies, Body};
+use crate::colony::economy::{Production, Resources};
+use crate::colony::population::People;
 use crate::nation::Nation;
 use crate::systems::System;
 use crate::*;
-use crate::colony::economy::{Resources, Production};
-use crate::colony::population::People;
 
-mod population;
 pub mod economy;
+mod population;
 
 #[derive(Debug, Clone)]
 pub struct Colony {
@@ -69,13 +69,18 @@ impl Colonies {
 
     pub fn print(&self) {
         println!(" == COLONIES ==");
-        self.alloc.ids()
+        self.alloc
+            .ids()
             .filter_map(|id| id)
-            .for_each(|id | self.print_colony(id));
+            .for_each(|id| self.print_colony(id));
     }
 
     fn print_colony<I: ValidId<Colony>>(&self, id: I) {
-        println!("{}: {}", self.name.get(id), self.people.population.get(id).millions());
+        println!(
+            "{}: {}",
+            self.name.get(id),
+            self.people.population.get(id).millions()
+        );
         self.resources.print_colony(id);
         self.production.print_colony(id);
     }

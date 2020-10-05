@@ -14,7 +14,8 @@ impl People {
     }
 
     pub fn request_food(&mut self, resources: &mut Resources) {
-        self.population.iter()
+        self.population
+            .iter()
             .zip(resources.requested.get_mut(Food).iter_mut())
             .for_each(|(population, food_requested)| {
                 *food_requested += population.get_food_requirement();
@@ -25,7 +26,8 @@ impl People {
         let fulfillment = resources.fulfillment.get(Food).iter();
         let stockpile = resources.stockpile.get_mut(Food).iter_mut();
 
-        self.population.iter()
+        self.population
+            .iter()
             .zip(self.satiation.iter_mut())
             .zip(fulfillment)
             .zip(stockpile)
@@ -47,7 +49,9 @@ impl Colonies {
         let body_pop = self.body.iter().map(|b| bodies.population.get(b));
         let land_area = self.body.iter().map(|b| bodies.get_land_area(*b));
 
-        self.people.population.iter_mut()
+        self.people
+            .population
+            .iter_mut()
             .zip(self.people.satiation.iter())
             .zip(body_pop)
             .zip(land_area)
@@ -70,7 +74,11 @@ impl Colonies {
 //                      ρ_max = 12 billion / 104 million sq km
 //
 //                      land usage: https://ourworldindata.org/land-use
-fn get_population_multiplier(satiation: Satiation, land_area: Area, body_population: Population) -> f64 {
+fn get_population_multiplier(
+    satiation: Satiation,
+    land_area: Area,
+    body_population: Population,
+) -> f64 {
     let max_pop = land_area * MAX_POPULATION_DENSITY;
     let k = max_pop * (BASE_GROWTH_MULTIPLIER / BASE_GROWTH_RATE);
 
@@ -96,24 +104,48 @@ mod tests {
 
     #[test]
     fn get_population_multiplier_satiation() {
-        let a = get_population_multiplier(Satiation::new(1.0), Area::in_square_km(1.0), Population::in_millions(0.001));
-        let b = get_population_multiplier(Satiation::new(0.9), Area::in_square_km(1.0), Population::in_millions(0.001));
+        let a = get_population_multiplier(
+            Satiation::new(1.0),
+            Area::in_square_km(1.0),
+            Population::in_millions(0.001),
+        );
+        let b = get_population_multiplier(
+            Satiation::new(0.9),
+            Area::in_square_km(1.0),
+            Population::in_millions(0.001),
+        );
 
         assert!(a > b);
     }
 
     #[test]
     fn get_population_multiplier_area() {
-        let a = get_population_multiplier(Satiation::new(1.0), Area::in_square_km(1.0), Population::in_millions(0.001));
-        let b = get_population_multiplier(Satiation::new(1.0), Area::in_square_km(0.5), Population::in_millions(0.001));
+        let a = get_population_multiplier(
+            Satiation::new(1.0),
+            Area::in_square_km(1.0),
+            Population::in_millions(0.001),
+        );
+        let b = get_population_multiplier(
+            Satiation::new(1.0),
+            Area::in_square_km(0.5),
+            Population::in_millions(0.001),
+        );
 
         assert!(a > b);
     }
 
     #[test]
     fn get_population_multiplier_population() {
-        let a = get_population_multiplier(Satiation::new(1.0), Area::in_square_km(1.0), Population::in_millions(0.001));
-        let b = get_population_multiplier(Satiation::new(1.0), Area::in_square_km(1.0), Population::in_millions(0.002));
+        let a = get_population_multiplier(
+            Satiation::new(1.0),
+            Area::in_square_km(1.0),
+            Population::in_millions(0.001),
+        );
+        let b = get_population_multiplier(
+            Satiation::new(1.0),
+            Area::in_square_km(1.0),
+            Population::in_millions(0.002),
+        );
 
         assert!(a > b);
     }

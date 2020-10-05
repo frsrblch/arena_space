@@ -1,9 +1,9 @@
-use crate::components::{Mass, ResourceComponent, FacilityMap, MassRate, DurationFloat, Facility, Price};
-use crate::colony::{Colony, Colonies};
-use arena_ecs::*;
+use crate::colony::{Colonies, Colony};
+use crate::components::*;
 use crate::systems::System;
-use std::slice::{Iter, IterMut};
+use arena_ecs::*;
 use std::iter::Zip;
+use std::slice::{Iter, IterMut};
 
 const INTERVAL: DurationFloat = crate::systems::System::ColonyProductionCycle.get_interval_float();
 
@@ -18,7 +18,8 @@ impl Colonies {
 
     fn request_resources(&mut self) {
         self.resources.reset_requests();
-        self.production.request_resouces(&mut self.resources, &self.alloc);
+        self.production
+            .request_resouces(&mut self.resources, &self.alloc);
         self.people.request_food(&mut self.resources);
     }
 
@@ -27,11 +28,13 @@ impl Colonies {
     }
 
     fn read_fulfillment(&mut self) {
-        self.production.get_fulfillment(&self.resources, &self.alloc);
+        self.production
+            .get_fulfillment(&self.resources, &self.alloc);
     }
 
     fn take_inputs(&mut self) {
-        self.production.take_inputs(&mut self.resources, &self.alloc);
+        self.production
+            .take_inputs(&mut self.resources, &self.alloc);
         self.people.take_food(&mut self.resources);
         self.resources.set_negatives_to_zero();
     }
@@ -71,16 +74,16 @@ impl Resources {
     }
 
     fn set_negatives_to_zero(&mut self) {
-        self.stockpile
-            .iter_mut()
-            .for_each(|stockpile| {
-                stockpile.iter_mut()
-                    .for_each(|amount| *amount = amount.max(Mass::zero()));
-            });
+        self.stockpile.iter_mut().for_each(|stockpile| {
+            stockpile
+                .iter_mut()
+                .for_each(|amount| *amount = amount.max(Mass::zero()));
+        });
     }
 
     fn set_fulfillment(&mut self) {
-        self.fulfillment.iter_mut()
+        self.fulfillment
+            .iter_mut()
             .zip(self.stockpile.iter())
             .zip(self.requested.iter())
             .for_each(|((f, s), r)| {
@@ -103,11 +106,9 @@ impl Resources {
         for (component, resource) in self.stockpile.iter_enum_mut() {
             if let Some(annual_decay) = resource.get_annual_decay() {
                 let decay = annual_decay.powf(YEAR_FRACTION);
-                component
-                    .iter_mut()
-                    .for_each(|value| {
-                        *value *= decay;
-                    });
+                component.iter_mut().for_each(|value| {
+                    *value *= decay;
+                });
             }
         }
     }
@@ -161,9 +162,7 @@ impl Production {
     }
 
     pub fn kill(&mut self, id: Id<Colony>) {
-        self.data
-            .iter_mut()
-            .for_each(|map| map.kill(id));
+        self.data.iter_mut().for_each(|map| map.kill(id));
     }
 
     pub fn request_resouces(&mut self, resources: &mut Resources, alloc: &Allocator<Colony>) {
@@ -172,18 +171,14 @@ impl Production {
             .for_each(|(production, facility)| {
                 let production = production.validate(alloc);
 
-                facility.get_inputs()
-                    .iter()
-                    .for_each(|input| {
-                        let requested = resources.requested.get_mut(input.resource);
+                facility.get_inputs().iter().for_each(|input| {
+                    let requested = resources.requested.get_mut(input.resource);
 
-                        production
-                            .iter()
-                            .for_each(|(colony, unit)| {
-                                let requested = requested.get_mut(colony);
-                                *requested += unit.capacity * input.multiplier;
-                            });
+                    production.iter().for_each(|(colony, unit)| {
+                        let requested = requested.get_mut(colony);
+                        *requested += unit.capacity * input.multiplier;
                     });
+                });
             });
     }
 
@@ -195,18 +190,14 @@ impl Production {
 
                 Self::reset_fulfillment(production);
 
-                facility.get_inputs()
-                    .iter()
-                    .for_each(|input| {
-                        let input_fulfillment = resources.fulfillment.get(input.resource);
+                facility.get_inputs().iter().for_each(|input| {
+                    let input_fulfillment = resources.fulfillment.get(input.resource);
 
-                        production
-                            .iter_mut()
-                            .for_each(|(colony, unit)| {
-                                let input_fulfillment = input_fulfillment.get(colony);
-                                unit.fulfillment = unit.fulfillment.min(*input_fulfillment);
-                            });
+                    production.iter_mut().for_each(|(colony, unit)| {
+                        let input_fulfillment = input_fulfillment.get(colony);
+                        unit.fulfillment = unit.fulfillment.min(*input_fulfillment);
                     });
+                });
             });
     }
 
@@ -279,9 +270,37 @@ mod tests {
 
     #[test]
     fn calculate_fulfillment() {
-        assert_eq!(1.0, Resources::calculate_fulfillment(Mass::in_kg(1.0), MassRate::in_kg_per_s(1.0), DurationFloat::in_s(1.0)));
-        assert_eq!(1.0, Resources::calculate_fulfillment(Mass::in_kg(2.0), MassRate::in_kg_per_s(1.0), DurationFloat::in_s(1.0)));
-        assert_eq!(0.5, Resources::calculate_fulfillment(Mass::in_kg(1.0), MassRate::in_kg_per_s(2.0), DurationFloat::in_s(1.0)));
-        assert_eq!(0.5, Resources::calculate_fulfillment(Mass::in_kg(1.0), MassRate::in_kg_per_s(1.0), DurationFloat::in_s(2.0)));
+        assert_eq!(
+            1.0,
+            Resources::calculate_fulfillment(
+                Mass::in_kg(1.0),
+                MassRate::in_kg_per_s(1.0),
+                DurationFloat::in_s(1.0)
+            )
+        );
+        assert_eq!(
+            1.0,
+            Resources::calculate_fulfillment(
+                Mass::in_kg(2.0),
+                MassRate::in_kg_per_s(1.0),
+                DurationFloat::in_s(1.0)
+            )
+        );
+        assert_eq!(
+            0.5,
+            Resources::calculate_fulfillment(
+                Mass::in_kg(1.0),
+                MassRate::in_kg_per_s(2.0),
+                DurationFloat::in_s(1.0)
+            )
+        );
+        assert_eq!(
+            0.5,
+            Resources::calculate_fulfillment(
+                Mass::in_kg(1.0),
+                MassRate::in_kg_per_s(1.0),
+                DurationFloat::in_s(2.0)
+            )
+        );
     }
 }

@@ -42,16 +42,20 @@ mod food_production_targets {
         }
 
         fn sum_population_from(&mut self, colonies: &Colonies) {
-            self.population.sum_from_opt(&colonies.people.population, &colonies.nation, &self.alloc);
+            self.population.sum_from_opt(
+                &colonies.people.population,
+                &colonies.nation,
+                &self.alloc,
+            );
         }
     }
 }
 
 mod economy {
     use crate::colony::Colonies;
-    use crate::components::{ResourceComponent, MassRate};
+    use crate::components::{MassRate, ResourceComponent};
     use crate::nation::Nation;
-    use arena_ecs::{ValidId, Allocator};
+    use arena_ecs::{Allocator, ValidId};
 
     #[derive(Debug, Default)]
     pub struct Economy {
@@ -73,7 +77,9 @@ mod economy {
         fn sum_production(&mut self, colonies: &mut Colonies, allocator: &Allocator<Nation>) {
             self.production.fill_with(MassRate::zero);
 
-            let iter = self.production.iter_mut()
+            let iter = self
+                .production
+                .iter_mut()
                 .zip(colonies.production.iter_mut());
 
             let colony_nation = colonies.nation.validate(allocator);
@@ -95,12 +101,13 @@ mod economy {
 
             let colony_nation = colonies.nation.validate(allocator);
 
-            let iter = self.consumption.iter_mut()
+            let iter = self
+                .consumption
+                .iter_mut()
                 .zip(colonies.resources.requested.iter());
 
             for (consumption, requested) in iter {
-                let iter = requested.iter()
-                    .zip(colony_nation.iter());
+                let iter = requested.iter().zip(colony_nation.iter());
 
                 for (requested, nation) in iter {
                     if let Some(nation) = nation {

@@ -1,10 +1,10 @@
-use Resource::*;
-use Facility::*;
 use crate::components::Price;
-use arena_ecs::{Component, ValidId, IdMap};
-use std::slice::{Iter, IterMut};
-use std::iter::Zip;
+use arena_ecs::{Component, IdMap, ValidId};
 use std::fmt::{Display, Formatter};
+use std::iter::Zip;
+use std::slice::{Iter, IterMut};
+use Facility::*;
+use Resource::*;
 
 pub const PRICE_DEFAULT: [Price; Resource::len()] = [
     Price::in_credits_per_kg(1.0), // Food
@@ -12,24 +12,16 @@ pub const PRICE_DEFAULT: [Price; Resource::len()] = [
     Price::in_credits_per_kg(4.0), // Metal
 ];
 
-array_enum!(
-    Resource {
-        Food,
-        Ore,
-        Metal,
-    }
-);
+array_enum!(Resource { Food, Ore, Metal });
 
 component_array!(ResourceComponent, Resource);
 
-array_enum!(
-    Facility {
-        Farmland,
-        Hydroponics,
-        Mine,
-        Foundry,
-    }
-);
+array_enum!(Facility {
+    Farmland,
+    Hydroponics,
+    Mine,
+    Foundry,
+});
 
 component_map!(FacilityMap, Facility);
 
@@ -74,7 +66,10 @@ impl Facility {
     pub const fn get_inputs(&self) -> &'static [Input] {
         match self {
             Farmland | Hydroponics | Mine => &[],
-            Foundry => &[Input { resource: Ore, multiplier: 4.0 }]
+            Foundry => &[Input {
+                resource: Ore,
+                multiplier: 4.0,
+            }],
         }
     }
 
@@ -136,22 +131,44 @@ mod tests {
 
     #[test]
     fn resource_get_default_price() {
-        assert_eq!(Price::in_credits_per_kg(1.0), Food.get_default_price());
-        assert_eq!(Price::in_credits_per_kg(1.0), Ore.get_default_price());
-        assert_eq!(Price::in_credits_per_kg(4.0), Metal.get_default_price());
+        assert_eq!(
+            Price::in_credits_per_kg(1.0),
+            Resource::Food.get_default_price()
+        );
+        assert_eq!(
+            Price::in_credits_per_kg(1.0),
+            Resource::Ore.get_default_price()
+        );
+        assert_eq!(
+            Price::in_credits_per_kg(4.0),
+            Resource::Metal.get_default_price()
+        );
     }
 
     #[test]
     fn facility_get_default_price() {
-        assert_eq!(Price::in_credits_per_kg(1.0), Mine.get_default_price());
-        assert_eq!(Price::in_credits_per_kg(1.0), Hydroponics.get_default_price());
-        assert_eq!(Price::in_credits_per_kg(1.0), Farmland.get_default_price());
-        assert_eq!(Price::in_credits_per_kg(4.0), Foundry.get_default_price());
+        assert_eq!(
+            Price::in_credits_per_kg(1.0),
+            Facility::Mine.get_default_price()
+        );
+        assert_eq!(
+            Price::in_credits_per_kg(1.0),
+            Facility::Hydroponics.get_default_price()
+        );
+        assert_eq!(
+            Price::in_credits_per_kg(1.0),
+            Facility::Farmland.get_default_price()
+        );
+        assert_eq!(
+            Price::in_credits_per_kg(4.0),
+            Facility::Foundry.get_default_price()
+        );
     }
 
     #[test]
     fn price_default_array_values() {
-        PRICE_DEFAULT.iter()
+        PRICE_DEFAULT
+            .iter()
             .zip(Resource::array().iter())
             .for_each(|(price, resource)| {
                 assert_eq!(*price, resource.get_default_price());

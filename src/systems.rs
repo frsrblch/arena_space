@@ -25,15 +25,13 @@ impl UpdateToken {
     }
 }
 
-array_enum!(
-    System {
-        ColonyProductionCycle,
-        NationFoodTargets,
-        ColonyPopulation,
-        ResourceDecay,
-        PrintState,
-    }
-);
+array_enum!(System {
+    ColonyProductionCycle,
+    NationFoodTargets,
+    ColonyPopulation,
+    ResourceDecay,
+    PrintState,
+});
 
 impl System {
     fn run(self, state: &mut State) {
@@ -42,9 +40,7 @@ impl System {
             System::NationFoodTargets => state.nation.update_food_targets(&state.colony),
             System::ColonyPopulation => state.colony.update_population(&mut state.body),
             System::ResourceDecay => state.colony.resources.decay(),
-            System::PrintState => {
-                state.print()
-            },
+            System::PrintState => state.print(),
         }
     }
 
@@ -146,7 +142,7 @@ impl<T: Ord> MinHeap<T> {
 }
 
 impl<T: Ord> FromIterator<T> for MinHeap<T> {
-    fn from_iter<I: IntoIterator<Item=T>>(iter: I) -> Self {
+    fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
         let heap = BinaryHeap::from_iter(iter.into_iter().map(Reverse));
         Self { heap }
     }

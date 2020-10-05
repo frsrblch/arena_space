@@ -68,7 +68,8 @@ impl Default for BodyProperties {
 
 impl BodyProperties {
     pub fn get_habitability(&self) -> Habitability {
-        self.surface.get_habitability()
+        self.surface
+            .get_habitability()
             .min(self.pressure.get_habitability())
             .min(self.hydrosphere.get_habitability())
             .min(self.biosphere.get_habitability())
