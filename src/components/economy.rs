@@ -50,7 +50,6 @@ impl Resource {
         }
     }
 
-
     pub fn get_default_price(&self) -> Price {
         self.get_facility()
             .iter()
