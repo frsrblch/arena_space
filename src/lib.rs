@@ -5,8 +5,8 @@
 #![feature(const_float_classify)]
 #![feature(iterator_fold_self)]
 
-use arena_ecs::*;
 use components::*;
+use gen_id::*;
 use state::State;
 
 pub mod body;

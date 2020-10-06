@@ -52,10 +52,9 @@ mod food_production_targets {
 }
 
 mod economy {
+    use super::*;
     use crate::colony::Colonies;
-    use crate::components::{MassRate, ResourceComponent};
     use crate::nation::Nation;
-    use arena_ecs::{Allocator, ValidId};
 
     #[derive(Debug, Default)]
     pub struct Economy {

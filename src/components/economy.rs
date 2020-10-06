@@ -1,5 +1,5 @@
 use crate::components::Price;
-use arena_ecs::{Component, IdMap, ValidId};
+use gen_id::{Component, IdMap, ValidId};
 use std::fmt::{Display, Formatter};
 use std::iter::Zip;
 use std::slice::{Iter, IterMut};

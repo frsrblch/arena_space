@@ -1,7 +1,7 @@
 use crate::colony::{Colonies, Colony};
 use crate::components::*;
 use crate::systems::System;
-use arena_ecs::*;
+use gen_id::*;
 use std::iter::Zip;
 use std::slice::{Iter, IterMut};
 

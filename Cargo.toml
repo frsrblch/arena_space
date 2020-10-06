@@ -7,7 +7,7 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-arena_ecs = { path = "C:/Users/Farseer/IdeaProjects/arena_ecs" }
+gen_id = { git = "https://github.com/frsrblch/gen_id" }
 fnv = "1.0"
 paste = "1.0"
 rand = "0.7"
