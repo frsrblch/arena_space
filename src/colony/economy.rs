@@ -98,7 +98,9 @@ impl Resources {
     }
 
     fn calculate_fulfillment(stockpile: Mass, requested: MassRate, interval: DurationFloat) -> f64 {
-        (stockpile / interval / requested).min(1.0)
+        let flow = stockpile / interval;
+        let fulfillment = flow / requested;
+        fulfillment.min(1.0)
     }
 
     pub fn decay(&mut self) {
