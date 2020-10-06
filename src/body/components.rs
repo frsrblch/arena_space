@@ -138,7 +138,7 @@ impl Pressure {
 ///
 /// Created by a molten core in rocky planets and metallic hydrogen in gas giants.
 ///
-/// Used during stellar system generation to determine whether the planet can support and atmosphere.
+/// Used during stellar system generation to determine whether the planet can support an atmosphere.
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum Magnetosphere {
     /// No strong magnetic field protects this body from stellar wind. Lighter elements will be ionized and blown away.
