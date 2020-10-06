@@ -47,18 +47,20 @@ impl Colonies {
         bodies.sum_population(self);
 
         let body_pop = self.body.iter().map(|b| bodies.population.get(b));
-        let land_area = self.body.iter().map(|b| bodies.get_land_area(*b));
+        let land_area = self.body.iter().map(|b| bodies.get_land_area(b));
 
-        self.people
+        let iter = self
+            .people
             .population
             .iter_mut()
             .zip(self.people.satiation.iter())
             .zip(body_pop)
-            .zip(land_area)
-            .for_each(|(((pop, satiation), body_pop), land_area)| {
-                let body_pop = body_pop.copied().unwrap_or(*pop);
-                *pop *= get_population_multiplier(*satiation, land_area, body_pop);
-            });
+            .zip(land_area);
+
+        for (((pop, satiation), body_pop), land_area) in iter {
+            let body_pop = body_pop.copied().unwrap_or(*pop);
+            *pop *= get_population_multiplier(*satiation, land_area, body_pop);
+        }
     }
 }
 
