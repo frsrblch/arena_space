@@ -131,6 +131,7 @@ pub struct Production {
 impl Production {
     pub fn print_colony<I: ValidId<Colony>>(&self, id: I) {
         println!("  Production:");
+
         for (map, facility) in self.data.iter_enum() {
             if let Some(unit) = map.get(id) {
                 println!("    {}: {}", facility, unit.get_output().tons_per_day());
@@ -169,39 +170,35 @@ impl Production {
     }
 
     pub fn request_resouces(&mut self, resources: &mut Resources, alloc: &Allocator<Colony>) {
-        self.data
-            .iter_enum_mut()
-            .for_each(|(production, facility)| {
-                let production = production.validate(alloc);
+        for (production, facility) in self.iter_enum_mut() {
+            let production = production.validate(alloc);
 
-                facility.get_inputs().iter().for_each(|input| {
-                    let requested = resources.requested.get_mut(input.resource);
+            for input in facility.get_inputs() {
+                let requested = resources.requested.get_mut(input.resource);
 
-                    production.iter().for_each(|(colony, unit)| {
-                        let requested = requested.get_mut(colony);
-                        *requested += unit.capacity * input.multiplier;
-                    });
-                });
-            });
+                for (colony, unit) in production.iter() {
+                    let requested = requested.get_mut(colony);
+                    *requested += unit.capacity * input.multiplier;
+                }
+            }
+        }
     }
 
     fn get_fulfillment(&mut self, resources: &Resources, alloc: &Allocator<Colony>) {
-        self.data
-            .iter_enum_mut()
-            .for_each(|(production, facility)| {
-                let production = &mut production.validate_mut(alloc);
+        for (production, facility) in self.iter_enum_mut() {
+            let mut production = production.validate_mut(alloc);
 
-                Self::reset_fulfillment(production);
+            Self::reset_fulfillment(&mut production);
 
-                facility.get_inputs().iter().for_each(|input| {
-                    let input_fulfillment = resources.fulfillment.get(input.resource);
+            for input in facility.get_inputs() {
+                let input_fulfillment = resources.fulfillment.get(input.resource);
 
-                    production.iter_mut().for_each(|(colony, unit)| {
-                        let input_fulfillment = input_fulfillment.get(colony);
-                        unit.fulfillment = unit.fulfillment.min(*input_fulfillment);
-                    });
-                });
-            });
+                for (colony, unit) in production.iter_mut() {
+                    let input_fulfillment = input_fulfillment.get(colony);
+                    unit.fulfillment = unit.fulfillment.min(*input_fulfillment);
+                }
+            }
+        }
     }
 
     fn reset_fulfillment(map: &mut Valid<&mut IdMap<Colony, ProductionUnit>>) {
