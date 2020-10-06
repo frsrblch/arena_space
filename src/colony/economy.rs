@@ -18,8 +18,10 @@ impl Colonies {
 
     fn request_resources(&mut self) {
         self.resources.reset_requests();
+
         self.production
             .request_resouces(&mut self.resources, &self.alloc);
+
         self.people.request_food(&mut self.resources);
     }
 
@@ -35,7 +37,9 @@ impl Colonies {
     fn take_inputs(&mut self) {
         self.production
             .take_inputs(&mut self.resources, &self.alloc);
+
         self.people.take_food(&mut self.resources);
+
         self.resources.set_negatives_to_zero();
     }
 
@@ -53,16 +57,15 @@ pub struct Resources {
 }
 
 impl Resources {
-    pub fn print_colony<I: ValidId<Colony>>(&self, id: I) {
+    pub fn print_colony<I: ValidId<Colony>>(&self, colony: I) {
         println!("  Stockpile:");
-        self.stockpile
-            .iter_enum()
-            .for_each(|(stockpile, resource)| {
-                let amount = stockpile.get(id);
-                if *amount > Mass::zero() {
-                    println!("    {}: {}", resource, amount.tons());
-                }
-            });
+
+        for (stockpile, resource) in self.stockpile.iter_enum() {
+            let amount = stockpile.get(colony);
+            if *amount > Mass::zero() {
+                println!("    {}: {}", resource, amount.tons());
+            }
+        }
     }
 }
 
@@ -74,11 +77,9 @@ impl Resources {
     }
 
     fn set_negatives_to_zero(&mut self) {
-        self.stockpile.iter_mut().for_each(|stockpile| {
-            stockpile
-                .iter_mut()
-                .for_each(|amount| *amount = amount.max(Mass::zero()));
-        });
+        for stockpile in self.stockpile.iter_mut() {
+            stockpile.fill_with(Mass::zero);
+        }
     }
 
     fn set_fulfillment(&mut self) {
