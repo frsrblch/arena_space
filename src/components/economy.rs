@@ -23,6 +23,15 @@ array_enum!(Facility {
     Foundry,
 });
 
+impl<ID> ResourceComponent<ID, Price> {
+    pub fn insert_default_prices<I: ValidId<ID>>(&mut self, id: I) {
+        for (prices, resource) in self.iter_enum_mut() {
+            let price = PRICE_DEFAULT[resource.index()];
+            prices.insert(id, price);
+        }
+    }
+}
+
 component_map!(FacilityMap, Facility);
 
 impl Resource {

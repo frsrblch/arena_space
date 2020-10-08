@@ -57,6 +57,13 @@ pub struct Resources {
 }
 
 impl Resources {
+    pub fn insert<I: ValidId<Colony>>(&mut self, id: I) {
+        self.stockpile.insert(id, Mass::zero());
+        self.requested.insert(id, MassRate::zero());
+        self.fulfillment.insert(id, 0.0);
+        self.price.insert_default_prices(id);
+    }
+
     pub fn print_colony<I: ValidId<Colony>>(&self, colony: I) {
         println!("  Stockpile:");
 
@@ -66,14 +73,6 @@ impl Resources {
                 println!("    {}: {}", resource, amount.tons());
             }
         }
-    }
-}
-
-impl Resources {
-    pub fn insert<I: ValidId<Colony>>(&mut self, id: I) {
-        self.stockpile.insert(id, Mass::zero());
-        self.requested.insert(id, MassRate::zero());
-        self.fulfillment.insert(id, 0.0);
     }
 
     fn set_negatives_to_zero(&mut self) {
