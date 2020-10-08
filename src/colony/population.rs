@@ -46,19 +46,18 @@ impl Colonies {
     pub fn update_population(&mut self, bodies: &mut Bodies) {
         bodies.sum_population(self);
 
-        let body_pop = self.body.iter().map(|b| bodies.population.get(b));
-        let land_area = self.body.iter().map(|b| bodies.get_land_area(b));
-
         let iter = self
             .people
             .population
             .iter_mut()
             .zip(self.people.satiation.iter())
-            .zip(body_pop)
-            .zip(land_area);
+            .zip(self.body.iter());
 
-        for (((pop, satiation), body_pop), land_area) in iter {
-            let body_pop = body_pop.copied().unwrap_or(*pop);
+        for ((pop, satiation), body) in iter {
+            let body_pop = bodies.population.get(body).copied().unwrap_or(*pop);
+
+            let land_area = bodies.get_land_area(body);
+
             *pop *= get_population_multiplier(*satiation, land_area, body_pop);
         }
     }

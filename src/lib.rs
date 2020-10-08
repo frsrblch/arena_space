@@ -3,11 +3,13 @@
 #![feature(const_generics)]
 #![feature(const_panic)]
 #![feature(const_float_classify)]
+#![feature(const_fn_floating_point_arithmetic)]
 #![feature(iterator_fold_self)]
 
 use components::*;
 use gen_id::*;
 use state::State;
+// use gen_id::ArenaIterator;
 
 pub mod body;
 pub mod colony;

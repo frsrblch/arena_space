@@ -36,15 +36,16 @@ mod food_production_targets {
     use super::*;
 
     impl Nations {
-        pub fn update_food_targets(&mut self, colonies: &Colonies) {
+        pub fn update_food_targets(&mut self, colonies: &mut Colonies) {
             self.sum_population_from(colonies);
+            // TODO reimplement
             // unimplemented!();
         }
 
-        fn sum_population_from(&mut self, colonies: &Colonies) {
-            self.population.sum_from_opt(
+        fn sum_population_from(&mut self, colonies: &mut Colonies) {
+            self.population.sum_from_link(
                 &colonies.people.population,
-                &colonies.nation,
+                &mut colonies.nation,
                 &self.alloc,
             );
         }
@@ -106,7 +107,7 @@ mod economy {
                 .zip(colonies.resources.requested.iter());
 
             for (consumption, requested) in iter {
-                let iter = requested.iter().zip(colony_nation.iter());
+                let iter = requested.zip(&colony_nation);
 
                 for (requested, nation) in iter {
                     if let Some(nation) = nation {

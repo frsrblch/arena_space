@@ -88,12 +88,9 @@ impl Resources {
             .zip(self.stockpile.iter())
             .zip(self.requested.iter())
             .for_each(|((f, s), r)| {
-                f.iter_mut()
-                    .zip(s.iter())
-                    .zip(r.iter())
-                    .for_each(|((f, s), r)| {
-                        *f = Self::calculate_fulfillment(*s, *r, INTERVAL);
-                    });
+                f.zip_mut(s).zip(r).for_each(|((f, s), r)| {
+                    *f = Self::calculate_fulfillment(*s, *r, INTERVAL);
+                });
             });
     }
 

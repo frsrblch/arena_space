@@ -37,7 +37,7 @@ impl System {
     fn run(self, state: &mut State) {
         match self {
             System::ColonyProductionCycle => state.colony.production_cycle(),
-            System::NationFoodTargets => state.nation.update_food_targets(&state.colony),
+            System::NationFoodTargets => state.nation.update_food_targets(&mut state.colony),
             System::ColonyPopulation => state.colony.update_population(&mut state.body),
             System::ResourceDecay => state.colony.resources.decay(),
             System::PrintState => state.print(),

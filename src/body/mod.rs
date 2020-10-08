@@ -161,16 +161,21 @@ pub mod population {
         }
 
         fn add_colony_population(&mut self, colonies: &Colonies) {
-            colonies
+
+            let iter = colonies
                 .people
                 .population
                 .iter()
-                .zip(colonies.body.iter())
-                .zip(colonies.alloc.living())
-                .filter(|(_, live)| *live)
-                .for_each(|((colony_population, body), _)| {
-                    self.add_population(body, colony_population);
-                });
+                .zip(colonies.body.iter());
+
+            for (pop, body) in colonies.alloc.filter_living(iter) {
+                self.add_population(body, pop);
+            }
+                // .zip(colonies.alloc.living())
+                // .filter(|(_, live)| *live)
+                // .for_each(|((colony_population, body), _)| {
+                //     self.add_population(body, colony_population);
+                // });
         }
 
         fn add_population(&mut self, body: &Id<Body>, colony_population: &Population) {
