@@ -25,7 +25,7 @@ impl UpdateToken {
     }
 }
 
-array_enum!(System {
+array_enum!(SystemArray System {
     ColonyProductionCycle,
     NationFoodTargets,
     ColonyPopulation,

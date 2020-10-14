@@ -2,22 +2,26 @@ use crate::colony::{Colonies, Colony};
 use crate::components::*;
 use crate::systems::System;
 use gen_id::*;
-use std::iter::Zip;
-use std::slice::{Iter, IterMut};
+use typed_iter::{Iter, IterMut, IterOver, Zip};
+
+// TODO split economy into production, pricing, decay?
 
 const INTERVAL: DurationFloat = crate::systems::System::ColonyProductionCycle.get_interval_float();
 
 impl Colonies {
     pub fn production_cycle(&mut self) {
         self.request_resources();
-        self.set_fulfillment();
+        self.calculate_fulfillment();
         self.read_fulfillment();
         self.take_inputs();
         self.output_production();
+
+        self.set_prices();
+        // update production rate
     }
 
     fn request_resources(&mut self) {
-        self.resources.reset_requests();
+        self.resources.reset_supply_and_demand();
 
         self.production
             .request_resouces(&mut self.resources, &self.alloc);
@@ -25,8 +29,8 @@ impl Colonies {
         self.people.request_food(&mut self.resources);
     }
 
-    fn set_fulfillment(&mut self) {
-        self.resources.set_fulfillment();
+    fn calculate_fulfillment(&mut self) {
+        self.resources.calculate_fulfillment();
     }
 
     fn read_fulfillment(&mut self) {
@@ -46,22 +50,34 @@ impl Colonies {
     fn output_production(&mut self) {
         self.production.output(&mut self.resources, &self.alloc);
     }
+
+    fn set_prices(&mut self) {
+        self.resources.set_prices();
+    }
 }
 
 #[derive(Debug, Default)]
 pub struct Resources {
     pub stockpile: ResourceComponent<Colony, Mass>,
-    pub requested: ResourceComponent<Colony, MassRate>,
     pub fulfillment: ResourceComponent<Colony, f64>,
-    pub price: ResourceComponent<Colony, Price>,
+
+    pub supply: ResourceComponent<Colony, MassRate>,
+    pub demand: ResourceComponent<Colony, MassRate>,
+
+    pub prices: ResourceComponent<Colony, Price>,
+    pub price_multiplier: ResourceComponent<Colony, f64>,
 }
 
 impl Resources {
     pub fn insert<I: ValidId<Colony>>(&mut self, id: I) {
         self.stockpile.insert(id, Mass::zero());
-        self.requested.insert(id, MassRate::zero());
         self.fulfillment.insert(id, 0.0);
-        self.price.insert_default_prices(id);
+
+        self.supply.insert(id, MassRate::zero());
+        self.demand.insert(id, MassRate::zero());
+
+        self.prices.insert_default_prices(id);
+        self.price_multiplier.insert(id, 1.0);
     }
 
     pub fn print_colony<I: ValidId<Colony>>(&self, colony: I) {
@@ -75,28 +91,65 @@ impl Resources {
         }
     }
 
-    fn set_negatives_to_zero(&mut self) {
-        for stockpile in self.stockpile.iter_mut() {
-            stockpile.fill_with(Mass::zero);
-        }
+    fn reset_supply_and_demand(&mut self) {
+        self.supply.fill_with(MassRate::zero);
+        self.demand.fill_with(MassRate::zero);
     }
 
-    fn set_fulfillment(&mut self) {
+    fn calculate_fulfillment(&mut self) {
         self.fulfillment
             .iter_mut()
             .zip(self.stockpile.iter())
-            .zip(self.requested.iter())
+            .zip(self.demand.iter())
             .for_each(|((f, s), r)| {
-                f.zip_mut(s).zip(r).for_each(|((f, s), r)| {
-                    *f = Self::calculate_fulfillment(*s, *r, INTERVAL);
-                });
+                f.iter_mut()
+                    .zip(s.iter())
+                    .zip(r.iter())
+                    .for_each(|((f, s), r)| {
+                        *f = Self::calculate_fulfillment_from(*s, *r, INTERVAL);
+                    });
             });
     }
 
-    fn calculate_fulfillment(stockpile: Mass, requested: MassRate, interval: DurationFloat) -> f64 {
+    fn calculate_fulfillment_from(
+        stockpile: Mass,
+        requested: MassRate,
+        interval: DurationFloat,
+    ) -> f64 {
         let flow = stockpile / interval;
         let fulfillment = flow / requested;
         fulfillment.min(1.0)
+    }
+
+    fn set_negatives_to_zero(&mut self) {
+        for stockpile in self.stockpile.iter_mut() {
+            for amount in stockpile.iter_mut() {
+                *amount = amount.max(Mass::zero());
+            }
+        }
+    }
+
+    fn set_prices(&mut self) {
+        let prices = self.prices.iter_mut();
+        let multiplier = self.price_multiplier.iter_mut();
+
+        let iter = prices
+            .zip(multiplier)
+            .zip(self.supply.iter())
+            .zip(self.demand.iter())
+            .zip(&crate::PRICE_DEFAULT);
+
+        for ((((prices, multiplier), supply), demand), default) in iter {
+            let prices = prices.iter_mut();
+
+            let iter = prices.zip(multiplier.iter_mut()).zip(supply).zip(demand);
+
+            for (((p, m), s), d) in iter {
+                let ratio = d / s;
+                *p = ratio * *m * default;
+                *m *= ratio.powf(0.02);
+            }
+        }
     }
 
     pub fn decay(&mut self) {
@@ -110,12 +163,6 @@ impl Resources {
                 });
             }
         }
-    }
-}
-
-impl Resources {
-    fn reset_requests(&mut self) {
-        self.requested.fill_with(MassRate::zero);
     }
 }
 
@@ -134,9 +181,7 @@ impl Production {
             }
         }
     }
-}
 
-impl Production {
     pub fn get(&self, facility: Facility) -> &IdMap<Colony, ProductionUnit> {
         self.data.get(facility)
     }
@@ -145,19 +190,25 @@ impl Production {
         self.data.get_mut(facility)
     }
 
-    pub fn iter(&self) -> Iter<IdMap<Colony, ProductionUnit>> {
+    pub fn iter(&self) -> Iter<Facility, IdMap<Colony, ProductionUnit>> {
         self.data.iter()
     }
 
-    pub fn iter_mut(&mut self) -> IterMut<IdMap<Colony, ProductionUnit>> {
+    pub fn iter_mut(&mut self) -> IterMut<Facility, IdMap<Colony, ProductionUnit>> {
         self.data.iter_mut()
     }
 
-    pub fn iter_enum(&self) -> Zip<Iter<IdMap<Colony, ProductionUnit>>, Iter<Facility>> {
+    pub fn iter_enum(
+        &self,
+    ) -> Zip<Facility, Iter<Facility, IdMap<Colony, ProductionUnit>>, Iter<Facility, Facility>>
+    {
         self.data.iter_enum()
     }
 
-    pub fn iter_enum_mut(&mut self) -> Zip<IterMut<IdMap<Colony, ProductionUnit>>, Iter<Facility>> {
+    pub fn iter_enum_mut(
+        &mut self,
+    ) -> Zip<Facility, IterMut<Facility, IdMap<Colony, ProductionUnit>>, Iter<Facility, Facility>>
+    {
         self.data.iter_enum_mut()
     }
 
@@ -170,11 +221,11 @@ impl Production {
             let production = production.validate(alloc);
 
             for input in facility.get_inputs() {
-                let requested = resources.requested.get_mut(input.resource);
+                let demand = resources.demand.get_mut(input.resource);
 
                 for (colony, unit) in production.iter() {
-                    let requested = requested.get_mut(colony);
-                    *requested += unit.capacity * input.multiplier;
+                    let demand = demand.get_mut(colony);
+                    *demand += unit.capacity * input.multiplier;
                 }
             }
         }
@@ -222,10 +273,16 @@ impl Production {
         for (production, facility) in self.iter_enum_mut() {
             let production = production.validate(alloc);
             let stockpile = resources.stockpile.get_mut(facility.get_output());
+            let supply = resources.supply.get_mut(facility.get_output());
 
             for (colony, unit) in production.iter() {
+                let output = unit.get_output();
+
                 let stockpile = stockpile.get_mut(colony);
-                *stockpile += unit.get_output() * INTERVAL;
+                *stockpile += output * INTERVAL;
+
+                let supply = supply.get_mut(colony);
+                *supply += output;
             }
         }
     }
@@ -268,7 +325,7 @@ mod tests {
     fn calculate_fulfillment() {
         assert_eq!(
             1.0,
-            Resources::calculate_fulfillment(
+            Resources::calculate_fulfillment_from(
                 Mass::in_kg(1.0),
                 MassRate::in_kg_per_s(1.0),
                 DurationFloat::in_s(1.0)
@@ -276,7 +333,7 @@ mod tests {
         );
         assert_eq!(
             1.0,
-            Resources::calculate_fulfillment(
+            Resources::calculate_fulfillment_from(
                 Mass::in_kg(2.0),
                 MassRate::in_kg_per_s(1.0),
                 DurationFloat::in_s(1.0)
@@ -284,7 +341,7 @@ mod tests {
         );
         assert_eq!(
             0.5,
-            Resources::calculate_fulfillment(
+            Resources::calculate_fulfillment_from(
                 Mass::in_kg(1.0),
                 MassRate::in_kg_per_s(2.0),
                 DurationFloat::in_s(1.0)
@@ -292,7 +349,7 @@ mod tests {
         );
         assert_eq!(
             0.5,
-            Resources::calculate_fulfillment(
+            Resources::calculate_fulfillment_from(
                 Mass::in_kg(1.0),
                 MassRate::in_kg_per_s(1.0),
                 DurationFloat::in_s(2.0)

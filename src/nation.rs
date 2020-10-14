@@ -77,14 +77,10 @@ mod economy {
         fn sum_production(&mut self, colonies: &mut Colonies, allocator: &Allocator<Nation>) {
             self.production.fill_with(MassRate::zero);
 
-            let iter = self
-                .production
-                .iter_mut()
-                .zip(colonies.production.iter_mut());
-
             let colony_nation = colonies.nation.validate(allocator);
 
-            for (national_production, colony_production) in iter {
+            for (colony_production, facility) in colonies.production.iter_enum_mut() {
+                let national_production = self.production.get_mut(facility.get_output());
                 let colony_production = colony_production.validate(&colonies.alloc);
 
                 for (colony, unit) in colony_production.iter() {
@@ -104,7 +100,7 @@ mod economy {
             let iter = self
                 .consumption
                 .iter_mut()
-                .zip(colonies.resources.requested.iter());
+                .zip(colonies.resources.demand.iter());
 
             for (consumption, requested) in iter {
                 let iter = requested.zip(&colony_nation);

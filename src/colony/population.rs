@@ -16,7 +16,7 @@ impl People {
     pub fn request_food(&mut self, resources: &mut Resources) {
         self.population
             .iter()
-            .zip(resources.requested.get_mut(Food).iter_mut())
+            .zip(resources.demand.get_mut(Food).iter_mut())
             .for_each(|(population, food_requested)| {
                 *food_requested += population.get_food_requirement();
             });

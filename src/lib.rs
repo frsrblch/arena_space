@@ -9,7 +9,7 @@
 use components::*;
 use gen_id::*;
 use state::State;
-// use gen_id::ArenaIterator;
+use typed_iter::*;
 
 pub mod body;
 pub mod colony;

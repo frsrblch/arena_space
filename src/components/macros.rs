@@ -745,16 +745,20 @@ macro_rules! scalar_div {
 }
 
 macro_rules! array_enum {
-    ($name:ident { $($enum_type:ident),+ $(,)?}) => {
+    ($array:ident $name:ident { $($enum_type:ident),+ $(,)?}) => {
         #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
         pub enum $name {
             $(
-                $enum_type ,
+                $enum_type,
             )*
         }
 
         impl $name {
-            pub const fn array() -> &'static [Self] {
+            pub fn iter<'a>() -> typed_iter::Iter<'a, Self, Self> {
+                typed_iter::Iter::new(Self::array().iter())
+            }
+
+            const fn array() -> &'static [Self] {
                 &[
                     $(
                         Self::$enum_type,
@@ -770,11 +774,62 @@ macro_rules! array_enum {
                 *self as usize
             }
         }
+
+        #[derive(Debug, Default, Copy, Clone)]
+        pub struct $array <T> {
+            values: [T; $name::len()],
+        }
+
+        impl<T> $array <T> {
+            pub const fn new(values: [T; <$name>::len()]) -> Self {
+                Self { values }
+            }
+        }
+
+        impl<T> typed_iter::IterOver for & $array <T> {
+            type Type = $name;
+        }
+
+        impl<'a, T> IntoIterator for &'a $array <T> {
+            type Item = &'a T;
+            type IntoIter = std::slice::Iter<'a, T>;
+
+            fn into_iter(self) -> Self::IntoIter {
+                self.values.iter()
+            }
+        }
+
+        impl<T> typed_iter::IterOver for &mut $array <T> {
+            type Type = $name;
+        }
+
+        impl<'a, T> IntoIterator for &'a mut $array <T> {
+            type Item = &'a mut T;
+            type IntoIter = std::slice::IterMut<'a, T>;
+
+            fn into_iter(self) -> Self::IntoIter {
+                self.values.iter_mut()
+            }
+        }
+
+        impl<T> std::ops::Index<$name> for $array <T> {
+            type Output = T;
+
+            fn index(&self, index: $name) -> &Self::Output {
+                &self.values[index.index()]
+            }
+        }
+
+        impl<T> std::ops::IndexMut<$name> for $array <T> {
+            fn index_mut(&mut self, index: $name) -> &mut Self::Output {
+                &mut self.values[index.index()]
+            }
+        }
     };
 }
 
 macro_rules! component_array {
-    ($name:ident, $enum:ty) => {
+    ($name:ident, $enum:ty, $array:ty) => {
         #[derive(Debug)]
         pub struct $name<ID, T> {
             components: [Component<ID, T>; <$enum>::len()],
@@ -803,20 +858,32 @@ macro_rules! component_array {
                     .for_each(|comp| comp.insert(id, value.clone()));
             }
 
-            pub fn iter(&self) -> Iter<Component<ID, T>> {
-                self.components.iter()
+            pub fn iter(&self) -> typed_iter::Iter<$enum, Component<ID, T>> {
+                typed_iter::Iter::new(self.components.iter())
             }
 
-            pub fn iter_mut(&mut self) -> IterMut<Component<ID, T>> {
-                self.components.iter_mut()
+            pub fn iter_mut(&mut self) -> typed_iter::IterMut<$enum, Component<ID, T>> {
+                typed_iter::IterMut::new(self.components.iter_mut())
             }
 
-            pub fn iter_enum(&self) -> Zip<Iter<Component<ID, T>>, Iter<$enum>> {
-                self.components.iter().zip(<$enum>::array())
+            pub fn iter_enum(
+                &self,
+            ) -> typed_iter::Zip<
+                $enum,
+                typed_iter::Iter<$enum, Component<ID, T>>,
+                typed_iter::Iter<$enum, $enum>,
+            > {
+                self.iter().zip(<$enum>::iter())
             }
 
-            pub fn iter_enum_mut(&mut self) -> Zip<IterMut<Component<ID, T>>, Iter<$enum>> {
-                self.components.iter_mut().zip(<$enum>::array())
+            pub fn iter_enum_mut(
+                &mut self,
+            ) -> typed_iter::Zip<
+                $enum,
+                typed_iter::IterMut<$enum, Component<ID, T>>,
+                typed_iter::Iter<$enum, $enum>,
+            > {
+                self.iter_mut().zip(<$enum>::iter())
             }
 
             pub fn fill_with<F: Fn() -> T + Copy>(&mut self, f: F) {
@@ -852,20 +919,32 @@ macro_rules! component_map {
                 &mut self.map[value.index()]
             }
 
-            pub fn iter(&self) -> Iter<IdMap<ID, T>> {
-                self.map.iter()
+            pub fn iter(&self) -> typed_iter::Iter<$enum, IdMap<ID, T>> {
+                typed_iter::Iter::new(self.map.iter())
             }
 
-            pub fn iter_mut(&mut self) -> IterMut<IdMap<ID, T>> {
-                self.map.iter_mut()
+            pub fn iter_mut(&mut self) -> typed_iter::IterMut<$enum, IdMap<ID, T>> {
+                typed_iter::IterMut::new(self.map.iter_mut())
             }
 
-            pub fn iter_enum(&self) -> Zip<Iter<IdMap<ID, T>>, Iter<$enum>> {
-                self.map.iter().zip(<$enum>::array())
+            pub fn iter_enum(
+                &self,
+            ) -> typed_iter::Zip<
+                $enum,
+                typed_iter::Iter<$enum, IdMap<ID, T>>,
+                typed_iter::Iter<$enum, $enum>,
+            > {
+                self.iter().zip(<$enum>::iter())
             }
 
-            pub fn iter_enum_mut(&mut self) -> Zip<IterMut<IdMap<ID, T>>, Iter<$enum>> {
-                self.map.iter_mut().zip(<$enum>::array())
+            pub fn iter_enum_mut(
+                &mut self,
+            ) -> typed_iter::Zip<
+                $enum,
+                typed_iter::IterMut<$enum, IdMap<ID, T>>,
+                typed_iter::Iter<$enum, $enum>,
+            > {
+                self.iter_mut().zip(<$enum>::iter())
             }
         }
     };

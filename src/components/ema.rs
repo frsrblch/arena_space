@@ -1,7 +1,7 @@
 use num_traits::MulAddAssign;
 use std::ops::Mul;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialOrd, PartialEq)]
 pub struct ExpMovingAvg<T, const PERIOD: f64> {
     value: T,
 }
