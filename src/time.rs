@@ -24,7 +24,7 @@ impl TimeState {
     pub fn set_date_time(&mut self, date_time: DateTime) {
         debug_assert!(date_time >= self.game_time);
         self.game_time = date_time;
-        self.time_float = Self::get_as_float(self.game_time)
+        self.time_float = self.calculate_time_float();
     }
 
     pub fn get_time(&self) -> DateTime {
@@ -35,9 +35,9 @@ impl TimeState {
         self.time_float
     }
 
-    fn get_as_float(date_time: DateTime) -> TimeFloat {
-        let game_duration: Duration = date_time - starting_date();
-        let seconds = game_duration.num_milliseconds() as f64 / 1e3;
+    fn calculate_time_float(&self) -> TimeFloat {
+        let duration: Duration = self.game_time - self.start_date;
+        let seconds = duration.num_milliseconds() as f64 / 1e3;
         TimeFloat::in_s(seconds)
     }
 }
