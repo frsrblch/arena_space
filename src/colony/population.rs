@@ -14,27 +14,26 @@ impl People {
     }
 
     pub fn request_food(&mut self, resources: &mut Resources) {
-        self.population
-            .iter()
-            .zip(resources.demand.get_mut(Food).iter_mut())
-            .for_each(|(population, food_requested)| {
-                *food_requested += population.get_food_requirement();
-            });
+        let population = self.population.iter();
+        let demand = resources.demand.get_mut(Food).iter_mut();
+
+        population.zip(demand).for_each(|(population, demand)| {
+            *demand += population.get_food_requirement();
+        });
     }
 
     pub fn take_food(&mut self, resources: &mut Resources) {
+        let population = self.population.iter();
+        let satiation = self.satiation.iter_mut();
         let fulfillment = resources.fulfillment.get(Food).iter();
         let stockpile = resources.stockpile.get_mut(Food).iter_mut();
 
-        self.population
-            .iter()
-            .zip(self.satiation.iter_mut())
-            .zip(fulfillment)
-            .zip(stockpile)
-            .for_each(|(((population, satiation), fulfillment), food_stockpile)| {
-                *food_stockpile -= population.get_food_requirement() * fulfillment * INTERVAL;
-                satiation.add_next(*fulfillment);
-            });
+        let iter = population.zip(satiation).zip(fulfillment).zip(stockpile);
+
+        for (((population, satiation), fulfillment), food_stockpile) in iter {
+            *food_stockpile -= population.get_food_requirement() * fulfillment * INTERVAL;
+            satiation.add_next(*fulfillment);
+        }
     }
 }
 
@@ -46,14 +45,11 @@ impl Colonies {
     pub fn update_population(&mut self, bodies: &mut Bodies) {
         bodies.sum_population(self);
 
-        let iter = self
-            .people
-            .population
-            .iter_mut()
-            .zip(self.people.satiation.iter())
-            .zip(self.body.iter());
+        let population = self.people.population.iter_mut();
+        let satiation = self.people.satiation.iter();
+        let body = self.body.iter();
 
-        for ((pop, satiation), body) in iter {
+        for ((pop, satiation), body) in population.zip(satiation).zip(body) {
             let body_pop = bodies.population.get(body).copied().unwrap_or(*pop);
 
             let land_area = bodies.get_land_area(body);
