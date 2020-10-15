@@ -1,18 +1,18 @@
 use crate::state::State;
-use crate::systems::Systems;
+use crate::systems::SystemQueue;
 use crate::time::DateTime;
 
 #[derive(Debug, Default)]
 pub struct SystemState {
     pub state: State,
-    pub systems: Systems,
+    pub systems: SystemQueue,
 }
 
 impl SystemState {
     pub fn new(start_date: DateTime) -> Self {
         Self {
             state: State::new(start_date),
-            systems: Systems::new(start_date),
+            systems: SystemQueue::new(start_date),
         }
     }
 

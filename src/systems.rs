@@ -1,6 +1,6 @@
 use crate::components::DurationFloat;
 use crate::state::State;
-use crate::time::DateTime;
+use crate::time::{DateTime, TimeState};
 use chrono::Duration;
 use std::cmp::Reverse;
 use std::collections::BinaryHeap;
@@ -71,18 +71,18 @@ impl System {
 }
 
 #[derive(Debug)]
-pub struct Systems {
+pub struct SystemQueue {
     pub queue: MinHeap<UpdateToken>,
 }
 
-impl Default for Systems {
+impl Default for SystemQueue {
     fn default() -> Self {
-        let start_date = crate::time::starting_date();
-        Self::new(start_date)
+        let start = TimeState::default();
+        Self::new(start.get_time())
     }
 }
 
-impl Systems {
+impl SystemQueue {
     pub fn new(start_date: DateTime) -> Self {
         let queue = System::array()
             .iter()
