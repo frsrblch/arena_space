@@ -56,7 +56,7 @@ impl Default for TimeState {
     }
 }
 
-pub fn starting_date() -> DateTime {
+fn starting_date() -> DateTime {
     get_date(2050, 1, 1)
 }
 
