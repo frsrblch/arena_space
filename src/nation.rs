@@ -80,8 +80,9 @@ mod economy {
             let colony_nation = colonies.nation.validate(allocator);
 
             for (colony_production, facility) in colonies.production.iter_enum_mut() {
-                let national_production = self.production.get_mut(facility.get_output());
                 let colony_production = colony_production.validate(&colonies.alloc);
+
+                let national_production = self.production.get_mut(facility.get_output());
 
                 for (colony, unit) in colony_production.iter() {
                     if let Some(nation) = colony_nation.get(colony) {
@@ -97,15 +98,11 @@ mod economy {
 
             let colony_nation = colonies.nation.validate(allocator);
 
-            let iter = self
-                .consumption
-                .iter_mut()
-                .zip(colonies.resources.demand.iter());
+            let consumption = self.consumption.iter_mut();
+            let demand = colonies.resources.demand.iter();
 
-            for (consumption, requested) in iter {
-                let iter = requested.zip(&colony_nation);
-
-                for (requested, nation) in iter {
+            for (consumption, demand) in consumption.zip(demand) {
+                for (requested, nation) in demand.zip(&colony_nation) {
                     if let Some(nation) = nation {
                         let consumption = consumption.get_mut(nation);
                         *consumption += requested;
