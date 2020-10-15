@@ -158,9 +158,8 @@ impl Resources {
         for (component, resource) in self.stockpile.iter_enum_mut() {
             if let Some(annual_decay) = resource.get_annual_decay() {
                 let decay = annual_decay.powf(YEAR_FRACTION);
-                component.iter_mut().for_each(|value| {
-                    *value *= decay;
-                });
+
+                component.for_each(|value| *value *= decay);
             }
         }
     }
@@ -272,8 +271,10 @@ impl Production {
     fn output(&mut self, resources: &mut Resources, alloc: &Allocator<Colony>) {
         for (production, facility) in self.iter_enum_mut() {
             let production = production.validate(alloc);
-            let stockpile = resources.stockpile.get_mut(facility.get_output());
-            let supply = resources.supply.get_mut(facility.get_output());
+
+            let output = facility.get_output();
+            let stockpile = resources.stockpile.get_mut(output);
+            let supply = resources.supply.get_mut(output);
 
             for (colony, unit) in production.iter() {
                 let output = unit.get_output();
