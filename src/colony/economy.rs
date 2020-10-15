@@ -24,7 +24,7 @@ impl Colonies {
         self.resources.reset_supply_and_demand();
 
         self.production
-            .request_resouces(&mut self.resources, &self.alloc);
+            .request_resources(&mut self.resources, &self.alloc);
 
         self.people.request_food(&mut self.resources);
     }
@@ -216,7 +216,7 @@ impl Production {
         self.data.iter_mut().for_each(|map| map.kill(id));
     }
 
-    pub fn request_resouces(&mut self, resources: &mut Resources, alloc: &Allocator<Colony>) {
+    pub fn request_resources(&mut self, resources: &mut Resources, alloc: &Allocator<Colony>) {
         for (production, facility) in self.iter_enum_mut() {
             let production = production.validate(alloc);
 
