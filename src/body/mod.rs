@@ -116,11 +116,11 @@ impl Bodies {
     }
 
     pub fn get_by_name(&self, name: &str) -> Option<Id<Body>> {
-        self.alloc
-            .ids()
-            .zip(self.name.iter())
-            .filter(|(_id, n)| *n == name)
-            .map(|(id, _)| id)
+        self.name
+            .iter()
+            .zip(self.alloc.ids())
+            .into_iter()
+            .filter_map(|(n, id)| if *n == name { Some(id) } else { None })
             .next()
     }
 }
@@ -153,6 +153,7 @@ impl Bodies {
 pub mod population {
     use super::*;
     use crate::colony::Colonies;
+    use std::collections::hash_map::Entry;
 
     impl Bodies {
         pub fn sum_population(&mut self, colonies: &Colonies) {
@@ -161,30 +162,25 @@ pub mod population {
         }
 
         fn add_colony_population(&mut self, colonies: &Colonies) {
+            let population = colonies.people.population.iter();
+            let body = colonies.body.iter();
 
-            let iter = colonies
-                .people
-                .population
-                .iter()
-                .zip(colonies.body.iter());
+            let iter = population.zip(body);
 
             for (pop, body) in colonies.alloc.filter_living(iter) {
                 self.add_population(body, pop);
             }
-                // .zip(colonies.alloc.living())
-                // .filter(|(_, live)| *live)
-                // .for_each(|((colony_population, body), _)| {
-                //     self.add_population(body, colony_population);
-                // });
         }
 
         fn add_population(&mut self, body: &Id<Body>, colony_population: &Population) {
-            let pop = self
-                .population
-                .entry(*body)
-                .or_insert_with(Population::zero);
-
-            *pop += colony_population;
+            match self.population.entry(*body) {
+                Entry::Occupied(mut entry) => {
+                    *entry.get_mut() += colony_population;
+                }
+                Entry::Vacant(entry) => {
+                    entry.insert(*colony_population);
+                }
+            }
         }
     }
 }
