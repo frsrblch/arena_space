@@ -111,6 +111,10 @@ impl Angle {
 
 vector_and_scalar!(Distance, Length, meters, in_m);
 
+vector_and_scalar!(Velocity, Speed, meters_per_second, in_m_per_s);
+
+scalar_div!(Length, DurationFloat, Speed);
+
 impl Distance {
     /// Returns the position vector given an angle and a radius
     ///
