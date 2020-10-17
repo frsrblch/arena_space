@@ -176,7 +176,11 @@ impl Production {
 
         for (map, facility) in self.data.iter_enum() {
             if let Some(unit) = map.get(id) {
-                println!("    {}: {}", facility, unit.get_output().tons_per_day());
+                println!(
+                    "    {}: {}",
+                    facility,
+                    unit.get_output_rate().tons_per_day()
+                );
             }
         }
     }
@@ -262,7 +266,7 @@ impl Production {
 
                 for (colony, unit) in production.iter() {
                     let stockpile = stockpile.get_mut(colony);
-                    *stockpile -= unit.get_output() * input.multiplier * INTERVAL;
+                    *stockpile -= unit.get_output_rate() * input.multiplier * INTERVAL;
                 }
             }
         }
@@ -277,7 +281,7 @@ impl Production {
             let supply = resources.supply.get_mut(output);
 
             for (colony, unit) in production.iter() {
-                let output = unit.get_output();
+                let output = unit.get_output_rate();
 
                 let stockpile = stockpile.get_mut(colony);
                 *stockpile += output * INTERVAL;
@@ -303,7 +307,7 @@ impl ProductionUnit {
         }
     }
 
-    pub fn get_output(&self) -> MassRate {
+    pub fn get_output_rate(&self) -> MassRate {
         self.capacity * self.fulfillment
     }
 }
