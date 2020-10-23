@@ -745,6 +745,37 @@ macro_rules! scalar_div {
 }
 
 macro_rules! array_enum {
+    ($name:ident { $($enum_type:ident),+ $(,)?}) => {
+        #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
+        pub enum $name {
+            $(
+                $enum_type,
+            )*
+        }
+
+        impl $name {
+            pub const ARRAY: [Self; Self::LEN] = [
+                $(
+                    Self::$enum_type,
+                )*
+            ];
+
+            pub const LEN: usize = [
+                    $(
+                        Self::$enum_type,
+                    )*
+                ]
+                    .len();
+
+            pub const fn index(&self) -> usize {
+                *self as usize
+            }
+
+            pub fn iter<'a>() -> typed_iter::Iter<'a, Self, Self> {
+                typed_iter::Iter::new(Self::ARRAY.iter())
+            }
+        }
+    };
     ($array:ident $name:ident { $($enum_type:ident),+ $(,)?}) => {
         #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
         pub enum $name {
@@ -754,61 +785,44 @@ macro_rules! array_enum {
         }
 
         impl $name {
-            pub fn iter<'a>() -> typed_iter::Iter<'a, Self, Self> {
-                typed_iter::Iter::new(Self::array().iter())
-            }
+            pub const ARRAY: [Self; Self::LEN] = [
+                $(
+                    Self::$enum_type,
+                )*
+            ];
 
-            const fn array() -> &'static [Self] {
-                &[
+            pub const LEN: usize = [
                     $(
                         Self::$enum_type,
                     )*
                 ]
-            }
-
-            pub const fn len() -> usize {
-                Self::array().len()
-            }
+                    .len();
 
             pub const fn index(&self) -> usize {
                 *self as usize
+            }
+
+            pub fn iter<'a>() -> typed_iter::Iter<'a, Self, Self> {
+                typed_iter::Iter::new(Self::ARRAY.iter())
             }
         }
 
         #[derive(Debug, Default, Copy, Clone)]
         pub struct $array <T> {
-            values: [T; $name::len()],
+            values: [T; $name::LEN],
         }
 
         impl<T> $array <T> {
-            pub const fn new(values: [T; <$name>::len()]) -> Self {
+            pub const fn new(values: [T; <$name>::LEN]) -> Self {
                 Self { values }
             }
-        }
 
-        impl<T> typed_iter::IterOver for & $array <T> {
-            type Type = $name;
-        }
-
-        impl<'a, T> IntoIterator for &'a $array <T> {
-            type Item = &'a T;
-            type IntoIter = std::slice::Iter<'a, T>;
-
-            fn into_iter(self) -> Self::IntoIter {
-                self.values.iter()
+            pub fn iter(&self) -> typed_iter::Iter<$name, T> {
+                typed_iter::Iter::new(self.values.iter())
             }
-        }
 
-        impl<T> typed_iter::IterOver for &mut $array <T> {
-            type Type = $name;
-        }
-
-        impl<'a, T> IntoIterator for &'a mut $array <T> {
-            type Item = &'a mut T;
-            type IntoIter = std::slice::IterMut<'a, T>;
-
-            fn into_iter(self) -> Self::IntoIter {
-                self.values.iter_mut()
+            pub fn iter_mut(&mut self) -> typed_iter::IterMut<$name, T> {
+                typed_iter::IterMut::new(self.values.iter_mut())
             }
         }
 
@@ -832,7 +846,7 @@ macro_rules! component_array {
     ($name:ident, $enum:ty, $array:ty) => {
         #[derive(Debug)]
         pub struct $name<ID, T> {
-            components: [Component<ID, T>; <$enum>::len()],
+            components: [Component<ID, T>; <$enum>::LEN],
         }
 
         impl<ID, T> Default for $name<ID, T> {
@@ -899,7 +913,7 @@ macro_rules! component_map {
     ($name:ident, $enum:ty) => {
         #[derive(Debug)]
         pub struct $name<ID, T> {
-            map: [IdMap<ID, T>; <$enum>::len()],
+            map: [IdMap<ID, T>; <$enum>::LEN],
         }
 
         impl<ID, T> Default for $name<ID, T> {

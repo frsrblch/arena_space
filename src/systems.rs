@@ -25,7 +25,7 @@ impl UpdateToken {
     }
 }
 
-array_enum!(SystemArray System {
+array_enum!(System {
     ColonyProductionCycle,
     NationFoodTargets,
     ColonyPopulation,
@@ -84,7 +84,7 @@ impl Default for SystemQueue {
 
 impl SystemQueue {
     pub fn new(start_date: DateTime) -> Self {
-        let queue = System::array()
+        let queue = System::ARRAY
             .iter()
             .map(|system| system.get_first_token(start_date))
             .collect();

@@ -1,7 +1,7 @@
 use crate::components::Price;
 use gen_id::{Component, IdMap, ValidId};
 use std::fmt::{Display, Formatter};
-use typed_iter::{IterOver, Zip};
+use typed_iter::TypedIterator;
 use Facility::*;
 use Resource::*;
 
@@ -14,44 +14,6 @@ pub const PRICE_DEFAULT: ResourceArray<Price> = ResourceArray::new([
 ]);
 
 component_array!(ResourceComponent, Resource, ResourceArray);
-
-impl<ID, T> ResourceComponent<ID, T> {
-    pub fn zip<U: IterOver<Type = Resource>>(&self, rhs: U) -> Zip<Resource, &Self, U> {
-        <&Self as IterOver>::zip(self, rhs)
-    }
-
-    pub fn zip_mut<U: IterOver<Type = Resource>>(&mut self, rhs: U) -> Zip<Resource, &mut Self, U> {
-        <&mut Self as IterOver>::zip(self, rhs)
-    }
-}
-
-// TODO use typed_iterator Iter and IterMut types for enum array types
-
-impl<'a, ID, T> IntoIterator for &'a ResourceComponent<ID, T> {
-    type Item = &'a Component<ID, T>;
-    type IntoIter = std::slice::Iter<'a, Component<ID, T>>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.components.iter()
-    }
-}
-
-impl<'a, ID, T> IterOver for &'a ResourceComponent<ID, T> {
-    type Type = Resource;
-}
-
-impl<'a, ID, T> IntoIterator for &'a mut ResourceComponent<ID, T> {
-    type Item = &'a mut Component<ID, T>;
-    type IntoIter = std::slice::IterMut<'a, Component<ID, T>>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.components.iter_mut()
-    }
-}
-
-impl<'a, ID, T> IterOver for &'a mut ResourceComponent<ID, T> {
-    type Type = Resource;
-}
 
 array_enum!(FacilityArray Facility {
     Farmland,
@@ -164,7 +126,7 @@ impl Input {
 mod tests {
     use super::*;
 
-    array_enum!(TestArray Test { A, B, C });
+    array_enum!(Test { A, B, C });
 
     #[test]
     fn array_enum() {

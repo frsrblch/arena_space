@@ -2,7 +2,7 @@ use crate::colony::{Colonies, Colony};
 use crate::components::*;
 use crate::systems::System;
 use gen_id::*;
-use typed_iter::{Iter, IterMut, IterOver, Zip};
+use typed_iter::{Iter, IterMut, TypedIterator, Zip};
 
 // TODO split economy into production, pricing, decay?
 
@@ -137,7 +137,7 @@ impl Resources {
             .zip(multiplier)
             .zip(self.supply.iter())
             .zip(self.demand.iter())
-            .zip(&crate::PRICE_DEFAULT);
+            .zip(crate::PRICE_DEFAULT.iter());
 
         for ((((prices, multiplier), supply), demand), default) in iter {
             let prices = prices.iter_mut();
