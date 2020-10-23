@@ -36,6 +36,9 @@ pub struct Colonies {
 
     pub body: Component<Colony, Id<Body>>,
     pub nation: IdLink<Colony, Nation>,
+
+    /// Allow the location of dead colonies to be referenced
+    pub body_reference: HashMap<Id<Colony>, Id<Body>>,
 }
 
 impl Colonies {
@@ -50,6 +53,8 @@ impl Colonies {
         self.body.insert(id, links.body);
         self.nation.insert_unvalidated(id, links.nation);
 
+        self.body_reference.insert(id.value, links.body);
+
         id.value
     }
 
@@ -63,6 +68,7 @@ impl Colonies {
             self.nation.remove(id);
 
             let id = id.value;
+
             self.alloc.kill(id);
         }
     }
@@ -83,5 +89,13 @@ impl Colonies {
         );
         self.resources.print_colony(id);
         self.production.print_colony(id);
+    }
+
+    pub fn get_body<I: ValidId<Colony>>(&self, id: I) -> Id<Body> {
+        *self.body.get(id)
+    }
+
+    pub fn get_body_reference(&self, id: Id<Colony>) -> Id<Body> {
+        *self.body_reference.get(&id).unwrap()
     }
 }
