@@ -134,7 +134,7 @@ mod tests {
         assert_eq!(1, Test::B.index());
         assert_eq!(2, Test::C.index());
 
-        assert_eq!(3, Test::len());
+        assert_eq!(3, Test::LEN);
     }
 
     #[test]
@@ -176,8 +176,8 @@ mod tests {
     #[test]
     fn price_default_array_values() {
         PRICE_DEFAULT
-            .into_iter()
-            .zip(Resource::array().iter())
+            .iter()
+            .zip(Resource::iter())
             .for_each(|(price, resource)| {
                 assert_eq!(*price, resource.get_default_price());
             });
