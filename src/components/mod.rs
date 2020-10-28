@@ -203,11 +203,17 @@ impl DurationFloat {
         Self::in_s(days * Self::SECONDS_PER_DAY)
     }
 
+    pub const fn in_hours(hours: f64) -> Self {
+        Self::in_s(hours * Self::SECONDS_PER_HOUR)
+    }
+
     pub fn days(&self) -> Days {
         Days(*self)
     }
 
-    pub const SECONDS_PER_DAY: f64 = 3600.0 * 24.0;
+    pub const SECONDS_PER_DAY: f64 = Self::SECONDS_PER_HOUR * 24.0;
+
+    pub const SECONDS_PER_HOUR: f64 = 3600.0;
 }
 
 impl From<chrono::Duration> for DurationFloat {
