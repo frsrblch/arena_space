@@ -1,16 +1,16 @@
 use crate::components::{Area, Length};
 
-pub struct Sphere<D> {
-    dim: D,
+pub struct Sphere {
+    radius: Length,
 }
 
-impl Sphere<Length> {
+impl Sphere {
     pub fn with_radius(radius: Length) -> Self {
-        Sphere { dim: radius }
+        Sphere { radius }
     }
 
     pub fn get_area(&self) -> Area {
-        let r_squared = self.dim * self.dim;
+        let r_squared = self.radius * self.radius;
         FOUR_PI * r_squared
     }
 }
