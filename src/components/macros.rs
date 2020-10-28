@@ -767,10 +767,11 @@ macro_rules! array_enum {
                 ]
                     .len();
 
-            pub const fn index(&self) -> usize {
+            pub fn index(&self) -> usize {
                 *self as usize
             }
 
+            #[allow(dead_code)]
             pub fn iter<'a>() -> typed_iter::Iter<'a, Self, Self> {
                 typed_iter::Iter::new(Self::ARRAY.iter())
             }
@@ -798,10 +799,11 @@ macro_rules! array_enum {
                 ]
                     .len();
 
-            pub const fn index(&self) -> usize {
+            pub fn index(&self) -> usize {
                 *self as usize
             }
 
+            #[allow(dead_code)]
             pub fn iter<'a>() -> typed_iter::Iter<'a, Self, Self> {
                 typed_iter::Iter::new(Self::ARRAY.iter())
             }
