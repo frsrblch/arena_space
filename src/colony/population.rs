@@ -23,15 +23,15 @@ impl People {
     }
 
     pub fn take_food(&mut self, resources: &mut Resources) {
-        let population = self.population.iter();
+        let food_required = self.population.iter().map(|pop| pop.get_food_requirement());
         let satiation = self.satiation.iter_mut();
         let fulfillment = resources.fulfillment.get(Food).iter();
         let stockpile = resources.stockpile.get_mut(Food).iter_mut();
 
-        let iter = population.zip(satiation).zip(fulfillment).zip(stockpile);
+        let iter = food_required.zip(satiation).zip(fulfillment).zip(stockpile);
 
-        for (((population, satiation), fulfillment), food_stockpile) in iter {
-            *food_stockpile -= population.get_food_requirement() * fulfillment * INTERVAL;
+        for (((food_required, satiation), fulfillment), food_stockpile) in iter {
+            *food_stockpile -= food_required * fulfillment * INTERVAL;
             satiation.add_next(*fulfillment);
         }
     }
