@@ -24,10 +24,9 @@ array_enum!(FacilityArray Facility {
 
 impl<ID> ResourceComponent<ID, Price> {
     pub fn insert_default_prices<I: ValidId<ID>>(&mut self, id: I) {
-        for (prices, resource) in self.iter_enum_mut() {
-            let price = PRICE_DEFAULT[*resource];
-            prices.insert(id, price);
-        }
+        self.iter_mut()
+            .zip(PRICE_DEFAULT.iter())
+            .for_each(|(prices, default)| prices.insert(id, *default));
     }
 }
 
