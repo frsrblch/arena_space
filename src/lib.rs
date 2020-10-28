@@ -17,6 +17,7 @@ pub mod colony;
 pub mod components;
 pub mod geometry;
 pub mod nation;
+pub mod ships;
 pub mod spaceport;
 pub mod star;
 pub mod state;

@@ -26,6 +26,7 @@ impl UpdateToken {
 }
 
 array_enum!(System {
+    FreighterState,
     ColonyProductionCycle,
     NationFoodTargets,
     ColonyPopulation,
@@ -36,6 +37,7 @@ array_enum!(System {
 impl System {
     fn run(self, state: &mut State) {
         match self {
+            System::FreighterState => state.freighter.update(&state.time),
             System::ColonyProductionCycle => state.colony.production_cycle(),
             System::NationFoodTargets => state.nation.update_food_targets(&mut state.colony),
             System::ColonyPopulation => state.colony.update_population(&mut state.body),
@@ -57,6 +59,7 @@ impl System {
 
     pub const fn get_interval_float(self) -> DurationFloat {
         match self {
+            System::FreighterState => DurationFloat::in_hours(1.0),
             System::ColonyProductionCycle => DurationFloat::in_days(1.0),
             System::NationFoodTargets => DurationFloat::in_days(30.0),
             System::ColonyPopulation => DurationFloat::in_days(5.0),
