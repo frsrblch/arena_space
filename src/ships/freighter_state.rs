@@ -22,16 +22,23 @@ table_array! {
                 destination: Id<Colony>,
                 resource: Resource,
             },
+            unloading: struct Unloading {
+                type Row = struct UnloadingRow;
+                location: Id<Colony>,
+                destination: Id<Colony>,
+                resource: Resource,
+            },
             moving: struct Moving {
                 type Row = struct MovingRow;
                 from: Id<Colony>,
                 to: Id<Colony>,
                 departure: TimeFloat,
                 arrival: TimeFloat,
+                resource: Resource,
             },
         }
         transitions {
-            moving_to_idle: MovingToIdle,
+            moving_to_unloading: MovingToUnloading,
         }
     }
 }
@@ -41,37 +48,40 @@ impl FreighterState {
         let time = time.get_time_float();
 
         let moving = &mut self.moving;
-        let idle = &mut self.idle;
+        let unloading = &mut self.unloading;
         let indices = &mut self.indices;
 
-        self.moving_to_idle.transition(time, moving, idle, indices);
+        self.moving_to_unloading
+            .transition(time, moving, unloading, indices);
     }
 }
 
 #[derive(Debug, Default)]
-pub struct MovingToIdle {
+pub struct MovingToUnloading {
     transition: Vec<Index<Moving>>,
 }
 
-impl From<MovingRow> for IdleRow {
+impl From<MovingRow> for UnloadingRow {
     fn from(value: MovingRow) -> Self {
         Self {
             id: value.id,
             location: value.to,
+            destination: value.from,
+            resource: value.resource,
         }
     }
 }
 
-impl MovingToIdle {
+impl MovingToUnloading {
     pub fn transition(
         &mut self,
         time: TimeFloat,
         moving: &mut Moving,
-        idle: &mut Idle,
+        unloading: &mut Unloading,
         indices: &mut IdIndices<Freighter, FreighterStateIndex>,
     ) {
         self.get_arrivals(&moving.arrival, time);
-        self.transition_arrivals(moving, idle, indices);
+        self.transition_arrivals(moving, unloading, indices);
     }
 
     fn get_arrivals(&mut self, arrival: &Column<Moving, TimeFloat>, time: TimeFloat) {
@@ -88,7 +98,7 @@ impl MovingToIdle {
     fn transition_arrivals(
         &mut self,
         moving: &mut Moving,
-        idle: &mut Idle,
+        idle: &mut Unloading,
         indices: &mut IdIndices<Freighter, FreighterStateIndex>,
     ) {
         for index in self.drain_rev() {
@@ -102,16 +112,5 @@ impl MovingToIdle {
 
     fn drain_rev(&mut self) -> impl Iterator<Item = Index<Moving>> + '_ {
         self.transition.drain(..).rev()
-    }
-}
-
-#[derive(Debug, Default)]
-pub struct IdleToMoving {
-    to_transition: Vec<Index<Idle>>,
-}
-
-impl IdleToMoving {
-    pub fn transition(&mut self, _time: TimeFloat) {
-        todo!();
     }
 }
