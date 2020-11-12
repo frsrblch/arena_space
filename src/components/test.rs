@@ -139,7 +139,7 @@ scalar! {
     }
 }
 
-scalar_div!(Num, Den, Res); // Num / Den = Res
+scalar_div! { Num | Den = Res}
 
 #[test]
 fn scalar_div_conversion_test() {

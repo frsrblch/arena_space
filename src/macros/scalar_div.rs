@@ -1,6 +1,7 @@
+/// Implements std::ops::{Add, Sub, Mul, Div} conversion for the given scalar types.
+/// The vertical bar is used in place of a '/', which is not allowed in macros.
 macro_rules! scalar_div {
-    // TODO express mathematically
-    ($num:ty, $den:ty, $res:ty) => {
+    { $num:ty | $den:ty = $res:ty } => {
         impl std::ops::Div<$den> for $num {
             type Output = $res;
             fn div(self, rhs: $den) -> Self::Output {
@@ -14,6 +15,7 @@ macro_rules! scalar_div {
                 Self::Output::new(self.value / rhs.value)
             }
         }
+
         impl std::ops::Div<&$den> for $num {
             type Output = $res;
             fn div(self, rhs: &$den) -> Self::Output {
@@ -41,6 +43,7 @@ macro_rules! scalar_div {
                 Self::Output::new(self.value / rhs.value)
             }
         }
+
         impl std::ops::Div<&$res> for $num {
             type Output = $den;
             fn div(self, rhs: &$res) -> Self::Output {

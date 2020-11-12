@@ -25,7 +25,7 @@ impl Display for TonsPerDay {
     }
 }
 
-scalar_div!(Mass, DurationFloat, MassRate);
+scalar_div! { Mass | DurationFloat = MassRate }
 
 scalar! {
     struct MassRatePerPerson(f64) {
@@ -35,4 +35,4 @@ scalar! {
 
 pub type Productivity = MassRatePerPerson;
 
-scalar_div!(MassRate, Population, MassRatePerPerson);
+scalar_div! { MassRate | Population = MassRatePerPerson }

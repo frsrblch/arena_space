@@ -44,4 +44,4 @@ impl PopulationDensity {
     }
 }
 
-scalar_div!(Population, Area, PopulationDensity);
+scalar_div! { Population | Area = PopulationDensity }

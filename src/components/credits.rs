@@ -12,7 +12,7 @@ scalar! {
     }
 }
 
-scalar_div!(Credits, DurationFloat, CreditRate);
+scalar_div! { Credits | DurationFloat = CreditRate }
 
 scalar! {
     struct CreditsPerPerson(f64) {
@@ -20,7 +20,7 @@ scalar! {
     }
 }
 
-scalar_div!(Credits, Population, CreditsPerPerson);
+scalar_div! { Credits | Population = CreditsPerPerson }
 
 scalar! {
     struct CreditsPerSecondPerPerson(f64) {
@@ -30,8 +30,8 @@ scalar! {
 
 pub type Wage = CreditsPerSecondPerPerson;
 
-scalar_div!(CreditRate, Population, CreditsPerSecondPerPerson);
-scalar_div!(CreditsPerPerson, DurationFloat, CreditsPerSecondPerPerson);
+scalar_div! { CreditRate | Population = CreditsPerSecondPerPerson }
+scalar_div! { CreditsPerPerson | DurationFloat = CreditsPerSecondPerPerson }
 
 scalar! {
     struct CreditsPerKilogram(f64) {
@@ -41,8 +41,4 @@ scalar! {
 
 pub type Price = CreditsPerKilogram;
 
-scalar_div!(
-    CreditsPerSecondPerPerson,
-    MassRatePerPerson,
-    CreditsPerKilogram
-);
+scalar_div! { CreditsPerSecondPerPerson | MassRatePerPerson = CreditsPerKilogram }
