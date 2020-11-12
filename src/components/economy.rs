@@ -5,7 +5,14 @@ use std::fmt::{Display, Formatter};
 use Facility::*;
 use Resource::*;
 
-array_enum!(ResourceArray Resource { Food, Ore, Metal });
+array_enum! {
+    enum Resource {
+        Food,
+        Ore,
+        Metal,
+    }
+    struct ResourceArray([enum]);
+}
 
 pub const PRICE_DEFAULT: ResourceArray<Price> = ResourceArray::new([
     Price::in_credits_per_kg(1.0), // Food
@@ -15,12 +22,15 @@ pub const PRICE_DEFAULT: ResourceArray<Price> = ResourceArray::new([
 
 component_array!(ResourceComponent, Resource, ResourceArray);
 
-array_enum!(FacilityArray Facility {
-    Farmland,
-    Hydroponics,
-    Mine,
-    Foundry,
-});
+array_enum! {
+    enum Facility {
+        Farmland,
+        Hydroponics,
+        Mine,
+        Foundry,
+    }
+    struct FacilityArray([enum]);
+}
 
 impl<ID> ResourceComponent<ID, Price> {
     pub fn insert_default_prices<I: ValidId<ID>>(&mut self, id: I) {
@@ -125,7 +135,13 @@ impl Input {
 mod tests {
     use super::*;
 
-    array_enum!(Test { A, B, C });
+    array_enum! {
+        enum Test {
+            A,
+            B,
+            C,
+        }
+    }
 
     #[test]
     fn array_enum() {

@@ -745,7 +745,11 @@ macro_rules! scalar_div {
 }
 
 macro_rules! array_enum {
-    ($name:ident { $($enum_type:ident),+ $(,)?}) => {
+    (
+        enum $name:ident {
+            $( $enum_type:ident ),+ $(,)?
+        }
+    ) => {
         #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
         pub enum $name {
             $(
@@ -777,35 +781,13 @@ macro_rules! array_enum {
             }
         }
     };
-    ($array:ident $name:ident { $($enum_type:ident),+ $(,)?}) => {
-        #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
-        pub enum $name {
-            $(
-                $enum_type,
-            )*
-        }
-
-        impl $name {
-            pub const ARRAY: [Self; Self::LEN] = [
-                $(
-                    Self::$enum_type,
-                )*
-            ];
-
-            pub const LEN: usize = [
-                    $(
-                        Self::$enum_type,
-                    )*
-                ]
-                    .len();
-
-            pub fn index(&self) -> usize {
-                *self as usize
-            }
-
-            #[allow(dead_code)]
-            pub fn iter<'a>() -> iter_context::Iter<'a, Self, Self> {
-                iter_context::Iter::new(Self::ARRAY.iter())
+    (
+        enum $name:ident { $($enum_type:ident),+ $(,)?}
+        struct $array:ident([enum]);
+    ) => {
+        array_enum! {
+            enum $name {
+                $( $enum_type, )*
             }
         }
 

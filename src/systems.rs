@@ -25,14 +25,16 @@ impl UpdateToken {
     }
 }
 
-array_enum!(System {
-    FreighterState,
-    ColonyProductionCycle,
-    NationFoodTargets,
-    ColonyPopulation,
-    ResourceDecay,
-    PrintState,
-});
+array_enum! {
+    enum System {
+        FreighterState,
+        ColonyProductionCycle,
+        NationFoodTargets,
+        ColonyPopulation,
+        ResourceDecay,
+        PrintState,
+    }
+}
 
 impl System {
     fn run(self, state: &mut State) {
