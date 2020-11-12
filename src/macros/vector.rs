@@ -1,7 +1,4 @@
 macro_rules! vector {
-    ($vector:ident, $scalar:ident, $unit:ident, $in_unit:ident) => {
-        vector!($vector, $scalar, $unit, $in_unit, f64);
-    };
     ($vector:ident, $scalar:ident, $unit:ident, $in_unit:ident, $base:ty) => {
         #[derive(Debug, Default, Copy, Clone, PartialEq, PartialOrd)]
         pub struct $vector {
