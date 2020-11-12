@@ -20,7 +20,7 @@ pub struct Nations {
 }
 
 impl Nations {
-    pub fn create(&mut self, row: Nation) -> Id<Nation> {
+    pub fn create(&mut self, row: Nation) -> Valid<Id<Nation>> {
         let id = self.alloc.create();
 
         self.name.insert(id, row.name);
@@ -28,7 +28,7 @@ impl Nations {
         self.population.insert(id, Population::default());
         self.economy.insert(id);
 
-        id.value
+        id
     }
 }
 

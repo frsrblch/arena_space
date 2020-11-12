@@ -2,7 +2,7 @@ use crate::colony::{Colonies, Colony};
 use crate::components::*;
 use crate::systems::System;
 use gen_id::*;
-use typed_iter::{Iter, IterMut, TypedIterator, Zip};
+use iter_context::{ContextualIterator, Iter, IterMut, Zip};
 
 // TODO split economy into production, pricing, decay?
 

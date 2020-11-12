@@ -37,6 +37,11 @@ impl Mass {
         *self = (*self - amount).max(Mass::zero());
         result
     }
+
+    pub fn give(&mut self, amount: &mut Mass) {
+        *self += *amount;
+        *amount = Mass::zero();
+    }
 }
 
 #[test]

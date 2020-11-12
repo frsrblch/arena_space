@@ -1,10 +1,11 @@
 use super::*;
 use crate::body::Bodies;
 use crate::colony::{Colonies, Colony};
-use crate::ships::freighter_state::{FreighterState, IdleRow};
 use crate::star::Stars;
 use crate::time::TimeState;
-use drives::Drive;
+
+use drives::*;
+use freighter_state::*;
 
 pub mod drives;
 pub mod freighter_state;
@@ -21,8 +22,8 @@ pub struct Freighter {
     pub drive: Drive,
 }
 
-pub struct FreighterLinks {
-    pub location: Id<Colony>,
+pub struct FreighterLinks<'c> {
+    pub location: Valid<'c, Id<Colony>>,
 }
 
 dynamic_arena!(Freighter);
@@ -35,7 +36,7 @@ pub struct Freighters {
     pub capacity: Component<Freighter, Mass>,
     pub drive: Component<Freighter, Drive>,
 
-    pub storage: ResourceComponent<Freighter, Mass>,
+    pub cargo: ResourceComponent<Freighter, Mass>,
 
     pub state: FreighterState,
 }
@@ -48,15 +49,13 @@ impl Freighters {
         self.capacity.insert(id, freighter.capacity);
         self.drive.insert(id, freighter.drive);
 
-        self.storage.insert(id, Mass::zero());
+        self.cargo.insert(id, Mass::zero());
 
-        self.state.insert_row(
-            id,
-            IdleRow {
-                id: id.id(),
-                location: links.location,
-            },
-        );
+        let idle = IdleRow {
+            id: id.id(),
+            location: links.location.id().into(),
+        };
+        self.state.insert(id, idle);
 
         id.id()
     }
@@ -67,7 +66,7 @@ impl Freighters {
             self.capacity.insert(id, Mass::zero());
             self.drive.insert(id, Drive::Warp(Speed::zero()));
 
-            self.storage.insert(id, Mass::zero());
+            self.cargo.insert(id, Mass::zero());
 
             self.state.remove(id);
 

@@ -35,29 +35,28 @@ fn setup() -> SystemState {
         },
     );
 
-    ss.state
-        .colony
-        .production
-        .get_mut(Facility::Farmland)
-        .insert_unvalidated(
+    {
+        let production = &mut ss.state.colony.production;
+        let alloc = &ss.state.colony.alloc;
+
+        let earth_colony = earth_colony.validate(alloc).unwrap();
+
+        production.get_mut(Facility::Farmland).insert(
             earth_colony,
             ProductionUnit::new(earth_population.get_food_requirement() * 0.25),
         );
 
-    let ore = MassRate::in_tons_per_day(5_475_701.0);
-    ss.state
-        .colony
-        .production
-        .get_mut(Facility::Mine)
-        .insert_unvalidated(earth_colony, ProductionUnit::new(ore));
+        let ore = MassRate::in_tons_per_day(5_475_701.0);
+        production
+            .get_mut(Facility::Mine)
+            .insert(earth_colony, ProductionUnit::new(ore));
 
-    let multiplier = 1.1 / Facility::Foundry.get_inputs().first().unwrap().multiplier;
-    let metal = ore * multiplier;
-    ss.state
-        .colony
-        .production
-        .get_mut(Facility::Foundry)
-        .insert_unvalidated(earth_colony, ProductionUnit::new(metal));
+        let multiplier = 1.1 / Facility::Foundry.get_inputs().first().unwrap().multiplier;
+        let metal = ore * multiplier;
+        production
+            .get_mut(Facility::Foundry)
+            .insert(earth_colony, ProductionUnit::new(metal));
+    }
 
     ss
 }

@@ -4,7 +4,7 @@ use std::cmp::Ordering;
 /// Elapsed game time in seconds. Distinct from Duration, which is a relative amount of time.
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct TimeFloat {
-    pub value: f64,
+    value: f64,
 }
 
 impl TimeFloat {
@@ -19,6 +19,10 @@ impl TimeFloat {
     fn new(value: f64) -> Self {
         Self { value }
     }
+
+    pub const NEVER: Self = Self {
+        value: f64::INFINITY,
+    };
 }
 
 impl Div for TimeFloat {

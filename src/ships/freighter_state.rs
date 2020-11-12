@@ -1,10 +1,10 @@
 use super::Freighter;
-use crate::colony::Colony;
-use crate::components::TimeFloat;
+use crate::colony::{Colonies, Colony};
+use crate::components::{Mass, ResourceComponent, TimeFloat};
 use crate::time::TimeState;
 use crate::Resource;
 use gen_id::*;
-use typed_iter::TypedIterator;
+use iter_context::ContextualIterator;
 
 table_array! {
     struct FreighterState {
@@ -14,27 +14,42 @@ table_array! {
         tables {
             idle: struct Idle {
                 type Row = struct IdleRow;
-                location: Id<Colony>,
+                fields {}
+                links {
+                    location: Colony,
+                }
             },
             loading: struct Loading {
                 type Row = struct LoadingRow;
-                location: Id<Colony>,
-                destination: Id<Colony>,
-                resource: Resource,
+                fields {
+                    resource: Resource,
+                }
+                links {
+                    location: Colony,
+                    destination: Colony,
+                }
             },
             unloading: struct Unloading {
                 type Row = struct UnloadingRow;
-                location: Id<Colony>,
-                destination: Id<Colony>,
-                resource: Resource,
+                fields {
+                    resource: Resource,
+                }
+                links {
+                    location: Colony,
+                    destination: Colony,
+                }
             },
             moving: struct Moving {
                 type Row = struct MovingRow;
-                from: Id<Colony>,
-                to: Id<Colony>,
-                departure: TimeFloat,
-                arrival: TimeFloat,
-                resource: Resource,
+                fields {
+                    departure: TimeFloat,
+                    arrival: TimeFloat,
+                    resource: Resource,
+                }
+                links {
+                    from: Colony,
+                    to: Colony,
+                }
             },
         }
         transitions {
@@ -112,5 +127,32 @@ impl MovingToUnloading {
 
     fn drain_rev(&mut self) -> impl Iterator<Item = Index<Moving>> + '_ {
         self.transition.drain(..).rev()
+    }
+}
+
+impl Unloading {
+    pub fn update(
+        &mut self,
+        colonies: &mut Colonies,
+        cargo: &mut ResourceComponent<Freighter, Mass>,
+    ) {
+        let ids = Valid::assert(self.id.iter());
+        let location = self.location.validate(&colonies.alloc);
+
+        for (id, location) in ids.zip(location.iter()) {
+            if let Some(location) = location {
+                let stockpile = colonies.resources.stockpile.iter_mut();
+                for (stockpile, cargo) in stockpile.zip(cargo.iter_mut()) {
+                    let stockpile = stockpile.get_mut(location);
+                    let cargo = cargo.get_mut(id);
+
+                    stockpile.give(cargo);
+                }
+            }
+        }
+
+        // TODO add ship loading rate
+        // TODO add spaceport loading rate
+        // TODO add id to DoneUnloading struct
     }
 }

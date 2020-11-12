@@ -1,7 +1,7 @@
 use crate::components::Price;
 use gen_id::{Component, IdMap, ValidId};
+use iter_context::ContextualIterator;
 use std::fmt::{Display, Formatter};
-use typed_iter::TypedIterator;
 use Facility::*;
 use Resource::*;
 

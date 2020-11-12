@@ -17,9 +17,9 @@ pub struct Colony {
 dynamic_arena!(Colony);
 
 #[derive(Debug, Copy, Clone)]
-pub struct ColonyLinks {
+pub struct ColonyLinks<'n> {
     pub body: Id<Body>,
-    pub nation: Option<Id<Nation>>,
+    pub nation: Option<Valid<'n, Id<Nation>>>,
 }
 
 type Satiation = ExpMovingAvg<f64, 15.0>;
@@ -51,7 +51,7 @@ impl Colonies {
         self.resources.insert(id);
 
         self.body.insert(id, links.body);
-        self.nation.insert_unvalidated(id, links.nation);
+        self.nation.insert(id, links.nation);
 
         self.body_reference.insert(id.value, links.body);
 
