@@ -1,4 +1,5 @@
 macro_rules! scalar_div {
+    // TODO express mathematically
     ($num:ty, $den:ty, $res:ty) => {
         impl std::ops::Div<$den> for $num {
             type Output = $res;

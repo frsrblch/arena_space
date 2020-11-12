@@ -2,7 +2,11 @@ use rand::distributions::{Distribution, Standard};
 use rand::Rng;
 use std::f64::consts::PI;
 
-scalar!(Angle, radians, in_rad);
+scalar! {
+    struct Angle(f64) {
+        fn in_rad(radians) -> Self;
+    }
+}
 
 impl Angle {
     pub fn in_deg(degrees: f64) -> Self {

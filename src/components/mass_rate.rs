@@ -1,6 +1,10 @@
 use super::*;
 
-scalar!(MassRate, kg_per_second, in_kg_per_s);
+scalar! {
+    struct MassRate(f64) {
+        fn in_kg_per_s(kg_per_second) -> Self;
+    }
+}
 
 impl MassRate {
     pub fn in_tons_per_day(tons: f64) -> Self {
@@ -23,6 +27,12 @@ impl Display for TonsPerDay {
 
 scalar_div!(Mass, DurationFloat, MassRate);
 
-scalar!(MassRatePerPerson, kg_per_person_second, in_kg_per_s_person);
+scalar! {
+    struct MassRatePerPerson(f64) {
+        fn in_kg_per_s_person(kg_per_person_second) -> Self;
+    }
+}
+
 pub type Productivity = MassRatePerPerson;
+
 scalar_div!(MassRate, Population, MassRatePerPerson);

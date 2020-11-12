@@ -81,7 +81,11 @@ impl Ord for TimeFloat {
     }
 }
 
-scalar!(DurationFloat, seconds, in_s);
+scalar! {
+    struct DurationFloat(f64) {
+        fn in_s(seconds) -> Self;
+    }
+}
 
 impl DurationFloat {
     pub const fn in_days(days: f64) -> Self {

@@ -33,9 +33,17 @@ mod position;
 mod speed;
 mod time;
 
-scalar!(Temperature, kelvin, in_k);
+scalar! {
+    struct Temperature(f64) {
+        fn in_k(kelvin) -> Self;
+    }
+}
 
-scalar!(PixelScale, meters_per_pixel, in_m_per_px, f32);
+scalar! {
+    struct PixelScale(f32) {
+        fn in_m_per_px(meters_per_pixel) -> Self;
+    }
+}
 
 #[cfg(test)]
 mod test;

@@ -70,8 +70,8 @@ impl System {
         }
     }
 
-    pub const fn get_interval_as_year_fraction(self) -> f64 {
-        self.get_interval_float().value / DurationFloat::in_days(365.25).value
+    pub fn get_interval_as_year_fraction(self) -> f64 {
+        self.get_interval_float() / DurationFloat::in_days(365.25)
     }
 }
 

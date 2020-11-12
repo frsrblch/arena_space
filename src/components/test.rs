@@ -121,9 +121,23 @@ fn scalar_div_assign_test() {
     assert_eq!(expected, a);
 }
 
-scalar!(Num, test, in_test);
-scalar!(Den, test, in_test);
-scalar!(Res, test, in_test);
+scalar! {
+    struct Num(f64) {
+        fn in_test(test) -> Self;
+    }
+}
+
+scalar! {
+    struct Den(f64) {
+        fn in_test(test) -> Self;
+    }
+}
+
+scalar! {
+    struct Res(f64) {
+        fn in_test(test) -> Self;
+    }
+}
 
 scalar_div!(Num, Den, Res); // Num / Den = Res
 

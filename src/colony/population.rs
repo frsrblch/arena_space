@@ -76,6 +76,8 @@ fn get_population_multiplier(
     land_area: Area,
     body_population: Population,
 ) -> f64 {
+    let year_fraction = System::ColonyPopulation.get_interval_as_year_fraction();
+
     let max_pop = land_area * MAX_POPULATION_DENSITY;
     let k = max_pop * (BASE_GROWTH_MULTIPLIER / BASE_GROWTH_RATE);
 
@@ -84,10 +86,9 @@ fn get_population_multiplier(
 
     let annual_growth_rate = BASE_GROWTH_MULTIPLIER * k_factor * satiation.value();
 
-    annual_growth_rate.powf(YEAR_FRACTION)
+    annual_growth_rate.powf(year_fraction)
 }
 
-const YEAR_FRACTION: f64 = System::ColonyPopulation.get_interval_as_year_fraction();
 const BASE_GROWTH_RATE: f64 = 0.025;
 const BASE_GROWTH_MULTIPLIER: f64 = 1.0 + BASE_GROWTH_RATE;
 

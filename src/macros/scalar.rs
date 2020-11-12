@@ -1,8 +1,10 @@
 macro_rules! scalar {
-    ($scalar:ident, $base:ty) => {
+    {
+        struct $scalar:ident($base:ty)
+    } => {
         #[derive(Debug, Default, Copy, Clone, PartialEq, PartialOrd)]
         pub struct $scalar {
-            pub value: $base,
+            pub(super) value: $base,
         }
 
         impl $scalar {
@@ -21,18 +23,6 @@ macro_rules! scalar {
 
             pub fn max(self, rhs: Self) -> Self {
                 Self::new(self.value.max(rhs.value))
-            }
-        }
-
-        impl Into<$base> for $scalar {
-            fn into(self) -> $base {
-                self.value
-            }
-        }
-
-        impl From<$base> for $scalar {
-            fn from(value: $base) -> Self {
-                Self::new(value)
             }
         }
 
@@ -306,16 +296,17 @@ macro_rules! scalar {
             }
         }
     };
-    ($scalar:ident, $unit:ident, $in_unit:ident, $base:ty) => {
-        scalar!($scalar, $base);
+    {
+        struct $scalar:ident($base:ty) {
+            fn $in_unit:ident($unit:ident) -> Self;
+        }
+    } => {
+        scalar!(struct $scalar($base));
 
         impl $scalar {
             pub const fn $in_unit($unit: $base) -> Self {
                 Self::new($unit)
             }
         }
-    };
-    ($scalar:ident, $unit:ident, $in_unit:ident) => {
-        scalar!($scalar, $unit, $in_unit, f64);
     };
 }

@@ -153,11 +153,11 @@ impl Resources {
     }
 
     pub fn decay(&mut self) {
-        const YEAR_FRACTION: f64 = System::ResourceDecay.get_interval_as_year_fraction();
+        let year_fraction = System::ResourceDecay.get_interval_as_year_fraction();
 
         for (component, resource) in self.stockpile.iter_enum_mut() {
             if let Some(annual_decay) = resource.get_annual_decay() {
-                let decay = annual_decay.powf(YEAR_FRACTION);
+                let decay = annual_decay.powf(year_fraction);
 
                 component.for_each(|value| *value *= decay);
             }

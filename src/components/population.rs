@@ -1,6 +1,6 @@
 use super::*;
 
-scalar!(Population, f64);
+scalar!(struct Population(f64));
 
 impl Population {
     pub const fn in_millions(mm_people: f64) -> Self {
@@ -36,7 +36,7 @@ impl Display for Millions {
     }
 }
 
-scalar!(PopulationDensity, f64);
+scalar!(struct PopulationDensity(f64));
 
 impl PopulationDensity {
     pub const fn in_people_per_square_km(value: f64) -> Self {

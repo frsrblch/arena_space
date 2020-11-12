@@ -1,7 +1,11 @@
 use super::*;
 use std::fmt::{Display, Formatter, Result};
 
-scalar!(Mass, kilograms, in_kg);
+scalar! {
+    struct Mass(f64) {
+        fn in_kg(kilograms) -> Self;
+    }
+}
 
 impl Mass {
     pub fn request(&mut self, amount: Mass) -> Mass {

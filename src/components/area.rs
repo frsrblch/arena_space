@@ -1,6 +1,10 @@
 use super::Length;
 
-scalar!(Area, square_meters, in_m2);
+scalar! {
+    struct Area(f64) {
+        fn in_m2(square_meters) -> Self;
+    }
+}
 
 impl Area {
     pub fn in_square_km(value: f64) -> Self {
