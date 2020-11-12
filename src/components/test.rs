@@ -1,5 +1,3 @@
-use super::*;
-
 vector_and_scalar!(TestVector, TestScalar, test, in_test);
 
 #[test]
