@@ -1,5 +1,9 @@
 macro_rules! vector {
-    ($vector:ident, $scalar:ident, $unit:ident, $in_unit:ident, $base:ty) => {
+    {
+        struct $vector:ident([$scalar:ident; 2]) {
+            fn $in_unit:ident($unit:ident: $base:ty) -> Self;
+        }
+    } => {
         #[derive(Debug, Default, Copy, Clone, PartialEq, PartialOrd)]
         pub struct $vector {
             pub x: $scalar,

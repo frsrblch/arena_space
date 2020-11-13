@@ -1,13 +1,18 @@
 macro_rules! vector_and_scalar {
-    ($vector:ident, $scalar:ident, $unit:ident, $abrev:ident, $base:ty) => {
+    {
+        struct $vector:ident([struct $scalar:ident($base:ty);2]) {
+            fn $abrev:ident($unit:ident) -> Self;
+        }
+    } => {
         scalar! {
             struct $scalar($base) {
                 fn $abrev($unit) -> Self;
             }
         }
-        vector!($vector, $scalar, $unit, $abrev, $base);
-    };
-    ($vector:ident, $scalar:ident, $unit:ident, $abrev:ident) => {
-        vector_and_scalar!($vector, $scalar, $unit, $abrev, f64);
+        vector! {
+            struct $vector([$scalar; 2]) {
+                fn $abrev($unit: $base) -> Self;
+            }
+        }
     };
 }

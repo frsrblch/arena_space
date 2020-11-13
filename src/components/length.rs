@@ -1,4 +1,8 @@
-vector_and_scalar!(Distance, Length, meters, in_m);
+vector_and_scalar! {
+    struct Distance([struct Length(f64); 2]) {
+        fn in_m(meters) -> Self;
+    }
+}
 
 impl Distance {
     /// Returns the position vector given an angle and a radius

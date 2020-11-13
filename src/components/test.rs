@@ -1,4 +1,8 @@
-vector_and_scalar!(TestVector, TestScalar, test, in_test);
+vector_and_scalar! {
+    struct TestVector([struct TestScalar(f64); 2]) {
+        fn in_test(test) -> Self;
+    }
+}
 
 #[test]
 fn scalar_add_tests() {
