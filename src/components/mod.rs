@@ -13,9 +13,11 @@ pub use self::length::*;
 pub use self::mass::*;
 pub use self::mass_rate::*;
 pub use self::orbit::*;
+pub use self::pixel::*;
 pub use self::population::*;
 pub use self::position::*;
 pub use self::speed::*;
+pub use self::temperature::*;
 pub use self::time::*;
 
 mod angle;
@@ -28,22 +30,12 @@ mod length;
 mod mass;
 mod mass_rate;
 mod orbit;
+mod pixel;
 mod population;
 mod position;
 mod speed;
+mod temperature;
 mod time;
-
-scalar! {
-    struct Temperature(f64) {
-        fn in_k(kelvin) -> Self;
-    }
-}
-
-scalar! {
-    struct PixelScale(f32) {
-        fn in_m_per_px(meters_per_pixel) -> Self;
-    }
-}
 
 #[cfg(test)]
 mod test;
