@@ -13,13 +13,17 @@ impl Mass {
         debug_assert!(amount >= Mass::zero());
 
         let result = self.min(amount);
-        *self = (*self - amount).max(Mass::zero());
+        *self -= result;
         result
     }
 
     pub fn give(&mut self, amount: &mut Mass) {
         *self += *amount;
         *amount = Mass::zero();
+    }
+
+    pub fn is_none(&self) -> bool {
+        *self == Mass::zero()
     }
 }
 

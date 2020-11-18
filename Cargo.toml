@@ -7,7 +7,8 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-gen_id = { git = "https://github.com/frsrblch/gen_id" }
+#gen_id = { git = "https://github.com/frsrblch/gen_id" }
+gen_id = { path = "C:/Users/Farseer/IdeaProjects/gen_id" }
 iter_context = { git = "https://github.com/frsrblch/iter_context" }
 fnv = "1.0"
 paste = "1.0"

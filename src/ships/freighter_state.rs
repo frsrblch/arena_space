@@ -1,10 +1,15 @@
 use super::Freighter;
 use crate::colony::{Colonies, Colony};
-use crate::components::{Mass, ResourceComponent, TimeFloat};
+use crate::components::{MassRate, TimeFloat};
+use crate::ships::cargo::CargoEntry;
+use crate::ships::freighter_assignment::Assignment;
+use crate::systems::System;
 use crate::time::TimeState;
 use crate::Resource;
 use gen_id::*;
 use iter_context::ContextualIterator;
+use std::iter::Rev;
+use std::vec::Drain;
 
 table_array! {
     struct FreighterState {
@@ -21,9 +26,7 @@ table_array! {
             },
             loading: struct Loading {
                 type Row = struct LoadingRow;
-                fields {
-                    resource: Resource,
-                }
+                fields {}
                 links {
                     location: Colony,
                     destination: Colony,
@@ -32,11 +35,9 @@ table_array! {
             unloading: struct Unloading {
                 type Row = struct UnloadingRow;
                 fields {
-                    resource: Resource,
                 }
                 links {
                     location: Colony,
-                    destination: Colony,
                 }
             },
             moving: struct Moving {
@@ -47,32 +48,37 @@ table_array! {
                     resource: Resource,
                 }
                 links {
-                    from: Colony,
-                    to: Colony,
+                    source: Colony,
+                    destination: Colony,
                 }
             },
         }
         transitions {
-            moving_to_unloading: MovingToUnloading,
+            transition_moving: TransitionMoving,
         }
     }
 }
 
 impl FreighterState {
-    pub fn transition(&mut self, time: &TimeState) {
+    pub fn transition(
+        &mut self,
+        time: &TimeState,
+        colonies: &Colonies,
+        assignment: &Component<Freighter, Assignment>,
+    ) {
         let time = time.get_time_float();
 
         let moving = &mut self.moving;
         let unloading = &mut self.unloading;
         let indices = &mut self.indices;
 
-        self.moving_to_unloading
-            .transition(time, moving, unloading, indices);
+        self.transition_moving
+            .transition(time, moving, unloading, indices, colonies, assignment);
     }
 }
 
 #[derive(Debug, Default)]
-pub struct MovingToUnloading {
+pub struct TransitionMoving {
     transition: Vec<Index<Moving>>,
 }
 
@@ -80,23 +86,23 @@ impl From<MovingRow> for UnloadingRow {
     fn from(value: MovingRow) -> Self {
         Self {
             id: value.id,
-            location: value.to,
-            destination: value.from,
-            resource: value.resource,
+            location: value.destination,
         }
     }
 }
 
-impl MovingToUnloading {
+impl TransitionMoving {
     pub fn transition(
         &mut self,
         time: TimeFloat,
         moving: &mut Moving,
         unloading: &mut Unloading,
         indices: &mut IdIndices<Freighter, FreighterStateIndex>,
+        colonies: &Colonies,
+        assignment: &Component<Freighter, Assignment>,
     ) {
         self.get_arrivals(&moving.arrival, time);
-        self.transition_arrivals(moving, unloading, indices);
+        self.transition_arrivals(moving, unloading, indices, colonies, assignment);
     }
 
     fn get_arrivals(&mut self, arrival: &Column<Moving, TimeFloat>, time: TimeFloat) {
@@ -104,7 +110,15 @@ impl MovingToUnloading {
             .iter()
             .zip(arrival.indices())
             .into_iter()
-            .filter_map(|(arrival, id)| if *arrival < time { Some(id) } else { None });
+            .filter_map(
+                |(arrival, id)| {
+                    if *arrival < time {
+                        Some(id)
+                    } else {
+                        None
+                    }
+                },
+            );
 
         self.transition.clear();
         self.transition.extend(iter);
@@ -113,19 +127,27 @@ impl MovingToUnloading {
     fn transition_arrivals(
         &mut self,
         moving: &mut Moving,
-        idle: &mut Unloading,
+        unloading: &mut Unloading,
         indices: &mut IdIndices<Freighter, FreighterStateIndex>,
+        colonies: &Colonies,
+        _assignment: &Component<Freighter, Assignment>,
     ) {
-        for index in self.drain_rev() {
+        for index in self.rev_drain() {
             let arrived = moving.swap_remove(index, indices);
 
-            let id = Valid::assert(arrived.id);
-            let row = arrived.into();
-            idle.insert(id, row, indices);
+            if let Some(_) = arrived
+                .destination
+                .and_then(|id| id.validate(&colonies.alloc))
+            {
+                let row = Valid::assert(arrived.into());
+                unloading.insert(row, indices);
+            } else {
+                todo!("Destination not available, reroute ship");
+            }
         }
     }
 
-    fn drain_rev(&mut self) -> impl Iterator<Item = Index<Moving>> + '_ {
+    fn rev_drain(&mut self) -> Rev<Drain<Index<Moving>>> {
         self.transition.drain(..).rev()
     }
 }
@@ -134,25 +156,106 @@ impl Unloading {
     pub fn update(
         &mut self,
         colonies: &mut Colonies,
-        cargo: &mut ResourceComponent<Freighter, Mass>,
+        cargo_manifest: &mut Component<Freighter, Vec<CargoEntry>>,
+        loading_rate: &Component<Freighter, MassRate>,
+        done: &mut DoneUnloading,
     ) {
+        let stockpile = &mut colonies.resources.stockpile;
+
         let ids = Valid::assert(self.id.iter());
         let location = self.location.validate(&colonies.alloc);
 
-        for (id, location) in ids.zip(location.iter()) {
-            if let Some(location) = location {
-                let stockpile = colonies.resources.stockpile.iter_mut();
-                for (stockpile, cargo) in stockpile.zip(cargo.iter_mut()) {
-                    let stockpile = stockpile.get_mut(location);
-                    let cargo = cargo.get_mut(id);
+        let interval = System::FreighterState.get_interval_float();
 
-                    stockpile.give(cargo);
+        for ((id, location), index) in ids.zip(location.iter()).zip(self.id.indices()) {
+            if let Some(location) = location {
+                let mut unload_capacity = loading_rate.get(id) * interval;
+
+                let cargo_manifest = cargo_manifest.get_mut(id);
+
+                while !cargo_manifest.is_empty() && !unload_capacity.is_none() {
+                    let CargoEntry { resource, amount } = cargo_manifest.last_mut().unwrap();
+
+                    let unloaded = amount.request(unload_capacity);
+                    unload_capacity -= unloaded;
+
+                    let colony_amount = stockpile.get_mut(*resource).get_mut(location);
+
+                    *colony_amount += unloaded;
+
+                    if amount.is_none() {
+                        cargo_manifest.pop();
+                    }
                 }
+
+                if cargo_manifest.is_empty() {
+                    done.push(index);
+                }
+            } else {
+                done.push(index);
             }
         }
 
-        // TODO add ship loading rate
         // TODO add spaceport loading rate
         // TODO add id to DoneUnloading struct
+    }
+}
+
+pub struct DoneUnloading {
+    done: Vec<Index<Unloading>>,
+}
+
+impl DoneUnloading {
+    fn push(&mut self, index: Index<Unloading>) {
+        self.done.push(index);
+    }
+
+    pub fn transition(
+        &mut self,
+        assignment: &mut Component<Freighter, Assignment>,
+        unloading: &mut Unloading,
+        loading: &mut Loading,
+        idling: &mut Idle,
+        indices: &mut IdIndices<Freighter, FreighterStateIndex>,
+        colonies: &Colonies,
+    ) {
+        for index in self.rev_drain() {
+            let row = unloading.swap_remove(index, indices);
+            let row = Valid::assert(row);
+
+            let id = UnloadingRow::id(&row);
+            if let Some(location) = UnloadingRow::location(&row) {
+                match assignment.get(id) {
+                    Assignment::None => {
+                        let idle = IdleRow::new(id, location);
+                        idling.insert(idle, indices);
+                    }
+                    Assignment::Route(a, b) => {
+                        if let (Some(a), Some(b)) =
+                            (a.validate(&colonies.alloc), b.validate(&colonies.alloc))
+                        {
+                            let destination = if location == a {
+                                b
+                            } else if location == b {
+                                a
+                            } else {
+                                panic!()
+                            };
+
+                            let row = LoadingRow::new(id, location, destination);
+                            loading.insert(row, indices);
+                        } else {
+                            let idle = IdleRow::new(id, location);
+                            idling.insert(idle, indices);
+                        }
+                    }
+                }
+            } else {
+            }
+        }
+    }
+
+    fn rev_drain(&mut self) -> Rev<Drain<Index<Unloading>>> {
+        self.done.drain(..).rev()
     }
 }

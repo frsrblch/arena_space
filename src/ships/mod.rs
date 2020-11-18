@@ -4,10 +4,14 @@ use crate::colony::{Colonies, Colony};
 use crate::star::Stars;
 use crate::time::TimeState;
 
+use crate::ships::cargo::CargoEntry;
 use drives::*;
+use freighter_assignment::*;
 use freighter_state::*;
 
+pub mod cargo;
 pub mod drives;
+pub mod freighter_assignment;
 pub mod freighter_state;
 
 #[derive(Debug, Default)]
@@ -19,6 +23,7 @@ pub struct Shipping {
 pub struct Freighter {
     pub tonnage: Mass,
     pub capacity: Mass,
+    pub loading_rate: MassRate,
     pub drive: Drive,
 }
 
@@ -34,10 +39,12 @@ pub struct Freighters {
 
     pub tonnage: Component<Freighter, Mass>,
     pub capacity: Component<Freighter, Mass>,
+    pub loading_rate: Component<Freighter, MassRate>,
     pub drive: Component<Freighter, Drive>,
 
-    pub cargo: ResourceComponent<Freighter, Mass>,
+    pub cargo: Component<Freighter, Vec<CargoEntry>>,
 
+    pub assignment: Component<Freighter, Assignment>,
     pub state: FreighterState,
 }
 
@@ -47,14 +54,13 @@ impl Freighters {
 
         self.tonnage.insert(id, freighter.tonnage);
         self.capacity.insert(id, freighter.capacity);
+        self.loading_rate.insert(id, freighter.loading_rate);
         self.drive.insert(id, freighter.drive);
 
-        self.cargo.insert(id, Mass::zero());
+        self.cargo.insert(id, Vec::default());
 
-        let idle = IdleRow {
-            id: id.id(),
-            location: links.location.id().into(),
-        };
+        self.assignment.insert(id, Assignment::None);
+        let idle = IdleRow::new(id, links.location);
         self.state.insert(id, idle);
 
         id.id()
@@ -64,10 +70,12 @@ impl Freighters {
         if let Some(id) = self.alloc.validate(id) {
             self.tonnage.insert(id, Mass::zero());
             self.capacity.insert(id, Mass::zero());
+            self.loading_rate.insert(id, MassRate::zero());
             self.drive.insert(id, Drive::Warp(Speed::zero()));
 
-            self.cargo.insert(id, Mass::zero());
+            self.cargo.get_mut(id).clear();
 
+            self.assignment.insert(id, Assignment::None);
             self.state.remove(id);
 
             let id = id.id();
@@ -75,7 +83,7 @@ impl Freighters {
         }
     }
 
-    pub fn update(&mut self, time: &TimeState) {
-        self.state.transition(time);
+    pub fn update(&mut self, time: &TimeState, colonies: &Colonies) {
+        self.state.transition(time, colonies, &self.assignment);
     }
 }

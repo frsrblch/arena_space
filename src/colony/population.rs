@@ -42,6 +42,7 @@ const INTERVAL: DurationFloat = crate::systems::System::ColonyProductionCycle.ge
 impl Colonies {
     /// Sums the population on each body so that multiple colonies on the same body
     /// will have the effect of crowding each other out
+    // TODO area should be a colony component, remove body population
     pub fn update_population(&mut self, bodies: &mut Bodies) {
         bodies.sum_population(self);
 
@@ -64,8 +65,8 @@ impl Colonies {
 //
 // where:               N = population
 //                      r = growth rate (zero growth = 1.0)
-// where:               K = N_max * r_max / (r_max - 1)
-//                      N_max = ρ_max * surface area * land fraction * habitable fraction
+//                      K = N_max * r_max / (r_max - 1)
+//                      r_max = ρ_max * surface area * land fraction * habitable fraction
 //                      land fraction = land area / total area
 //                      habitable fraction = habitable area / land area
 //                      ρ_max = 12 billion / 104 million sq km

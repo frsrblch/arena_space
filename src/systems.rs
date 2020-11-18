@@ -39,7 +39,7 @@ array_enum! {
 impl System {
     fn run(self, state: &mut State) {
         match self {
-            System::FreighterState => state.freighter.update(&state.time),
+            System::FreighterState => state.freighter.update(&state.time, &state.colony),
             System::ColonyProductionCycle => state.colony.production_cycle(),
             System::NationFoodTargets => state.nation.update_food_targets(&mut state.colony),
             System::ColonyPopulation => state.colony.update_population(&mut state.body),
