@@ -36,8 +36,10 @@ macro_rules! array_enum {
         }
     };
     (
-        enum $name:ident { $($enum_type:ident),+ $(,)?}
-        struct $array:ident([enum]);
+        enum $name:ident {
+            type Array = struct $array:ident;
+            $( $enum_type:ident, )+
+        }
     ) => {
         array_enum! {
             enum $name {

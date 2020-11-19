@@ -2,11 +2,11 @@ use super::*;
 
 array_enum! {
     enum Resource {
+        type Array = struct ResourceArray;
         Food,
         Ore,
         Metal,
     }
-    struct ResourceArray([enum]);
 }
 
 pub const PRICE_DEFAULT: ResourceArray<Price> = ResourceArray::new([

@@ -2,12 +2,12 @@ use super::*;
 
 array_enum! {
     enum Facility {
+        type Array = struct FacilityArray;
         Farmland,
         Hydroponics,
         Mine,
         Foundry,
     }
-    struct FacilityArray([enum]);
 }
 
 component_map!(FacilityMap, Facility);
