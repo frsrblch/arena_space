@@ -5,7 +5,6 @@ use num_format::{Locale, ToFormattedString};
 
 pub use self::angle::*;
 pub use self::area::*;
-pub use self::credits::*;
 pub use self::economy::*;
 pub use self::ema::*;
 pub use self::fraction::*;
@@ -22,7 +21,6 @@ pub use self::time::*;
 
 mod angle;
 mod area;
-mod credits;
 mod economy;
 mod ema;
 mod fraction;

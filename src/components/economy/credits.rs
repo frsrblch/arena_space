@@ -1,4 +1,4 @@
-use super::{DurationFloat, MassRatePerPerson, Population};
+use crate::components::{DurationFloat, MassRatePerPerson, Population};
 
 scalar! {
     struct Credits(f64) {
