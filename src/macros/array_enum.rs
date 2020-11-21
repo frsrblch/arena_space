@@ -64,6 +64,14 @@ macro_rules! array_enum {
             pub fn iter_mut(&mut self) -> iter_context::IterMut<$name, T> {
                 iter_context::IterMut::new(self.values.iter_mut())
             }
+
+            pub fn iter_enum(&self) -> iter_context::Zip<$name, iter_context::Iter<$name, T>, iter_context::Iter<$name, $name>> {
+                self.iter().zip($name::iter())
+            }
+
+            pub fn iter_enum_mut(&mut self) -> iter_context::Zip<$name, iter_context::IterMut<$name, T>, iter_context::Iter<$name, $name>> {
+                self.iter_mut().zip($name::iter())
+            }
         }
 
         impl<T> std::ops::Index<$name> for $array <T> {

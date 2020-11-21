@@ -23,8 +23,7 @@ impl Colonies {
     fn request_resources(&mut self) {
         self.resources.reset_supply_and_demand();
 
-        self.production
-            .request_resources(&mut self.resources, &self.alloc);
+        self.production.request_resources(&mut self.resources);
 
         self.people.request_food(&mut self.resources);
     }
@@ -34,13 +33,11 @@ impl Colonies {
     }
 
     fn read_fulfillment(&mut self) {
-        self.production
-            .get_fulfillment(&self.resources, &self.alloc);
+        self.production.get_fulfillment(&self.resources);
     }
 
     fn take_inputs(&mut self) {
-        self.production
-            .take_inputs(&mut self.resources, &self.alloc);
+        self.production.take_inputs(&mut self.resources);
 
         self.people.take_food(&mut self.resources);
 
@@ -48,7 +45,7 @@ impl Colonies {
     }
 
     fn output_production(&mut self) {
-        self.production.output(&mut self.resources, &self.alloc);
+        self.production.output(&mut self.resources);
     }
 
     fn set_prices(&mut self) {
@@ -219,10 +216,8 @@ impl Production {
         self.data.iter_mut().for_each(|map| map.kill(id));
     }
 
-    pub fn request_resources(&mut self, resources: &mut Resources, alloc: &Allocator<Colony>) {
+    pub fn request_resources(&mut self, resources: &mut Resources) {
         for (production, facility) in self.iter_enum_mut() {
-            let production = production.validate(alloc);
-
             for input in facility.get_inputs() {
                 let demand = resources.demand.get_mut(input.resource);
 
@@ -234,11 +229,9 @@ impl Production {
         }
     }
 
-    fn get_fulfillment(&mut self, resources: &Resources, alloc: &Allocator<Colony>) {
+    fn get_fulfillment(&mut self, resources: &Resources) {
         for (production, facility) in self.iter_enum_mut() {
-            let mut production = production.validate_mut(alloc);
-
-            Self::reset_fulfillment(&mut production);
+            Self::reset_fulfillment(production);
 
             for input in facility.get_inputs() {
                 let input_fulfillment = resources.fulfillment.get(input.resource);
@@ -251,16 +244,14 @@ impl Production {
         }
     }
 
-    fn reset_fulfillment(map: &mut Valid<&mut IdMap<Colony, ProductionUnit>>) {
+    fn reset_fulfillment(map: &mut IdMap<Colony, ProductionUnit>) {
         for (_, unit) in map.iter_mut() {
             unit.fulfillment = 1.0;
         }
     }
 
-    fn take_inputs(&mut self, resources: &mut Resources, alloc: &Allocator<Colony>) {
+    fn take_inputs(&mut self, resources: &mut Resources) {
         for (production, facility) in self.iter_enum_mut() {
-            let production = production.validate(alloc);
-
             for input in facility.get_inputs() {
                 let stockpile = resources.stockpile.get_mut(input.resource);
 
@@ -272,10 +263,8 @@ impl Production {
         }
     }
 
-    fn output(&mut self, resources: &mut Resources, alloc: &Allocator<Colony>) {
+    fn output(&mut self, resources: &mut Resources) {
         for (production, facility) in self.iter_enum_mut() {
-            let production = production.validate(alloc);
-
             let output = facility.get_output();
             let stockpile = resources.stockpile.get_mut(output);
             let supply = resources.supply.get_mut(output);

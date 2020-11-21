@@ -25,6 +25,10 @@ impl Mass {
     pub fn is_none(&self) -> bool {
         *self == Mass::zero()
     }
+
+    pub fn is_some(&self) -> bool {
+        !self.is_none()
+    }
 }
 
 #[test]

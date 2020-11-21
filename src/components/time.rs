@@ -103,6 +103,8 @@ impl DurationFloat {
     pub const SECONDS_PER_DAY: f64 = Self::SECONDS_PER_HOUR * 24.0;
 
     pub const SECONDS_PER_HOUR: f64 = 3600.0;
+
+    pub const INFINITY: DurationFloat = DurationFloat::new(f64::INFINITY);
 }
 
 impl From<chrono::Duration> for DurationFloat {

@@ -5,7 +5,8 @@
     const_panic,
     const_float_classify,
     const_fn_floating_point_arithmetic,
-    iterator_fold_self
+    iterator_fold_self,
+    bool_to_option
 )]
 
 use gen_id::*;
@@ -20,7 +21,7 @@ pub mod body;
 pub mod colony;
 pub mod components;
 pub mod geometry;
-pub mod nation;
+// pub mod nation;
 pub mod ships;
 pub mod spaceport;
 pub mod star;

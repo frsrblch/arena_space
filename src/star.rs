@@ -2,6 +2,17 @@ use crate::body::{Body, Planet};
 use crate::state::State;
 use crate::*;
 
+// create_fixed_arena! {
+//     struct Stars {
+//         type Entity = struct Star;
+//         components {
+//             name: String,
+//             position: Position,
+//             star_type: StarType,
+//         }
+//     }
+// }
+
 #[derive(Debug, Clone)]
 pub struct Star {
     pub name: String,

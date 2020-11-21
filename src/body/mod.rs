@@ -167,7 +167,7 @@ pub mod population {
 
             let iter = population.zip(body);
 
-            for (pop, body) in colonies.alloc.filter_living(iter) {
+            for (pop, body) in iter {
                 self.add_population(body, pop);
             }
         }

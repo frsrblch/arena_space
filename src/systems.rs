@@ -29,7 +29,7 @@ array_enum! {
     enum System {
         FreighterState,
         ColonyProductionCycle,
-        NationFoodTargets,
+        // NationFoodTargets,
         ColonyPopulation,
         ResourceDecay,
         PrintState,
@@ -39,9 +39,13 @@ array_enum! {
 impl System {
     fn run(self, state: &mut State) {
         match self {
-            System::FreighterState => state.freighter.update(&state.time, &state.colony),
+            System::FreighterState => {
+                state
+                    .freighter
+                    .update(&state.time, &mut state.colony, &state.body, &state.star)
+            }
             System::ColonyProductionCycle => state.colony.production_cycle(),
-            System::NationFoodTargets => state.nation.update_food_targets(&mut state.colony),
+            // System::NationFoodTargets => state.nation.update_food_targets(&mut state.colony),
             System::ColonyPopulation => state.colony.update_population(&mut state.body),
             System::ResourceDecay => state.colony.resources.decay(),
             System::PrintState => state.print(),
@@ -63,7 +67,7 @@ impl System {
         match self {
             System::FreighterState => DurationFloat::in_hours(1.0),
             System::ColonyProductionCycle => DurationFloat::in_days(1.0),
-            System::NationFoodTargets => DurationFloat::in_days(30.0),
+            // System::NationFoodTargets => DurationFloat::in_days(30.0),
             System::ColonyPopulation => DurationFloat::in_days(5.0),
             System::ResourceDecay => DurationFloat::in_days(30.0),
             System::PrintState => DurationFloat::in_days(90.0),

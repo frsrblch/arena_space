@@ -5,8 +5,6 @@ pub enum Drive {
     Warp(Speed),
 }
 
-type TripDuration = DurationFloat;
-
 impl Drive {
     pub fn calculate_trip_duration<I: ValidId<Colony>>(
         &self,
@@ -16,7 +14,7 @@ impl Drive {
         colonies: &Colonies,
         bodies: &Bodies,
         stars: &Stars,
-    ) -> TripDuration {
+    ) -> DurationFloat {
         let from_body = colonies.body.get(from);
         let from_star = bodies.star.get(from_body);
 
@@ -41,7 +39,7 @@ impl Drive {
         from_orbit: &Orbit,
         to_orbit: &Orbit,
         departure: TimeFloat,
-    ) -> TripDuration {
+    ) -> DurationFloat {
         let from_position = from_orbit.calculate_position(departure);
         let mut duration = DurationFloat::zero();
 
@@ -59,7 +57,7 @@ impl Drive {
         duration
     }
 
-    fn calculate_trip_duration_interstellar(&self, from: Position, to: Position) -> TripDuration {
+    fn calculate_trip_duration_interstellar(&self, from: Position, to: Position) -> DurationFloat {
         let distance = (from - to).magnitude();
 
         match self {

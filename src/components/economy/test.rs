@@ -1,4 +1,3 @@
-
 use super::*;
 
 array_enum! {

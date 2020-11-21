@@ -27,8 +27,8 @@ pub struct Freighter {
     pub drive: Drive,
 }
 
-pub struct FreighterLinks<'c> {
-    pub location: Valid<'c, Id<Colony>>,
+pub struct FreighterLinks {
+    pub location: Id<Colony>,
 }
 
 dynamic_arena!(Freighter);
@@ -60,7 +60,7 @@ impl Freighters {
         self.cargo.insert(id, Vec::default());
 
         self.assignment.insert(id, Assignment::None);
-        let idle = IdleRow::new(id, links.location);
+        let idle = IdleRow::new(links.location);
         self.state.insert(id, idle);
 
         id.id()
@@ -83,7 +83,25 @@ impl Freighters {
         }
     }
 
-    pub fn update(&mut self, time: &TimeState, colonies: &Colonies) {
-        self.state.transition(time, colonies, &self.assignment);
+    pub fn update(
+        &mut self,
+        time: &TimeState,
+        colonies: &mut Colonies,
+        bodies: &Bodies,
+        stars: &Stars,
+    ) {
+        let parameters = &mut Parameters {
+            assignment: &mut self.assignment,
+            cargo: &mut self.cargo,
+            loading_rate: &self.loading_rate,
+            capacity: &self.capacity,
+            drive: &self.drive,
+            time,
+            colonies,
+            bodies,
+            stars,
+        };
+
+        self.state.update(parameters);
     }
 }

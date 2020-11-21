@@ -1,6 +1,6 @@
 use crate::body::Bodies;
 use crate::colony::Colonies;
-use crate::nation::Nations;
+// use crate::nation::Nations;
 use crate::ships::Freighters;
 use crate::star::Stars;
 use crate::time::{DateTime, TimeState};
@@ -10,7 +10,7 @@ pub struct State {
     pub time: TimeState,
     pub star: Stars,
     pub body: Bodies,
-    pub nation: Nations,
+    // pub nation: Nations,
     pub colony: Colonies,
     pub freighter: Freighters,
 }
