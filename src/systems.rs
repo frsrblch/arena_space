@@ -48,7 +48,7 @@ impl System {
             // System::NationFoodTargets => state.nation.update_food_targets(&mut state.colony),
             System::ColonyPopulation => state.colony.update_population(&mut state.body),
             System::ResourceDecay => state.colony.resources.decay(),
-            System::PrintState => state.print(),
+            System::PrintState => {} // state.print(),
         }
     }
 
@@ -65,7 +65,7 @@ impl System {
 
     pub const fn get_interval_float(self) -> DurationFloat {
         match self {
-            System::FreighterState => DurationFloat::in_hours(1.0),
+            System::FreighterState => DurationFloat::in_s(60.0 * 60.0),
             System::ColonyProductionCycle => DurationFloat::in_days(1.0),
             // System::NationFoodTargets => DurationFloat::in_days(30.0),
             System::ColonyPopulation => DurationFloat::in_days(5.0),
@@ -109,6 +109,11 @@ impl SystemQueue {
         }
 
         state.time.set_date_time(target);
+    }
+
+    pub fn update_by(&mut self, state: &mut State, duration: DurationFloat) {
+        let time = state.time.get_time() + Duration::from(duration);
+        self.update(state, time);
     }
 
     fn target_reached(&self, target: DateTime) -> bool {

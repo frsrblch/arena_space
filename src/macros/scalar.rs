@@ -4,7 +4,7 @@ macro_rules! scalar {
     } => {
         #[derive(Debug, Default, Copy, Clone, PartialEq, PartialOrd)]
         pub struct $scalar {
-            pub(super) value: $base,
+            pub value: $base,
         }
 
         impl $scalar {

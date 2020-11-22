@@ -59,7 +59,7 @@ table_array! {
             },
         }
         transitions {
-            assign_idle: AssignIdle,
+            assign: Assign,
             arrivals: Arrivals,
             unloaded: Unloaded,
             loaded: Loaded,
@@ -152,7 +152,7 @@ impl<'a> Parameters<'a> {
 impl FreighterState {
     pub fn update(&mut self, parameters: &mut Parameters) {
         let idle = &mut self.idle;
-        let assign = &mut self.assign_idle;
+        let assign = &mut self.assign;
 
         let moving = &mut self.moving;
         let arrivals = &mut self.arrivals;
@@ -165,28 +165,25 @@ impl FreighterState {
 
         let indices = &mut self.indices;
 
-        // MOVING
-        arrivals.transition(moving, unloading, indices, parameters);
-
-        // UNLOADING
+        // do updates before transitions
+        // otherwise, a new arrival would spend the hour unloading
         unloading.update(parameters);
-        unloaded.transition(unloading, idle, indices, parameters);
-
-        // IDLE
-        assign.transition(idle, moving, loading, indices, parameters);
-
-        // LOADING
         loading.update(parameters);
+
+        // each transition can lead into the next if applicable
+        arrivals.transition(moving, unloading, indices, parameters);
+        unloaded.transition(unloading, idle, indices, parameters);
+        assign.transition(idle, moving, loading, indices, parameters);
         loaded.transition(loading, moving, unloading, indices, parameters);
     }
 }
 
 #[derive(Debug, Default)]
-pub struct AssignIdle {
+pub struct Assign {
     assign: Transition<Idle>,
 }
 
-impl AssignIdle {
+impl Assign {
     pub fn transition(
         &mut self,
         idle: &mut Idle,
@@ -206,7 +203,10 @@ impl AssignIdle {
             .into_iter()
             .filter_map(|(id, index)| match parameters.assignment.get(id) {
                 Assignment::None => None,
-                Assignment::Route(_, _) => Some(index),
+                Assignment::Route(_, _) => {
+                    println!("{:?}:\tidle: transition", parameters.time.get_time());
+                    Some(index)
+                }
             });
 
         self.assign.fill(iter);
@@ -289,7 +289,12 @@ impl Arrivals {
             .iter()
             .zip(arrival.indices())
             .into_iter()
-            .filter_map(|(arrival, id)| (*arrival < time).then_some(id));
+            .filter_map(|(arrival, id)| {
+                (*arrival < time).then(|| {
+                    println!("{:?}:\tarrival: transition", parameters.time.get_time());
+                    id
+                })
+            });
 
         self.transition.fill(iter);
     }
@@ -306,6 +311,20 @@ impl Arrivals {
 
             let (id, row) = moving.swap_remove(index, indices);
             let id = Valid::assert(id);
+
+            // #[cfg(test)]
+            // {
+            //     let name = parameters.colonies.name.get(row.destination);
+            //     let cargo = parameters.cargo.get(id);
+            //     if !cargo.is_empty() {
+            //         println!("unloading at {}:", name);
+            //         for c in parameters.cargo.get(id).iter() {
+            //             println!("{}: {}", c.resource, c.amount);
+            //         }
+            //     } else {
+            //         println!("done unloading at {}", name);
+            //     }
+            // }
 
             let cargo = parameters.cargo.get(id);
             let cargo = cargo.iter().map(|c| c.amount).sum::<Mass>();
@@ -380,6 +399,8 @@ impl Unloaded {
             .into_iter()
             .filter_map(|(completion, index)| {
                 if *completion < time {
+                    println!("{:?}:\tunloading: transition", parameters.time.get_time());
+
                     Some(index)
                 } else {
                     None
@@ -482,8 +503,14 @@ impl Loaded {
 
         let iter = ids
             .zip(loading.indices())
+            .zip(loading.abort.iter())
             .into_iter()
-            .filter_map(|(id, index)| parameters.is_cargo_full(id).then_some(index));
+            .filter_map(|((id, index), abort)| {
+                (parameters.is_cargo_full(id) || *abort).then(|| {
+                    println!("{:?}:\tloading: transition", parameters.time.get_time());
+                    index
+                })
+            });
 
         self.transition.fill(iter);
     }
