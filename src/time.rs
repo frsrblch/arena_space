@@ -5,13 +5,6 @@ use std::ops::AddAssign;
 pub type DateTime = NaiveDateTime;
 type StdDuration = std::time::Duration;
 
-impl From<DurationFloat> for StdDuration {
-    fn from(duration: DurationFloat) -> Self {
-        let ms = (duration * 1e3).value as u64;
-        StdDuration::from_millis(ms)
-    }
-}
-
 #[derive(Debug)]
 pub struct TimeState {
     game_time: DateTime,
@@ -59,8 +52,7 @@ impl AddAssign<StdDuration> for TimeState {
 
 impl AddAssign<DurationFloat> for TimeState {
     fn add_assign(&mut self, rhs: DurationFloat) {
-        let ms = (rhs * 1e3).value as u64;
-        self.add_assign(StdDuration::from_millis(ms));
+        self.add_assign(StdDuration::from(rhs));
     }
 }
 

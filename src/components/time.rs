@@ -127,6 +127,13 @@ impl From<DurationFloat> for chrono::Duration {
     }
 }
 
+impl From<DurationFloat> for std::time::Duration {
+    fn from(duration: DurationFloat) -> Self {
+        let microseconds = (duration.value * 1e6) as u64;
+        std::time::Duration::from_micros(microseconds)
+    }
+}
+
 pub struct Days(DurationFloat);
 
 impl Display for Days {
