@@ -167,7 +167,6 @@ impl FreighterState {
 
         // do updates before transitions
         // otherwise, a new arrival would spend the hour unloading
-        unloading.update(parameters);
         loading.update(parameters);
 
         // each transition can lead into the next if applicable
@@ -203,10 +202,7 @@ impl Assign {
             .into_iter()
             .filter_map(|(id, index)| match parameters.assignment.get(id) {
                 Assignment::None => None,
-                Assignment::Route(_, _) => {
-                    println!("{:?}:\tidle: transition", parameters.time.get_time());
-                    Some(index)
-                }
+                Assignment::Route(_, _) => Some(index),
             });
 
         self.assign.fill(iter);
@@ -289,12 +285,7 @@ impl Arrivals {
             .iter()
             .zip(arrival.indices())
             .into_iter()
-            .filter_map(|(arrival, id)| {
-                (*arrival < time).then(|| {
-                    println!("{:?}:\tarrival: transition", parameters.time.get_time());
-                    id
-                })
-            });
+            .filter_map(|(arrival, id)| (*arrival < time).then_some(id));
 
         self.transition.fill(iter);
     }
@@ -312,20 +303,6 @@ impl Arrivals {
             let (id, row) = moving.swap_remove(index, indices);
             let id = Valid::assert(id);
 
-            // #[cfg(test)]
-            // {
-            //     let name = parameters.colonies.name.get(row.destination);
-            //     let cargo = parameters.cargo.get(id);
-            //     if !cargo.is_empty() {
-            //         println!("unloading at {}:", name);
-            //         for c in parameters.cargo.get(id).iter() {
-            //             println!("{}: {}", c.resource, c.amount);
-            //         }
-            //     } else {
-            //         println!("done unloading at {}", name);
-            //     }
-            // }
-
             let cargo = parameters.cargo.get(id);
             let cargo = cargo.iter().map(|c| c.amount).sum::<Mass>();
             let loading_rate = parameters.loading_rate.get(id);
@@ -340,38 +317,6 @@ impl Arrivals {
     }
 }
 
-impl Unloading {
-    pub fn update(&mut self, parameters: &mut Parameters) {
-        // TODO add spaceport loading rate
-
-        let stockpile = &mut parameters.colonies.resources.stockpile;
-
-        let ids = Valid::assert(self.id.iter());
-        let location = self.location.iter();
-
-        for (id, location) in ids.zip(location) {
-            let mut unload_capacity = parameters.loading_rate.get(id) * INTERVAL;
-
-            let cargo_manifest = parameters.cargo.get_mut(id);
-
-            while !cargo_manifest.is_empty() && !unload_capacity.is_none() {
-                if let Some(CargoEntry { resource, amount }) = cargo_manifest.last_mut() {
-                    let unloaded = amount.request(unload_capacity);
-                    unload_capacity -= unloaded;
-
-                    let colony_amount = stockpile.get_mut(*resource).get_mut(location);
-
-                    *colony_amount += unloaded;
-
-                    if amount.is_none() {
-                        cargo_manifest.pop();
-                    }
-                }
-            }
-        }
-    }
-}
-
 #[derive(Debug, Default)]
 pub struct Unloaded {
     transition: Transition<Unloading>,
@@ -383,10 +328,10 @@ impl Unloaded {
         unloading: &mut Unloading,
         idling: &mut Idle,
         indices: &mut Indices,
-        parameters: &Parameters,
+        parameters: &mut Parameters,
     ) {
         self.get_unloaded(unloading, parameters);
-        self.transition_unloaded(unloading, idling, indices);
+        self.transition_unloaded(unloading, idling, indices, parameters);
     }
 
     fn get_unloaded(&mut self, unloading: &Unloading, parameters: &Parameters) {
@@ -397,15 +342,7 @@ impl Unloaded {
             .iter()
             .zip(unloading.indices())
             .into_iter()
-            .filter_map(|(completion, index)| {
-                if *completion < time {
-                    println!("{:?}:\tunloading: transition", parameters.time.get_time());
-
-                    Some(index)
-                } else {
-                    None
-                }
-            });
+            .filter_map(|(completion, index)| (*completion < time).then_some(index));
 
         self.transition.fill(iter);
     }
@@ -415,10 +352,19 @@ impl Unloaded {
         unloading: &mut Unloading,
         idling: &mut Idle,
         indices: &mut Indices,
+        parameters: &mut Parameters,
     ) {
         self.transition.drain().for_each(|index| {
             let (id, row) = unloading.swap_remove(index, indices);
             let id = Valid::assert(id);
+
+            let cargo = parameters.cargo.get_mut(id);
+            let stockpile = &mut parameters.colonies.resources.stockpile;
+
+            for CargoEntry { resource, amount } in cargo.drain(..) {
+                let stockpile = stockpile.get_mut(resource).get_mut(row.location);
+                *stockpile += amount;
+            }
 
             let idle = IdleRow::new(row.location);
             idling.insert(id, idle, indices);
@@ -506,10 +452,7 @@ impl Loaded {
             .zip(loading.abort.iter())
             .into_iter()
             .filter_map(|((id, index), abort)| {
-                (parameters.is_cargo_full(id) || *abort).then(|| {
-                    println!("{:?}:\tloading: transition", parameters.time.get_time());
-                    index
-                })
+                (parameters.is_cargo_full(id) || *abort).then_some(index)
             });
 
         self.transition.fill(iter);

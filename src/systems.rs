@@ -65,7 +65,7 @@ impl System {
 
     pub const fn get_interval_float(self) -> DurationFloat {
         match self {
-            System::FreighterState => DurationFloat::in_s(60.0 * 60.0),
+            System::FreighterState => DurationFloat::in_s(60.0 * 10.0),
             System::ColonyProductionCycle => DurationFloat::in_days(1.0),
             // System::NationFoodTargets => DurationFloat::in_days(30.0),
             System::ColonyPopulation => DurationFloat::in_days(5.0),
