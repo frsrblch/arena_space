@@ -1,6 +1,9 @@
 use super::*;
 use std::fmt::{Display, Formatter, Result};
 
+pub const KG: Mass = Mass::in_kg(1.0);
+pub const TON: Mass = Mass::in_kg(1e3);
+
 scalar! {
     struct Mass(f64) {
         fn in_kg(kilograms) -> Self;

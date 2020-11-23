@@ -1,5 +1,7 @@
 use super::Length;
 
+pub const M2: Area = Area::in_m2(1.0);
+
 scalar! {
     struct Area(f64) {
         fn in_m2(square_meters) -> Self;

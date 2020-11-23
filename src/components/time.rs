@@ -2,6 +2,12 @@ use super::*;
 use chrono::Duration;
 use std::cmp::Ordering;
 
+pub const S: DurationFloat = DurationFloat::in_s(1.0);
+pub const MIN: DurationFloat = DurationFloat::in_s(60.0);
+pub const HR: DurationFloat = DurationFloat::in_hours(1.0);
+pub const DAY: DurationFloat = DurationFloat::in_hours(24.0);
+pub const YR: DurationFloat = DurationFloat::in_days(365.25);
+
 /// Elapsed game time in seconds. Distinct from Duration, which is a relative amount of time.
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct TimeFloat {

@@ -78,11 +78,6 @@ fn get_random_freighter(rng: &mut impl rand::Rng) -> Freighter {
     }
 }
 
-const KM: Length = Length::in_m(1e3);
-const TON: Mass = Mass::in_kg(1e3);
-const S: DurationFloat = DurationFloat::in_s(1.0);
-const MIN: DurationFloat = DurationFloat::in_s(60.0);
-
 #[allow(unused_variables)]
 #[test]
 fn idle_freighter_without_assignment_remains_idle() {
@@ -124,5 +119,5 @@ fn idle_freighter_without_assignment_remains_idle() {
     println!("{}: {}", get_name(city_colony), get_satiation(city_colony));
     println!("{}: {}", get_name(farm_colony), get_satiation(farm_colony));
 
-    panic!();
+    // panic!();
 }

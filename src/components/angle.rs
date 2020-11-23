@@ -2,6 +2,8 @@ use rand::distributions::{Distribution, Standard};
 use rand::Rng;
 use std::f64::consts::PI;
 
+pub const DEG: Angle = Angle::in_deg(1.0);
+
 scalar! {
     struct Angle(f64) {
         fn in_rad(radians) -> Self;
@@ -9,7 +11,7 @@ scalar! {
 }
 
 impl Angle {
-    pub fn in_deg(degrees: f64) -> Self {
+    pub const fn in_deg(degrees: f64) -> Self {
         Self::new(degrees * Self::RAD_PER_DEG)
     }
 
@@ -29,6 +31,7 @@ impl Distribution<Angle> for Standard {
         Angle::in_rad(rng.gen_range(-PI, PI))
     }
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;
