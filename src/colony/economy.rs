@@ -112,11 +112,7 @@ impl Resources {
         }
     }
 
-    // fn reset_supply_and_demand(&mut self) {
-    //     self.supply.fill_with(MassRate::zero);
-    //     self.demand.fill_with(MassRate::zero);
-    // }
-
+    // TODO incorporate partial shipping amount so that changes affect prices before the average is updated
     fn reset_supply_and_demand_from_shipping(&mut self) {
         let supply = self.supply.iter_mut();
         let demand = self.demand.iter_mut();
