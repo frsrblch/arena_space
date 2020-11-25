@@ -25,6 +25,13 @@ impl<ID> ResourceComponent<ID, Price> {
     }
 }
 
+impl<ID, T: Default> ResourceComponent<ID, T> {
+    pub fn insert_default<I: ValidId<ID>>(&mut self, id: I) {
+        self.iter_mut()
+            .for_each(|values| values.insert(id, T::default()));
+    }
+}
+
 impl Resource {
     pub const fn get_facility(&self) -> &'static [Facility] {
         match self {

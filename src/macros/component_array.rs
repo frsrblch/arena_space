@@ -13,19 +13,21 @@ macro_rules! component_array {
             }
         }
 
-        impl<ID, T: Default + Clone> $name<ID, T> {
+        impl<ID, T: Clone> $name<ID, T> {
+            pub fn insert<I: ValidId<ID>>(&mut self, id: I, value: T) {
+                self.components
+                    .iter_mut()
+                    .for_each(|comp| comp.insert(id, value.clone()));
+            }
+        }
+
+        impl<ID, T> $name<ID, T> {
             pub fn get(&self, index: $enum) -> &Component<ID, T> {
                 &self.components[index.index()]
             }
 
             pub fn get_mut(&mut self, index: Resource) -> &mut Component<ID, T> {
                 &mut self.components[index.index()]
-            }
-
-            pub fn insert<I: ValidId<ID>>(&mut self, id: I, value: T) {
-                self.components
-                    .iter_mut()
-                    .for_each(|comp| comp.insert(id, value.clone()));
             }
 
             pub fn iter(&self) -> iter_context::Iter<$enum, Component<ID, T>> {
