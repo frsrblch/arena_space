@@ -26,6 +26,12 @@ macro_rules! scalar {
             }
         }
 
+        impl num_traits::MulAddAssign<$base, Self> for $scalar {
+            fn mul_add_assign(&mut self, a: $base, b: Self) {
+                self.value.mul_add_assign(a, b.value);
+            }
+        }
+
         impl std::ops::Add for $scalar {
             type Output = Self;
             fn add(self, rhs: Self) -> Self::Output {
