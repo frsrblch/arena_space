@@ -47,7 +47,7 @@ pub struct Freighters {
 
     pub cargo: Component<Freighter, Vec<CargoEntry>>,
 
-    pub assignment: Component<Freighter, Assignment>,
+    pub assignment: Component<Freighter, Option<Assignment>>,
     pub state: FreighterState,
 }
 
@@ -62,7 +62,7 @@ impl Freighters {
 
         self.cargo.insert(id, Vec::default());
 
-        self.assignment.insert(id, Assignment::None);
+        self.assignment.insert(id, None);
         let idle = IdleRow::new(links.location);
         self.state.insert(id, idle);
 
@@ -78,7 +78,7 @@ impl Freighters {
 
             self.cargo.get_mut(id).clear();
 
-            self.assignment.insert(id, Assignment::None);
+            self.assignment.insert(id, None);
             self.state.remove(id);
 
             let id = id.id();

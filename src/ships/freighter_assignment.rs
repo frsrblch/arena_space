@@ -1,8 +1,7 @@
 use crate::colony::Colony;
 use gen_id::*;
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum Assignment {
-    None,
     Route(Id<Colony>, Id<Colony>),
 }

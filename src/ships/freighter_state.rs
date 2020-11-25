@@ -70,7 +70,7 @@ table_array! {
 type Indices = IdIndices<Freighter, FreighterStateIndex>;
 
 pub struct Parameters<'a> {
-    pub assignment: &'a mut Component<Freighter, Assignment>,
+    pub assignment: &'a mut Component<Freighter, Option<Assignment>>,
     pub cargo: &'a mut Component<Freighter, Vec<CargoEntry>>,
     pub capacity: &'a Component<Freighter, Mass>,
     pub loading_rate: &'a Component<Freighter, MassRate>,
@@ -179,7 +179,7 @@ impl FreighterState {
 
 #[derive(Debug, Default)]
 pub struct Assign {
-    assign: Transition<Idle>,
+    assign: Transition<(Index<Idle>, Assignment)>,
 }
 
 impl Assign {
@@ -197,12 +197,13 @@ impl Assign {
 
     fn get_idle_assigned(&mut self, idle: &mut Idle, parameters: &Parameters) {
         let ids = idle.id.iter().map(Valid::assert);
+
         let iter = ids
             .zip(idle.indices())
             .into_iter()
             .filter_map(|(id, index)| match parameters.assignment.get(id) {
-                Assignment::None => None,
-                Assignment::Route(_, _) => Some(index),
+                None => None,
+                Some(assignment) => Some((index, *assignment)),
             });
 
         self.assign.fill(iter);
@@ -218,28 +219,25 @@ impl Assign {
     ) {
         let time = parameters.time.get_time_float();
 
-        for index in self.assign.drain() {
+        for (index, assignment) in self.assign.drain() {
             let (id, idle_row) = idle.swap_remove(index, indices);
             let id = Valid::assert(id);
 
-            match parameters.assignment.get(id) {
-                Assignment::None => {
-                    idle.insert(id, Valid::assert(idle_row), indices);
-                }
+            match assignment {
                 Assignment::Route(a, b) => {
-                    if idle_row.location.eq(a) {
-                        let row = LoadingRow::new(false, idle_row.location, *b);
+                    if idle_row.location.eq(&a) {
+                        let row = LoadingRow::new(false, idle_row.location, b);
                         loading.insert(id, row, indices);
-                    } else if idle_row.location.eq(b) {
-                        let row = LoadingRow::new(false, idle_row.location, *a);
+                    } else if idle_row.location.eq(&b) {
+                        let row = LoadingRow::new(false, idle_row.location, a);
                         loading.insert(id, row, indices);
                     } else {
                         // go to nearest
-                        let to_a = parameters.get_trip_duration(id, idle_row.location, *a);
-                        let to_b = parameters.get_trip_duration(id, idle_row.location, *b);
+                        let to_a = parameters.get_trip_duration(id, idle_row.location, a);
+                        let to_b = parameters.get_trip_duration(id, idle_row.location, b);
 
                         let (destination, duration) =
-                            if to_a > to_b { (*b, to_b) } else { (*a, to_a) };
+                            if to_a > to_b { (b, to_b) } else { (a, to_a) };
 
                         if duration < DurationFloat::INFINITY {
                             let row = MovingRow::new(
@@ -251,7 +249,7 @@ impl Assign {
                             moving.insert(id, row, indices);
                         } else {
                             // destination unreachable
-                            parameters.assignment.insert(id, Assignment::None);
+                            parameters.assignment.insert(id, None);
                             idle.insert(id, Valid::assert(idle_row), indices);
                         }
                     };
@@ -263,7 +261,7 @@ impl Assign {
 
 #[derive(Debug, Default)]
 pub struct Arrivals {
-    transition: Transition<Moving>,
+    transition: Transition<Index<Moving>>,
 }
 
 impl Arrivals {
@@ -319,7 +317,7 @@ impl Arrivals {
 
 #[derive(Debug, Default)]
 pub struct Unloaded {
-    transition: Transition<Unloading>,
+    transition: Transition<Index<Unloading>>,
 }
 
 impl Unloaded {
@@ -428,7 +426,7 @@ impl Loading {
 
 #[derive(Debug, Default)]
 pub struct Loaded {
-    transition: Transition<Loading>,
+    transition: Transition<Index<Loading>>,
 }
 
 impl Loaded {
@@ -473,17 +471,17 @@ impl Loaded {
             let id = Valid::assert(id);
 
             match parameters.assignment.get(id) {
-                Assignment::Route(a, destination) if row.location.eq(a) => {
+                Some(Assignment::Route(a, destination)) if row.location.eq(a) => {
                     let duration = parameters.get_trip_duration(id, row.location, *destination);
                     let row = MovingRow::new(time, time + duration, row.location, destination);
                     moving.insert(id, row, indices);
                 }
-                Assignment::Route(destination, b) if row.location.eq(b) => {
+                Some(Assignment::Route(destination, b)) if row.location.eq(b) => {
                     let duration = parameters.get_trip_duration(id, row.location, *destination);
                     let row = MovingRow::new(time, time + duration, row.location, destination);
                     moving.insert(id, row, indices);
                 }
-                Assignment::None | Assignment::Route(_, _) => {
+                Some(Assignment::Route(_, _)) | None => {
                     let duration = parameters.get_unloading_duration(id);
                     let row = UnloadingRow::new(time, time + duration, row.destination);
                     unloading.insert(id, row, indices);
