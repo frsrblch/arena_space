@@ -31,4 +31,4 @@ pub mod systems;
 pub mod time;
 
 #[allow(dead_code)]
-type HashMap<I, T> = fnv::FnvHashMap<I, T>;
+type HashMap<K, V> = fnv::FnvHashMap<K, V>;
