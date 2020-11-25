@@ -1,4 +1,5 @@
 use crate::components::{DurationFloat, MassRatePerPerson, Population};
+use std::fmt::{Display, Formatter, Result};
 
 scalar! {
     struct Credits(f64) {
@@ -40,5 +41,17 @@ scalar! {
 }
 
 pub type Price = CreditsPerKilogram;
+
+impl Display for Price {
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        write!(f, "${:.2}/kg", self.value)
+    }
+}
+
+#[test]
+fn price_display() {
+    let p = Price::in_credits_per_kg(3.333333);
+    assert_eq!(&format!("{}", p), "$3.33/kg");
+}
 
 scalar_div! { CreditsPerSecondPerPerson | MassRatePerPerson = CreditsPerKilogram }
