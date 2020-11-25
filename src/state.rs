@@ -29,9 +29,3 @@ impl State {
         println!();
     }
 }
-
-impl TimeState {
-    fn print(&self) {
-        println!("{}\n", self.get_time().format("%Y-%m-%d"));
-    }
-}

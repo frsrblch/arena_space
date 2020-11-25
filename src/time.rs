@@ -40,6 +40,10 @@ impl TimeState {
         let seconds = duration.num_milliseconds() as f64 / 1e3;
         TimeFloat::in_s(seconds)
     }
+
+    pub fn print(&self) {
+        println!("{}", self.game_time.format("%Y-%m-%d %H:%M:%S"));
+    }
 }
 
 impl AddAssign<StdDuration> for TimeState {
