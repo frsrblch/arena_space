@@ -116,7 +116,7 @@ impl<'a> Parameters<'a> {
         destination: I,
         resource: Resource,
     ) -> Price {
-        let prices = &self.colonies.resources.prices.get(resource);
+        let prices = &self.colonies.resources.price.get(resource);
         let destination_price = prices.get(destination);
         let source_price = prices.get(source);
         destination_price - source_price
@@ -222,6 +222,11 @@ impl Assign {
         for (index, assignment) in self.assign.drain() {
             let (id, idle_row) = idle.swap_remove(index, indices);
             let id = Valid::assert(id);
+
+            assert!(
+                parameters.cargo.get_mut(id).is_empty(),
+                "Colony shipping system assumes that freighters are empty when they start loading"
+            );
 
             match assignment {
                 Assignment::Route(a, b) => {
@@ -358,10 +363,14 @@ impl Unloaded {
 
             let cargo = parameters.cargo.get_mut(id);
             let stockpile = &mut parameters.colonies.resources.stockpile;
+            let shipping = &mut parameters.colonies.resources.shipping;
 
             for CargoEntry { resource, amount } in cargo.drain(..) {
                 let stockpile = stockpile.get_mut(resource).get_mut(row.location);
+                let shipping = shipping.get_mut(resource).get_mut(row.location);
+
                 *stockpile += amount;
+                *shipping += amount;
             }
 
             let idle = IdleRow::new(row.location);
@@ -436,7 +445,7 @@ impl Loaded {
         moving: &mut Moving,
         unloading: &mut Unloading,
         indices: &mut Indices,
-        parameters: &Parameters,
+        parameters: &mut Parameters,
     ) {
         self.get_loaded(loading, parameters);
         self.transition_loaded(loading, moving, unloading, indices, parameters);
@@ -462,13 +471,19 @@ impl Loaded {
         moving: &mut Moving,
         unloading: &mut Unloading,
         indices: &mut Indices,
-        parameters: &Parameters,
+        parameters: &mut Parameters,
     ) {
         let time = parameters.time.get_time_float();
 
         self.transition.drain().for_each(|index| {
             let (id, row) = loading.swap_remove(index, indices);
             let id = Valid::assert(id);
+
+            for cargo in parameters.cargo.get(id) {
+                let shipped = &mut parameters.colonies.resources.shipping;
+                let shipped = shipped.get_mut(cargo.resource).get_mut(row.location);
+                *shipped -= cargo.amount;
+            }
 
             match parameters.assignment.get(id) {
                 Some(Assignment::Route(a, destination)) if row.location.eq(a) => {

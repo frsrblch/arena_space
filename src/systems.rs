@@ -33,6 +33,7 @@ array_enum! {
         ColonyPopulation,
         ResourceDecay,
         PrintState,
+        ShippingAverage,
     }
 }
 
@@ -49,6 +50,7 @@ impl System {
             System::ColonyPopulation => state.colony.update_population(&mut state.body),
             System::ResourceDecay => state.colony.resources.decay(),
             System::PrintState => {} // state.print(),
+            System::ShippingAverage => state.colony.resources.update_shipping_avg(),
         }
     }
 
@@ -71,6 +73,7 @@ impl System {
             System::ColonyPopulation => DurationFloat::in_days(5.0),
             System::ResourceDecay => DurationFloat::in_days(30.0),
             System::PrintState => DurationFloat::in_days(90.0),
+            System::ShippingAverage => DurationFloat::in_days(365.25 / 52.0),
         }
     }
 

@@ -33,9 +33,10 @@ fn get_test_state() -> TestState {
     );
 
     // create production
-    let food_required = ProductionUnit::new((earth_pop + luna_pop).get_food_requirement());
+    let food_required = (earth_pop + luna_pop).get_food_requirement();
+    let production_unit = ProductionUnit::new(food_required * 1.1);
     let food_production = state.state.colony.production.get_mut(Facility::Farmland);
-    food_production.insert(farm_colony, food_required);
+    food_production.insert(farm_colony, production_unit);
 
     state.state.colony.production_cycle();
 
@@ -48,7 +49,7 @@ fn get_test_state() -> TestState {
     );
 
     // create price gradient
-    let food_prices = state.state.colony.resources.prices.get_mut(Resource::Food);
+    let food_prices = state.state.colony.resources.price.get_mut(Resource::Food);
     food_prices.insert(city_colony, Resource::Food.get_default_price() * 4.0);
 
     TestState {
@@ -69,15 +70,16 @@ fn get_test_star_system() -> StarSystem {
 }
 
 fn get_random_freighter(rng: &mut impl rand::Rng) -> Freighter {
-    let tonnage = rng.gen_range(100.0, 250.0) * TON;
+    let tonnage = rng.gen_range(100.0, 250.0) * TON * 5.0;
     Freighter {
         tonnage,
         capacity: tonnage * 2.5,
         loading_rate: rng.gen_range(1.0, 2.5) * TON / MIN,
-        drive: Drive::Warp(rng.gen_range(10.0, 30.0) * KM / S),
+        drive: Drive::Warp(rng.gen_range(40.0, 60.0) * KM / S),
     }
 }
 
+// TODO this isn't a test anymore, move it to examples
 #[allow(unused_variables)]
 #[test]
 fn idle_freighter_without_assignment_remains_idle() {
@@ -89,7 +91,7 @@ fn idle_freighter_without_assignment_remains_idle() {
 
     let rng = &mut rand::thread_rng();
 
-    for _ in 0..150 {
+    for _ in 0..20 {
         let f = state.state.freighter.create(
             get_random_freighter(rng),
             FreighterLinks {
@@ -100,24 +102,35 @@ fn idle_freighter_without_assignment_remains_idle() {
         {
             let f = Valid::assert(f);
             let assignment = &mut state.state.freighter.assignment;
-            assignment.insert(f, Assignment::Route(city_colony, farm_colony));
+            assignment.insert(f, Some(Assignment::Route(city_colony, farm_colony)));
         }
     }
 
-    state.update_by(60.0 * MIN * 2000.0);
+    state.update_by(360.0 * DAY);
 
-    let start = std::time::Instant::now();
-    state.update_by(60.0 * MIN);
-    let end = std::time::Instant::now();
-    dbg!(end - start);
+    for _ in 0..6 {
+        state.update_by(30.0 * DAY);
+
+        state.state.time.print();
+        state.state.colony.print();
+        println!();
+    }
 
     println!("{:?}:\tdone", state.state.time.get_time());
 
     let get_name = |id: Id<Colony>| state.state.colony.name.get(id);
     let get_satiation = |id: Id<Colony>| state.state.colony.people.satiation.get(id).value();
 
-    println!("{}: {}", get_name(city_colony), get_satiation(city_colony));
-    println!("{}: {}", get_name(farm_colony), get_satiation(farm_colony));
+    println!(
+        "{}: {:.2}",
+        get_name(city_colony),
+        get_satiation(city_colony)
+    );
+    println!(
+        "{}: {:.2}",
+        get_name(farm_colony),
+        get_satiation(farm_colony)
+    );
 
     // panic!();
 }

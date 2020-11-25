@@ -21,7 +21,7 @@ impl Colonies {
     }
 
     fn request_resources(&mut self) {
-        self.resources.reset_supply_and_demand();
+        self.resources.reset_supply_and_demand_from_shipping();
 
         self.production.request_resources(&mut self.resources);
 
@@ -61,8 +61,11 @@ pub struct Resources {
     pub supply: ResourceComponent<Colony, MassRate>,
     pub demand: ResourceComponent<Colony, MassRate>,
 
-    pub prices: ResourceComponent<Colony, Price>,
+    pub price: ResourceComponent<Colony, Price>,
     pub price_multiplier: ResourceComponent<Colony, f64>,
+
+    pub shipping: ResourceComponent<Colony, Mass>,
+    pub avg_shipping: ResourceComponent<Colony, ExpMovingAvg<MassRate, 12.0>>,
 }
 
 impl Resources {
@@ -73,24 +76,66 @@ impl Resources {
         self.supply.insert(id, MassRate::zero());
         self.demand.insert(id, MassRate::zero());
 
-        self.prices.insert_default_prices(id);
+        self.price.insert_default_prices(id);
         self.price_multiplier.insert(id, 1.0);
+
+        self.shipping.insert_default(id);
+        self.avg_shipping
+            .insert(id, ExpMovingAvg::new(MassRate::zero()));
     }
 
-    pub fn print_colony<I: ValidId<Colony>>(&self, colony: I) {
+    pub fn print_colony<I: ValidId<Colony>>(&self, id: I) {
         println!("  Stockpile:");
 
-        for (stockpile, resource) in self.stockpile.iter_enum() {
-            let amount = stockpile.get(colony);
-            if *amount > Mass::zero() {
-                println!("    {}: {}", resource, amount.tons());
+        for ((((stockpile, resource), price), supply), demand) in self
+            .stockpile
+            .iter_enum()
+            .zip(self.price.iter())
+            .zip(self.supply.iter())
+            .zip(self.demand.iter())
+        {
+            let amount = stockpile.get(id);
+            let price = price.get(id);
+            let supply = supply.get(id);
+            let demand = demand.get(id);
+
+            if MassRate::zero().ne(supply) || MassRate::zero().ne(demand) {
+                println!(
+                    "    {}: {}\t{}\tS-D: {:.2}-{:.2}",
+                    resource,
+                    amount.tons(),
+                    price,
+                    supply.value,
+                    demand.value,
+                );
             }
         }
     }
 
-    fn reset_supply_and_demand(&mut self) {
-        self.supply.fill_with(MassRate::zero);
-        self.demand.fill_with(MassRate::zero);
+    // fn reset_supply_and_demand(&mut self) {
+    //     self.supply.fill_with(MassRate::zero);
+    //     self.demand.fill_with(MassRate::zero);
+    // }
+
+    fn reset_supply_and_demand_from_shipping(&mut self) {
+        let supply = self.supply.iter_mut();
+        let demand = self.demand.iter_mut();
+        let shipping = self.avg_shipping.iter();
+
+        for ((supply, demand), shipping) in supply.zip(demand).zip(shipping) {
+            let supply = supply.iter_mut();
+            let demand = demand.iter_mut();
+            let shipping = shipping.iter();
+
+            for ((supply, demand), shipping) in supply.zip(demand).zip(shipping) {
+                let shipping = shipping.value();
+                *supply = shipping.max(MassRate::zero());
+                *demand = (-shipping).max(MassRate::zero());
+
+                debug_assert!(supply.value >= 0.0);
+                debug_assert!(demand.value >= 0.0);
+            }
+        }
     }
 
     fn calculate_fulfillment(&mut self) {
@@ -104,6 +149,7 @@ impl Resources {
                     .zip(r.iter())
                     .for_each(|((f, s), r)| {
                         *f = Self::calculate_fulfillment_from(*s, *r, INTERVAL);
+                        assert!(*f >= 0.0);
                     });
             });
     }
@@ -127,7 +173,7 @@ impl Resources {
     }
 
     fn set_prices(&mut self) {
-        let prices = self.prices.iter_mut();
+        let prices = self.price.iter_mut();
         let multiplier = self.price_multiplier.iter_mut();
 
         let iter = prices
@@ -142,9 +188,9 @@ impl Resources {
             let iter = prices.zip(multiplier.iter_mut()).zip(supply).zip(demand);
 
             for (((p, m), s), d) in iter {
-                let ratio = d / s;
-                *p = ratio * *m * default;
-                *m *= ratio.powf(0.02);
+                let ratio = DemandSupplyRatio::new(*d, *s);
+                *p = ratio.value() * *m * default;
+                *m *= ratio.value().powf(0.02);
             }
         }
     }
@@ -160,6 +206,61 @@ impl Resources {
             }
         }
     }
+
+    pub fn update_shipping_avg(&mut self) {
+        const INTERVAL: DurationFloat = System::ShippingAverage.get_interval_float();
+
+        for (shipped, average) in self.shipping.iter_mut().zip(self.avg_shipping.iter_mut()) {
+            for (shipped, average) in shipped.iter_mut().zip(average.iter_mut()) {
+                average.add_next(*shipped / INTERVAL);
+                *shipped = Mass::zero();
+            }
+        }
+    }
+}
+
+#[derive(Debug, Copy, Clone, PartialOrd, PartialEq)]
+struct DemandSupplyRatio(f64);
+
+impl DemandSupplyRatio {
+    fn new(demand: MassRate, supply: MassRate) -> Self {
+        debug_assert!(demand.value >= 0.0);
+        debug_assert!(supply.value >= 0.0);
+
+        let value = if supply == demand {
+            1.0
+        } else if supply == MassRate::zero() {
+            DemandSupplyRatio::MAX_VALUE
+        } else {
+            (demand / supply).min(Self::MAX_VALUE)
+        };
+
+        DemandSupplyRatio(value)
+    }
+
+    const fn value(&self) -> f64 {
+        self.0
+    }
+
+    const MAX_VALUE: f64 = 4.0;
+}
+
+#[test]
+fn demand_supply_ratio_tests() {
+    let demand_supply_expected = |demand: f64, supply: f64, expected: f64| {
+        let supply = MassRate::in_kg_per_s(supply);
+        let demand = MassRate::in_kg_per_s(demand);
+        let expected = DemandSupplyRatio(expected);
+        assert_eq!(expected, DemandSupplyRatio::new(demand, supply))
+    };
+
+    demand_supply_expected(1.0, 1.0, 1.0);
+    demand_supply_expected(0.0, 0.0, 1.0);
+    demand_supply_expected(1.0, 0.0, DemandSupplyRatio::MAX_VALUE);
+    demand_supply_expected(0.0, 1.0, 0.0);
+    demand_supply_expected(2.0, 1.0, 2.0);
+    demand_supply_expected(1.0, 2.0, 0.5);
+    demand_supply_expected(1000.0, 1.0, DemandSupplyRatio::MAX_VALUE);
 }
 
 #[derive(Debug, Default)]
