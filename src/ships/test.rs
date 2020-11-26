@@ -116,7 +116,7 @@ fn idle_freighter_without_assignment_remains_idle() {
         println!();
     }
 
-    println!("{:?}:\tdone", state.state.time.get_time());
+    println!("done: {}\n", &state.state.time);
 
     let get_name = |id: Id<Colony>| state.state.colony.name.get(id);
     let get_satiation = |id: Id<Colony>| state.state.colony.people.satiation.get(id).value();
