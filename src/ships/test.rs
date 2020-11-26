@@ -6,6 +6,7 @@ use crate::colony::ColonyLinks;
 use crate::star::examples::sol;
 use crate::star::StarSystem;
 use crate::system_state::SystemState;
+use rand::SeedableRng;
 
 struct TestState {
     state: SystemState,
