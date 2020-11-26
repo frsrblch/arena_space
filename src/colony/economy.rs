@@ -10,26 +10,24 @@ const INTERVAL: DurationFloat = crate::systems::System::ColonyProductionCycle.ge
 
 impl Colonies {
     pub fn production_cycle(&mut self) {
+        self.resources.reset_supply_and_demand();
+
         self.request_resources();
-        self.calculate_fulfillment();
+        self.resources.calculate_fulfillment();
         self.read_fulfillment();
         self.take_inputs();
-        self.output_production();
 
-        self.set_prices();
+        self.production.output(&mut self.resources);
+
+        self.resources.add_shipping_flow_to_supply_and_demand();
+        self.resources.set_prices();
+
         // update production rate
     }
 
     fn request_resources(&mut self) {
-        self.resources.reset_supply_and_demand_from_shipping();
-
         self.production.request_resources(&mut self.resources);
-
         self.people.request_food(&mut self.resources);
-    }
-
-    fn calculate_fulfillment(&mut self) {
-        self.resources.calculate_fulfillment();
     }
 
     fn read_fulfillment(&mut self) {
@@ -38,21 +36,14 @@ impl Colonies {
 
     fn take_inputs(&mut self) {
         self.production.take_inputs(&mut self.resources);
-
         self.people.take_food(&mut self.resources);
 
         self.resources.set_negatives_to_zero();
     }
-
-    fn output_production(&mut self) {
-        self.production.output(&mut self.resources);
-    }
-
-    fn set_prices(&mut self) {
-        self.resources.set_prices();
-    }
 }
 
+/// demand = requested (+ shipping out)
+/// supply = production (+ shipping in)
 #[derive(Debug, Default)]
 pub struct Resources {
     pub stockpile: ResourceComponent<Colony, Mass>,
@@ -112,8 +103,13 @@ impl Resources {
         }
     }
 
+    fn reset_supply_and_demand(&mut self) {
+        self.supply.fill_with(MassRate::zero);
+        self.demand.fill_with(MassRate::zero);
+    }
+
     // TODO incorporate partial shipping amount so that changes affect prices before the average is updated
-    fn reset_supply_and_demand_from_shipping(&mut self) {
+    fn add_shipping_flow_to_supply_and_demand(&mut self) {
         let supply = self.supply.iter_mut();
         let demand = self.demand.iter_mut();
         let shipping = self.avg_shipping.iter();
@@ -125,8 +121,8 @@ impl Resources {
 
             for ((supply, demand), shipping) in supply.zip(demand).zip(shipping) {
                 let shipping = shipping.value();
-                *supply = shipping.max(MassRate::zero());
-                *demand = (-shipping).max(MassRate::zero());
+                *supply += shipping.max(MassRate::zero());
+                *demand += (-shipping).max(MassRate::zero());
             }
         }
     }
@@ -141,13 +137,12 @@ impl Resources {
                     .zip(s.iter())
                     .zip(r.iter())
                     .for_each(|((f, s), r)| {
-                        *f = Self::calculate_fulfillment_from(*s, *r, INTERVAL);
-                        assert!(*f >= 0.0);
+                        *f = Self::calculate_fulfillment_inner(*s, *r, INTERVAL);
                     });
             });
     }
 
-    fn calculate_fulfillment_from(
+    fn calculate_fulfillment_inner(
         stockpile: Mass,
         requested: MassRate,
         interval: DurationFloat,
@@ -176,14 +171,12 @@ impl Resources {
             .zip(crate::PRICE_DEFAULT.iter());
 
         for ((((prices, multiplier), supply), demand), default) in iter {
-            let prices = prices.iter_mut();
+            let iter = prices.zip(multiplier).zip(supply).zip(demand);
 
-            let iter = prices.zip(multiplier.iter_mut()).zip(supply).zip(demand);
-
-            for (((p, m), s), d) in iter {
-                let ratio = DemandSupplyRatio::new(*d, *s);
-                *p = ratio.value() * *m * default;
-                *m *= ratio.value().powf(0.02);
+            for (((price, mult), supply), demand) in iter {
+                let ratio = DemandSupplyRatio::calculate(*demand, *supply);
+                *price = ratio * *mult * default;
+                *mult *= ratio.powf(0.02);
             }
         }
     }
@@ -216,7 +209,7 @@ impl Resources {
 struct DemandSupplyRatio(f64);
 
 impl DemandSupplyRatio {
-    fn new(demand: MassRate, supply: MassRate) -> Self {
+    fn calculate(demand: MassRate, supply: MassRate) -> f64 {
         debug_assert!(demand.value >= 0.0);
         debug_assert!(supply.value >= 0.0);
 
@@ -228,11 +221,7 @@ impl DemandSupplyRatio {
             (demand / supply).min(Self::MAX_VALUE)
         };
 
-        DemandSupplyRatio(value)
-    }
-
-    const fn value(&self) -> f64 {
-        self.0
+        value
     }
 
     const MAX_VALUE: f64 = 4.0;
@@ -243,8 +232,7 @@ fn demand_supply_ratio_tests() {
     let demand_supply_expected = |demand: f64, supply: f64, expected: f64| {
         let supply = MassRate::in_kg_per_s(supply);
         let demand = MassRate::in_kg_per_s(demand);
-        let expected = DemandSupplyRatio(expected);
-        assert_eq!(expected, DemandSupplyRatio::new(demand, supply))
+        assert_eq!(expected, DemandSupplyRatio::calculate(demand, supply))
     };
 
     demand_supply_expected(1.0, 1.0, 1.0);
@@ -267,11 +255,7 @@ impl Production {
 
         for (map, facility) in self.data.iter_enum() {
             if let Some(unit) = map.get(id) {
-                println!(
-                    "    {}: {}",
-                    facility,
-                    unit.get_output_rate().tons_per_day()
-                );
+                println!("    {}: {}", facility, unit.get_output().tons_per_day());
             }
         }
     }
@@ -317,7 +301,8 @@ impl Production {
 
                 for (colony, unit) in production.iter() {
                     let demand = demand.get_mut(colony);
-                    *demand += unit.capacity * input.multiplier;
+                    let amount = unit.capacity * input.multiplier;
+                    *demand += amount;
                 }
             }
         }
@@ -351,7 +336,7 @@ impl Production {
 
                 for (colony, unit) in production.iter() {
                     let stockpile = stockpile.get_mut(colony);
-                    *stockpile -= unit.get_output_rate() * input.multiplier * INTERVAL;
+                    *stockpile -= unit.get_output() * input.multiplier * INTERVAL;
                 }
             }
         }
@@ -364,7 +349,7 @@ impl Production {
             let supply = resources.supply.get_mut(output);
 
             for (colony, unit) in production.iter() {
-                let output = unit.get_output_rate();
+                let output = unit.get_output();
 
                 let stockpile = stockpile.get_mut(colony);
                 *stockpile += output * INTERVAL;
@@ -390,7 +375,7 @@ impl ProductionUnit {
         }
     }
 
-    pub fn get_output_rate(&self) -> MassRate {
+    pub fn get_output(&self) -> MassRate {
         self.capacity * self.fulfillment
     }
 }
@@ -413,7 +398,7 @@ mod tests {
     fn calculate_fulfillment() {
         assert_eq!(
             1.0,
-            Resources::calculate_fulfillment_from(
+            Resources::calculate_fulfillment_inner(
                 Mass::in_kg(1.0),
                 MassRate::in_kg_per_s(1.0),
                 DurationFloat::in_s(1.0)
@@ -421,7 +406,7 @@ mod tests {
         );
         assert_eq!(
             1.0,
-            Resources::calculate_fulfillment_from(
+            Resources::calculate_fulfillment_inner(
                 Mass::in_kg(2.0),
                 MassRate::in_kg_per_s(1.0),
                 DurationFloat::in_s(1.0)
@@ -429,7 +414,7 @@ mod tests {
         );
         assert_eq!(
             0.5,
-            Resources::calculate_fulfillment_from(
+            Resources::calculate_fulfillment_inner(
                 Mass::in_kg(1.0),
                 MassRate::in_kg_per_s(2.0),
                 DurationFloat::in_s(1.0)
@@ -437,7 +422,7 @@ mod tests {
         );
         assert_eq!(
             0.5,
-            Resources::calculate_fulfillment_from(
+            Resources::calculate_fulfillment_inner(
                 Mass::in_kg(1.0),
                 MassRate::in_kg_per_s(1.0),
                 DurationFloat::in_s(2.0)

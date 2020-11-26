@@ -34,7 +34,7 @@ fn get_test_state() -> TestState {
 
     // create production
     let food_required = (earth_pop + luna_pop).get_food_requirement();
-    let production_unit = ProductionUnit::new(food_required * 1.1);
+    let production_unit = ProductionUnit::new(food_required * 1.075);
     let food_production = state.state.colony.production.get_mut(Facility::Farmland);
     food_production.insert(farm_colony, production_unit);
 
@@ -89,7 +89,7 @@ fn idle_freighter_without_assignment_remains_idle() {
         farm_colony,
     } = get_test_state();
 
-    let rng = &mut rand::thread_rng();
+    let rng = &mut rand::rngs::StdRng::seed_from_u64(1);
 
     for _ in 0..20 {
         let f = state.state.freighter.create(
@@ -106,7 +106,7 @@ fn idle_freighter_without_assignment_remains_idle() {
         }
     }
 
-    state.update_by(360.0 * DAY);
+    state.update_by(2.0 * YR);
 
     for _ in 0..6 {
         state.update_by(30.0 * DAY);
@@ -118,8 +118,9 @@ fn idle_freighter_without_assignment_remains_idle() {
 
     println!("done: {}\n", &state.state.time);
 
-    let get_name = |id: Id<Colony>| state.state.colony.name.get(id);
-    let get_satiation = |id: Id<Colony>| state.state.colony.people.satiation.get(id).value();
+    let colony = &state.state.colony;
+    let get_name = |id: Id<Colony>| colony.name.get(id);
+    let get_satiation = |id: Id<Colony>| colony.people.satiation.get(id).value();
 
     println!(
         "{}: {:.2}",
