@@ -70,7 +70,7 @@ impl Bodies {
         Orbit { params, parent }
     }
 
-    pub fn get_position(&self, id: Id<Body>, time: TimeFloat) -> Position {
+    pub fn get_position<I: ValidId<Body>>(&self, id: I, time: TimeFloat) -> Position {
         self.orbit.get(id).calculate_position(time)
     }
 
@@ -167,7 +167,7 @@ pub mod population {
 
             let iter = population.zip(body);
 
-            for (pop, body) in colonies.alloc.filter_living(iter) {
+            for (pop, body) in iter {
                 self.add_population(body, pop);
             }
         }

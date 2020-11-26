@@ -1,6 +1,8 @@
-use super::*;
-
-vector_and_scalar!(TestVector, TestScalar, test, in_test);
+vector_and_scalar! {
+    struct TestVector([struct TestScalar(f64); 2]) {
+        fn in_test(test) -> Self;
+    }
+}
 
 #[test]
 fn scalar_add_tests() {
@@ -123,11 +125,25 @@ fn scalar_div_assign_test() {
     assert_eq!(expected, a);
 }
 
-scalar!(Num, test, in_test);
-scalar!(Den, test, in_test);
-scalar!(Res, test, in_test);
+scalar! {
+    struct Num(f64) {
+        fn in_test(test) -> Self;
+    }
+}
 
-scalar_div!(Num, Den, Res); // Num / Den = Res
+scalar! {
+    struct Den(f64) {
+        fn in_test(test) -> Self;
+    }
+}
+
+scalar! {
+    struct Res(f64) {
+        fn in_test(test) -> Self;
+    }
+}
+
+scalar_div! { Num | Den = Res}
 
 #[test]
 fn scalar_div_conversion_test() {

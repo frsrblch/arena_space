@@ -1,22 +1,28 @@
 #![allow(incomplete_features)]
-#![feature(const_fn)]
-#![feature(const_generics)]
-#![feature(const_panic)]
-#![feature(const_float_classify)]
-#![feature(const_fn_floating_point_arithmetic)]
-#![feature(iterator_fold_self)]
+#![feature(
+    const_fn,
+    const_generics,
+    const_panic,
+    const_float_classify,
+    const_fn_floating_point_arithmetic,
+    iterator_fold_self,
+    bool_to_option
+)]
+
+use gen_id::*;
+use iter_context::ContextualIterator;
 
 use components::*;
-use gen_id::*;
-use state::State;
-use typed_iter::*;
+
+#[macro_use]
+pub mod macros;
 
 pub mod body;
 pub mod colony;
-#[macro_use]
 pub mod components;
 pub mod geometry;
-pub mod nation;
+// pub mod nation;
+pub mod ships;
 pub mod spaceport;
 pub mod star;
 pub mod state;
@@ -25,6 +31,4 @@ pub mod systems;
 pub mod time;
 
 #[allow(dead_code)]
-type HashMap<I, T> = fnv::FnvHashMap<I, T>;
-#[allow(dead_code)]
-type HashSet<T> = fnv::FnvHashSet<T>;
+type HashMap<K, V> = fnv::FnvHashMap<K, V>;

@@ -15,23 +15,25 @@ impl People {
 
     pub fn request_food(&mut self, resources: &mut Resources) {
         let population = self.population.iter();
-        let demand = resources.demand.get_mut(Food).iter_mut();
+        let requested = resources.demand.get_mut(Food).iter_mut();
 
-        population.zip(demand).for_each(|(population, demand)| {
-            *demand += population.get_food_requirement();
-        });
+        population
+            .zip(requested)
+            .for_each(|(population, requested)| {
+                *requested += population.get_food_requirement();
+            });
     }
 
     pub fn take_food(&mut self, resources: &mut Resources) {
-        let population = self.population.iter();
+        let food_required = self.population.iter().map(|pop| pop.get_food_requirement());
         let satiation = self.satiation.iter_mut();
         let fulfillment = resources.fulfillment.get(Food).iter();
         let stockpile = resources.stockpile.get_mut(Food).iter_mut();
 
-        let iter = population.zip(satiation).zip(fulfillment).zip(stockpile);
+        let iter = food_required.zip(satiation).zip(fulfillment).zip(stockpile);
 
-        for (((population, satiation), fulfillment), food_stockpile) in iter {
-            *food_stockpile -= population.get_food_requirement() * fulfillment * INTERVAL;
+        for (((food_required, satiation), fulfillment), food_stockpile) in iter {
+            *food_stockpile -= food_required * fulfillment * INTERVAL;
             satiation.add_next(*fulfillment);
         }
     }
@@ -42,6 +44,7 @@ const INTERVAL: DurationFloat = crate::systems::System::ColonyProductionCycle.ge
 impl Colonies {
     /// Sums the population on each body so that multiple colonies on the same body
     /// will have the effect of crowding each other out
+    // TODO area should be a colony component, remove body population
     pub fn update_population(&mut self, bodies: &mut Bodies) {
         bodies.sum_population(self);
 
@@ -64,8 +67,8 @@ impl Colonies {
 //
 // where:               N = population
 //                      r = growth rate (zero growth = 1.0)
-// where:               K = N_max * r_max / (r_max - 1)
-//                      N_max = ρ_max * surface area * land fraction * habitable fraction
+//                      K = N_max * r_max / (r_max - 1)
+//                      r_max = ρ_max * surface area * land fraction * habitable fraction
 //                      land fraction = land area / total area
 //                      habitable fraction = habitable area / land area
 //                      ρ_max = 12 billion / 104 million sq km
@@ -76,6 +79,8 @@ fn get_population_multiplier(
     land_area: Area,
     body_population: Population,
 ) -> f64 {
+    const YEAR_FRACTION: f64 = System::ColonyPopulation.get_interval_as_year_fraction();
+
     let max_pop = land_area * MAX_POPULATION_DENSITY;
     let k = max_pop * (BASE_GROWTH_MULTIPLIER / BASE_GROWTH_RATE);
 
@@ -87,7 +92,6 @@ fn get_population_multiplier(
     annual_growth_rate.powf(YEAR_FRACTION)
 }
 
-const YEAR_FRACTION: f64 = System::ColonyPopulation.get_interval_as_year_fraction();
 const BASE_GROWTH_RATE: f64 = 0.025;
 const BASE_GROWTH_MULTIPLIER: f64 = 1.0 + BASE_GROWTH_RATE;
 

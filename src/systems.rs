@@ -25,22 +25,32 @@ impl UpdateToken {
     }
 }
 
-array_enum!(SystemArray System {
-    ColonyProductionCycle,
-    NationFoodTargets,
-    ColonyPopulation,
-    ResourceDecay,
-    PrintState,
-});
+array_enum! {
+    enum System {
+        FreighterState,
+        ColonyProductionCycle,
+        // NationFoodTargets,
+        ColonyPopulation,
+        ResourceDecay,
+        PrintState,
+        ShippingAverage,
+    }
+}
 
 impl System {
     fn run(self, state: &mut State) {
         match self {
+            System::FreighterState => {
+                state
+                    .freighter
+                    .update(&state.time, &mut state.colony, &state.body, &state.star)
+            }
             System::ColonyProductionCycle => state.colony.production_cycle(),
-            System::NationFoodTargets => state.nation.update_food_targets(&mut state.colony),
+            // System::NationFoodTargets => state.nation.update_food_targets(&mut state.colony),
             System::ColonyPopulation => state.colony.update_population(&mut state.body),
             System::ResourceDecay => state.colony.resources.decay(),
-            System::PrintState => state.print(),
+            System::PrintState => {} // state.print(),
+            System::ShippingAverage => state.colony.resources.update_shipping_avg(),
         }
     }
 
@@ -57,11 +67,13 @@ impl System {
 
     pub const fn get_interval_float(self) -> DurationFloat {
         match self {
+            System::FreighterState => DurationFloat::in_s(60.0 * 10.0),
             System::ColonyProductionCycle => DurationFloat::in_days(1.0),
-            System::NationFoodTargets => DurationFloat::in_days(30.0),
+            // System::NationFoodTargets => DurationFloat::in_days(30.0),
             System::ColonyPopulation => DurationFloat::in_days(5.0),
             System::ResourceDecay => DurationFloat::in_days(30.0),
             System::PrintState => DurationFloat::in_days(90.0),
+            System::ShippingAverage => DurationFloat::in_days(365.25 / 52.0),
         }
     }
 
@@ -84,7 +96,7 @@ impl Default for SystemQueue {
 
 impl SystemQueue {
     pub fn new(start_date: DateTime) -> Self {
-        let queue = System::array()
+        let queue = System::ARRAY
             .iter()
             .map(|system| system.get_first_token(start_date))
             .collect();
@@ -100,6 +112,11 @@ impl SystemQueue {
         }
 
         state.time.set_date_time(target);
+    }
+
+    pub fn update_by(&mut self, state: &mut State, duration: DurationFloat) {
+        let time = state.time.get_time() + Duration::from(duration);
+        self.update(state, time);
     }
 
     fn target_reached(&self, target: DateTime) -> bool {

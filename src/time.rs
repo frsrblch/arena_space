@@ -1,5 +1,6 @@
-use crate::components::TimeFloat;
+use crate::components::{DurationFloat, TimeFloat};
 use chrono::{Duration, NaiveDate, NaiveDateTime, NaiveTime};
+use std::fmt::{Display, Formatter, Result};
 use std::ops::AddAssign;
 
 pub type DateTime = NaiveDateTime;
@@ -40,6 +41,16 @@ impl TimeState {
         let seconds = duration.num_milliseconds() as f64 / 1e3;
         TimeFloat::in_s(seconds)
     }
+
+    pub fn print(&self) {
+        println!("{}\n", self);
+    }
+}
+
+impl Display for TimeState {
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        write!(f, "{}", self.game_time.format("%Y-%m-%d %H:%M:%S"))
+    }
 }
 
 impl AddAssign<StdDuration> for TimeState {
@@ -47,6 +58,12 @@ impl AddAssign<StdDuration> for TimeState {
         let duration = Duration::from_std(rhs).unwrap();
         let new_date_time = self.game_time + duration;
         self.set_date_time(new_date_time);
+    }
+}
+
+impl AddAssign<DurationFloat> for TimeState {
+    fn add_assign(&mut self, rhs: DurationFloat) {
+        self.add_assign(StdDuration::from(rhs));
     }
 }
 
