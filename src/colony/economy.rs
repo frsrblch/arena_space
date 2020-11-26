@@ -127,9 +127,6 @@ impl Resources {
                 let shipping = shipping.value();
                 *supply = shipping.max(MassRate::zero());
                 *demand = (-shipping).max(MassRate::zero());
-
-                debug_assert!(supply.value >= 0.0);
-                debug_assert!(demand.value >= 0.0);
             }
         }
     }
