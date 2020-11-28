@@ -15,12 +15,8 @@ impl Into<f64> for Fraction {
 
 impl Fraction {
     pub const fn new(value: f64) -> Self {
-        if value == f64::NEG_INFINITY || value.is_nan() {
+        if value.is_nan() {
             return Self(0.0);
-        }
-
-        if value == f64::INFINITY {
-            return Self(1.0);
         }
 
         match value {
@@ -63,4 +59,31 @@ impl Mul<Fraction> for f64 {
     fn mul(self, rhs: Fraction) -> Self::Output {
         rhs * self
     }
+}
+
+macro_rules! fraction_tests {
+    { $( $name:ident ( $value:expr, $expected:expr ); )* } => {
+        #[cfg(test)]
+        mod test {
+            use super::*;
+
+            $(
+                #[test]
+                fn $name () {
+                    assert_eq!(Fraction::new($value), Fraction($expected));
+                }
+            )*
+        }
+    }
+}
+
+fraction_tests! {
+    zero(0.0, 0.0);
+    one(1.0, 1.0);
+    two(2.0, 1.0);
+    nan(f64::NAN, 0.0);
+    inf(f64::INFINITY, 1.0);
+    neg_inf(f64::NEG_INFINITY, 0.0);
+    neg(-1.0, 0.0);
+    valid(0.4, 0.4);
 }
