@@ -13,6 +13,12 @@ impl Into<f64> for Fraction {
     }
 }
 
+impl From<f64> for Fraction {
+    fn from(value: f64) -> Self {
+        Self::new(value)
+    }
+}
+
 impl Fraction {
     pub const fn new(value: f64) -> Self {
         if value.is_nan() {
