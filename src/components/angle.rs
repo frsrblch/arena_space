@@ -1,3 +1,4 @@
+use super::DurationFloat;
 use rand::distributions::{Distribution, Standard};
 use rand::Rng;
 use std::f64::consts::PI;
@@ -23,7 +24,11 @@ impl Angle {
         self.value.cos()
     }
 
-    const RAD_PER_DEG: f64 = std::f64::consts::PI / 180.0;
+    const RAD_PER_DEG: f64 = PI / 180.0;
+
+    pub const TWO_PI: Self = Angle::in_rad(2.0 * PI);
+
+    pub const NEG_TWO_PI: Self = Angle::in_rad(-2.0 * PI);
 }
 
 impl Distribution<Angle> for Standard {
@@ -31,6 +36,14 @@ impl Distribution<Angle> for Standard {
         Angle::in_rad(rng.gen_range(-PI, PI))
     }
 }
+
+scalar! {
+    struct AngularSpeed(f64) {
+        fn in_rad_per_s(rad_per_s) -> Self;
+    }
+}
+
+scalar_div!(Angle | DurationFloat = AngularSpeed);
 
 #[cfg(test)]
 mod tests {
