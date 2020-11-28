@@ -8,10 +8,10 @@ pub const HR: DurationFloat = DurationFloat::in_hours(1.0);
 pub const DAY: DurationFloat = DurationFloat::in_hours(24.0);
 pub const YR: DurationFloat = DurationFloat::in_days(365.25);
 
-/// Elapsed game time in seconds. Distinct from Duration, which is a relative amount of time.
+/// Elapsed game time in seconds.
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct TimeFloat {
-    value: f64,
+    pub value: DurationFloat,
 }
 
 impl TimeFloat {
@@ -24,11 +24,13 @@ impl TimeFloat {
     }
 
     fn new(value: f64) -> Self {
-        Self { value }
+        Self {
+            value: DurationFloat::new(value),
+        }
     }
 
     pub const NEVER: Self = Self {
-        value: f64::INFINITY,
+        value: DurationFloat::INFINITY,
     };
 }
 
@@ -42,34 +44,38 @@ impl Div for TimeFloat {
 impl Add<DurationFloat> for TimeFloat {
     type Output = Self;
     fn add(self, rhs: DurationFloat) -> Self {
-        Self::new(self.value + rhs.value)
+        Self {
+            value: self.value + rhs,
+        }
     }
 }
 
 impl AddAssign<DurationFloat> for TimeFloat {
     fn add_assign(&mut self, rhs: DurationFloat) {
-        self.value += rhs.value;
+        self.value += rhs;
     }
 }
 
 impl Sub<DurationFloat> for TimeFloat {
     type Output = Self;
     fn sub(self, rhs: DurationFloat) -> Self {
-        Self::new(self.value - rhs.value)
+        Self {
+            value: self.value - rhs,
+        }
     }
 }
 
 impl Sub for TimeFloat {
     type Output = DurationFloat;
     fn sub(self, rhs: Self) -> DurationFloat {
-        DurationFloat::in_s(self.value - rhs.value)
+        self.value - rhs.value
     }
 }
 
 impl Div<DurationFloat> for TimeFloat {
     type Output = f64;
     fn div(self, rhs: DurationFloat) -> Self::Output {
-        self.value / rhs.value
+        self.value / rhs
     }
 }
 
