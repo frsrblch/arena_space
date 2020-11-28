@@ -7,6 +7,7 @@ use crate::star::examples::sol;
 use crate::star::StarSystem;
 use crate::system_state::SystemState;
 use rand::SeedableRng;
+use wyhash::WyRng;
 
 struct TestState {
     state: SystemState,
@@ -83,6 +84,7 @@ fn get_random_freighter(rng: &mut impl rand::Rng) -> Freighter {
 // TODO this isn't a test anymore, move it to examples
 #[allow(unused_variables)]
 #[test]
+#[ignore]
 fn idle_freighter_without_assignment_remains_idle() {
     let TestState {
         mut state,
@@ -90,7 +92,7 @@ fn idle_freighter_without_assignment_remains_idle() {
         farm_colony,
     } = get_test_state();
 
-    let rng = &mut rand::rngs::StdRng::seed_from_u64(1);
+    let rng = &mut WyRng::seed_from_u64(0);
 
     for _ in 0..20 {
         let f = state.state.freighter.create(
@@ -134,5 +136,5 @@ fn idle_freighter_without_assignment_remains_idle() {
         get_satiation(farm_colony)
     );
 
-    // panic!();
+    panic!();
 }
