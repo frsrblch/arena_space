@@ -6,7 +6,7 @@ use iter_context::{ContextualIterator, Iter, IterMut, Zip};
 
 // TODO split economy into production, pricing, decay?
 
-const INTERVAL: DurationFloat = crate::systems::System::ColonyProductionCycle.get_interval_float();
+const INTERVAL: Duration = crate::systems::System::ColonyProductionCycle.get_interval_float();
 
 impl Colonies {
     pub fn production_cycle(&mut self) {
@@ -145,7 +145,7 @@ impl Resources {
     fn calculate_fulfillment_inner(
         stockpile: Mass,
         requested: MassRate,
-        interval: DurationFloat,
+        interval: Duration,
     ) -> f64 {
         let flow = stockpile / interval;
         let fulfillment = flow / requested;
@@ -194,7 +194,7 @@ impl Resources {
     }
 
     pub fn update_shipping_avg(&mut self) {
-        const INTERVAL: DurationFloat = System::ShippingAverage.get_interval_float();
+        const INTERVAL: Duration = System::ShippingAverage.get_interval_float();
 
         for (shipped, average) in self.shipping.iter_mut().zip(self.avg_shipping.iter_mut()) {
             for (shipped, average) in shipped.iter_mut().zip(average.iter_mut()) {
@@ -401,7 +401,7 @@ mod tests {
             Resources::calculate_fulfillment_inner(
                 Mass::in_kg(1.0),
                 MassRate::in_kg_per_s(1.0),
-                DurationFloat::in_s(1.0)
+                Duration::in_s(1.0)
             )
         );
         assert_eq!(
@@ -409,7 +409,7 @@ mod tests {
             Resources::calculate_fulfillment_inner(
                 Mass::in_kg(2.0),
                 MassRate::in_kg_per_s(1.0),
-                DurationFloat::in_s(1.0)
+                Duration::in_s(1.0)
             )
         );
         assert_eq!(
@@ -417,7 +417,7 @@ mod tests {
             Resources::calculate_fulfillment_inner(
                 Mass::in_kg(1.0),
                 MassRate::in_kg_per_s(2.0),
-                DurationFloat::in_s(1.0)
+                Duration::in_s(1.0)
             )
         );
         assert_eq!(
@@ -425,7 +425,7 @@ mod tests {
             Resources::calculate_fulfillment_inner(
                 Mass::in_kg(1.0),
                 MassRate::in_kg_per_s(1.0),
-                DurationFloat::in_s(2.0)
+                Duration::in_s(2.0)
             )
         );
     }

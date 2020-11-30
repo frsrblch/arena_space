@@ -25,7 +25,7 @@ pub struct OrbitParams {
 }
 
 impl OrbitParams {
-    pub fn from_period(radius: Length, period: DurationFloat, offset: Angle) -> Self {
+    pub fn from_period(radius: Length, period: Duration, offset: Angle) -> Self {
         Self {
             radius,
             angular_speed: Angle::NEG_TWO_PI / period,
@@ -66,7 +66,7 @@ mod tests {
     fn orbit_test_at_quarter_orbit() {
         let orbit = get_planet_orbit();
         let time = Angle::NEG_TWO_PI / orbit.params.angular_speed / 4.0;
-        assert!(time > DurationFloat::zero());
+        assert!(time > Duration::zero());
 
         let quarter = orbit.calculate_position(TimeFloat::in_s(time.value));
 
@@ -97,11 +97,7 @@ mod tests {
 
     fn get_planet_orbit_with_offset(offset: Angle) -> Orbit {
         Orbit {
-            params: OrbitParams::from_period(
-                Length::in_m(1000.0),
-                DurationFloat::in_s(60.0),
-                offset,
-            ),
+            params: OrbitParams::from_period(Length::in_m(1000.0), Duration::in_s(60.0), offset),
             parent: None,
         }
     }
@@ -114,7 +110,7 @@ mod tests {
         Orbit {
             params: OrbitParams::from_period(
                 Length::in_m(10.0),
-                DurationFloat::in_s(10.0),
+                Duration::in_s(10.0),
                 Angle::default(),
             ),
             parent: Some(get_planet_orbit().params),

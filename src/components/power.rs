@@ -1,4 +1,4 @@
-use super::{DurationFloat, Energy, Force, Speed};
+use super::{Duration, Energy, Force, Speed};
 
 scalar! {
     struct Power(f64) {
@@ -6,7 +6,7 @@ scalar! {
     }
 }
 
-scalar_div!(Energy | DurationFloat = Power);
+scalar_div!(Energy | Duration = Power);
 scalar_div!(Power | Speed = Force);
 
 #[test]

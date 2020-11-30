@@ -1,4 +1,4 @@
-use super::DurationFloat;
+use super::Duration;
 use rand::distributions::{Distribution, Standard};
 use rand::Rng;
 use std::f64::consts::PI;
@@ -43,7 +43,7 @@ scalar! {
     }
 }
 
-scalar_div!(Angle | DurationFloat = AngularSpeed);
+scalar_div!(Angle | Duration = AngularSpeed);
 
 #[cfg(test)]
 mod tests {

@@ -13,7 +13,7 @@ impl Population {
 
     /// 2 kg per person per day
     const FOOD_PER_PERSON: MassRatePerPerson =
-        MassRatePerPerson::in_kg_per_s_person(2.0 / DurationFloat::SECONDS_PER_DAY);
+        MassRatePerPerson::in_kg_per_s_person(2.0 / Duration::SECONDS_PER_DAY);
 
     pub fn millions(self) -> Millions {
         Millions(self)

@@ -1,4 +1,4 @@
-use super::{DurationFloat, Speed};
+use super::{Duration, Speed};
 
 scalar! {
     struct Acceleration(f64) {
@@ -6,4 +6,4 @@ scalar! {
     }
 }
 
-scalar_div!(Speed | DurationFloat = Acceleration);
+scalar_div!(Speed | Duration = Acceleration);

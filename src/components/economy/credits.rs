@@ -1,4 +1,4 @@
-use crate::components::{DurationFloat, MassRatePerPerson, Population};
+use crate::components::{Duration, MassRatePerPerson, Population};
 use std::fmt::{Display, Formatter, Result};
 
 scalar! {
@@ -13,7 +13,7 @@ scalar! {
     }
 }
 
-scalar_div! { Credits | DurationFloat = CreditRate }
+scalar_div! { Credits | Duration = CreditRate }
 
 scalar! {
     struct CreditsPerPerson(f64) {
@@ -32,7 +32,7 @@ scalar! {
 pub type Wage = CreditsPerSecondPerPerson;
 
 scalar_div! { CreditRate | Population = CreditsPerSecondPerPerson }
-scalar_div! { CreditsPerPerson | DurationFloat = CreditsPerSecondPerPerson }
+scalar_div! { CreditsPerPerson | Duration = CreditsPerSecondPerPerson }
 
 scalar! {
     struct CreditsPerKilogram(f64) {

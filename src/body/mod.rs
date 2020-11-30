@@ -202,7 +202,7 @@ pub mod examples {
             radius: Length::in_m(6371e3),
             orbit: OrbitParams::from_period(
                 Length::in_m(149.60e9),
-                DurationFloat::in_days(365.25),
+                Duration::in_days(365.25),
                 Default::default(),
             ),
             conditions: BodyProperties {
@@ -225,7 +225,7 @@ pub mod examples {
             radius: Length::in_m(1737.1e3),
             orbit: OrbitParams::from_period(
                 Length::in_m(384_400e3),
-                DurationFloat::in_days(27.322),
+                Duration::in_days(27.322),
                 Default::default(),
             ),
 

@@ -1,4 +1,4 @@
-use crate::components::DurationFloat;
+use crate::components::Duration;
 use crate::state::State;
 use crate::systems::SystemQueue;
 use crate::time::DateTime;
@@ -21,7 +21,7 @@ impl SystemState {
         self.systems.update(&mut self.state, target);
     }
 
-    pub fn update_by(&mut self, duration: DurationFloat) {
+    pub fn update_by(&mut self, duration: Duration) {
         self.systems.update_by(&mut self.state, duration);
     }
 }
