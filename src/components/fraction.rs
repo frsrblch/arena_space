@@ -38,13 +38,9 @@ impl Fraction {
     pub fn value(&self) -> f64 {
         self.0
     }
-}
 
-impl Powf<f64> for Fraction {
-    type Output = f64;
-
-    fn powf(self, rhs: f64) -> Self::Output {
-        self.0.powf(rhs)
+    pub fn powf(self, n: f64) -> f64 {
+        self.0.powf(n)
     }
 }
 

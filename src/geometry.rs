@@ -5,11 +5,11 @@ pub struct Sphere {
 }
 
 impl Sphere {
-    pub fn with_radius(radius: Length) -> Self {
+    pub const fn with_radius(radius: Length) -> Self {
         Sphere { radius }
     }
 
-    pub fn get_area(&self) -> Area {
+    pub const fn get_area(&self) -> Area {
         FOUR_PI * self.radius.squared()
     }
 }

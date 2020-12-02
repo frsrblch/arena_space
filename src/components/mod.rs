@@ -70,14 +70,14 @@ impl Squared for f64 {
     }
 }
 
-pub trait Powf<T> {
-    type Output;
-    fn powf(self, rhs: T) -> Self::Output;
-}
-
-impl Powf<Self> for f64 {
-    type Output = Self;
-    fn powf(self, rhs: Self) -> Self::Output {
-        f64::powf(self, rhs)
-    }
-}
+// pub trait Powf<T> {
+//     type Output;
+//     fn powf(self, rhs: T) -> Self::Output;
+// }
+//
+// impl Powf<Self> for f64 {
+//     type Output = Self;
+//     fn powf(self, rhs: Self) -> Self::Output {
+//         f64::powf(self, rhs)
+//     }
+// }
