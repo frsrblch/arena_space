@@ -355,4 +355,16 @@ mod debug_tests {
     fn overflow_panics() {
         let _ = TestScalar::new(f64::MAX) * 2.0;
     }
+
+    #[test]
+    #[should_panic]
+    fn div_by_zero_panics() {
+        let _inf = crate::Length::new(1.0) / crate::Duration::zero();
+    }
+
+    #[test]
+    #[should_panic]
+    fn zero_div_by_zero_panics() {
+        let _inf = crate::Length::zero() / crate::Duration::zero();
+    }
 }

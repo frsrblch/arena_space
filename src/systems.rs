@@ -1,4 +1,4 @@
-use crate::components::Duration;
+use crate::components::*;
 use crate::state::State;
 use crate::time::{DateTime, TimeState};
 use chrono::Duration as ChronoDuration;
@@ -19,7 +19,7 @@ impl UpdateToken {
         self.system.run(state);
 
         UpdateToken {
-            next_update: self.next_update + self.system.get_interval(),
+            next_update: self.next_update + self.system.get_chrono_interval(),
             system: self.system,
         }
     }
@@ -61,24 +61,24 @@ impl System {
         }
     }
 
-    pub fn get_interval(self) -> ChronoDuration {
-        self.get_interval_float().into()
+    pub fn get_chrono_interval(self) -> ChronoDuration {
+        self.get_interval().into()
     }
 
-    pub const fn get_interval_float(self) -> Duration {
+    pub const fn get_interval(self) -> Duration {
         match self {
-            System::FreighterState => Duration::in_s(60.0 * 10.0),
-            System::ColonyProductionCycle => Duration::in_days(1.0),
+            System::FreighterState => 10.0 * MIN,
+            System::ColonyProductionCycle => 1.0 * DAY,
             // System::NationFoodTargets => DurationFloat::in_days(30.0),
-            System::ColonyPopulation => Duration::in_days(5.0),
-            System::ResourceDecay => Duration::in_days(30.0),
-            System::PrintState => Duration::in_days(90.0),
-            System::ShippingAverage => Duration::in_days(365.25 / 52.0),
+            System::ColonyPopulation => 5.0 * DAY,
+            System::ResourceDecay => 30.0 * DAY,
+            System::PrintState => 90.0 * DAY,
+            System::ShippingAverage => 7.0 * DAY,
         }
     }
 
     pub const fn get_interval_as_year_fraction(self) -> f64 {
-        self.get_interval_float().value / Duration::in_days(365.25).value
+        self.get_interval() / Duration::in_days(365.25)
     }
 }
 

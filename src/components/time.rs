@@ -159,19 +159,6 @@ scalar! {
     }
 }
 
-impl Squared for Duration {
-    type Output = DurationSquared;
-    fn squared(self) -> DurationSquared {
-        DurationSquared::new(self.value * self.value)
-    }
-}
-
-impl Sqrt for DurationSquared {
-    type Output = Duration;
-
-    fn sqrt(self) -> Duration {
-        Duration::in_s(self.value.sqrt())
-    }
-}
+scalar_squared!(Duration ^ 2 = DurationSquared);
 
 scalar_div!(Length | Acceleration = DurationSquared);

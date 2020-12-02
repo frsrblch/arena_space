@@ -6,7 +6,7 @@ use iter_context::{ContextualIterator, Iter, IterMut, Zip};
 
 // TODO split economy into production, pricing, decay?
 
-const INTERVAL: Duration = crate::systems::System::ColonyProductionCycle.get_interval_float();
+const INTERVAL: Duration = crate::systems::System::ColonyProductionCycle.get_interval();
 
 impl Colonies {
     pub fn production_cycle(&mut self) {
@@ -155,7 +155,7 @@ impl Resources {
     fn set_negatives_to_zero(&mut self) {
         for stockpile in self.stockpile.iter_mut() {
             for amount in stockpile.iter_mut() {
-                *amount = amount.max(Mass::zero());
+                *amount = Mass::zero().max(*amount);
             }
         }
     }
@@ -194,7 +194,7 @@ impl Resources {
     }
 
     pub fn update_shipping_avg(&mut self) {
-        const INTERVAL: Duration = System::ShippingAverage.get_interval_float();
+        const INTERVAL: Duration = System::ShippingAverage.get_interval();
 
         for (shipped, average) in self.shipping.iter_mut().zip(self.avg_shipping.iter_mut()) {
             for (shipped, average) in shipped.iter_mut().zip(average.iter_mut()) {
@@ -210,8 +210,8 @@ struct DemandSupplyRatio(f64);
 
 impl DemandSupplyRatio {
     fn calculate(demand: MassRate, supply: MassRate) -> f64 {
-        debug_assert!(demand.value >= 0.0);
-        debug_assert!(supply.value >= 0.0);
+        debug_assert!(demand.value().is_sign_positive());
+        debug_assert!(supply.value().is_sign_positive());
 
         let value = if supply == demand {
             1.0

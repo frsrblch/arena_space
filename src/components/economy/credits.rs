@@ -1,6 +1,8 @@
 use crate::components::{Duration, MassRatePerPerson, Population};
 use std::fmt::{Display, Formatter, Result};
 
+pub const CR: Credits = Credits::in_credits(1.0);
+
 scalar! {
     struct Credits(f64) {
         fn in_credits(credits) -> Self;

@@ -11,7 +11,7 @@ use crate::time::TimeState;
 use gen_id::*;
 use iter_context::ContextualIterator;
 
-const INTERVAL: Duration = System::FreighterState.get_interval_float();
+const INTERVAL: Duration = System::FreighterState.get_interval();
 
 table_array! {
     struct FreighterState {

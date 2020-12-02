@@ -1,4 +1,4 @@
-use crate::components::{Area, Length};
+use crate::components::{Area, Length, Squared};
 
 pub struct Sphere {
     radius: Length,
@@ -10,8 +10,7 @@ impl Sphere {
     }
 
     pub fn get_area(&self) -> Area {
-        let r_squared = self.radius * self.radius;
-        FOUR_PI * r_squared
+        FOUR_PI * self.radius.squared()
     }
 }
 

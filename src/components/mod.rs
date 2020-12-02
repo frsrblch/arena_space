@@ -45,3 +45,39 @@ mod time;
 
 #[cfg(test)]
 mod test;
+
+pub trait Sqrt {
+    type Output;
+    fn sqrt(self) -> Self::Output;
+}
+
+impl Sqrt for f64 {
+    type Output = f64;
+    fn sqrt(self) -> Self::Output {
+        self.sqrt()
+    }
+}
+
+pub trait Squared {
+    type Output;
+    fn squared(self) -> Self::Output;
+}
+
+impl Squared for f64 {
+    type Output = Self;
+    fn squared(self) -> Self::Output {
+        self * self
+    }
+}
+
+pub trait Powf<T> {
+    type Output;
+    fn powf(self, rhs: T) -> Self::Output;
+}
+
+impl Powf<Self> for f64 {
+    type Output = Self;
+    fn powf(self, rhs: Self) -> Self::Output {
+        f64::powf(self, rhs)
+    }
+}

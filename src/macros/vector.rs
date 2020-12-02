@@ -27,7 +27,7 @@ macro_rules! vector {
             }
         }
 
-        impl std::ops::Add<$vector> for $vector {
+        impl const std::ops::Add<$vector> for $vector {
             type Output = $vector;
             fn add(self, rhs: $vector) -> Self::Output {
                 Self::Output {
@@ -37,7 +37,7 @@ macro_rules! vector {
             }
         }
 
-        impl std::ops::Add<$vector> for &$vector {
+        impl const std::ops::Add<$vector> for &$vector {
             type Output = $vector;
             fn add(self, rhs: $vector) -> Self::Output {
                 Self::Output {
@@ -47,7 +47,7 @@ macro_rules! vector {
             }
         }
 
-        impl std::ops::Add<&$vector> for $vector {
+        impl const std::ops::Add<&$vector> for $vector {
             type Output = $vector;
             fn add(self, rhs: &$vector) -> Self::Output {
                 Self::Output {
@@ -57,7 +57,7 @@ macro_rules! vector {
             }
         }
 
-        impl std::ops::Add<&$vector> for &$vector {
+        impl const std::ops::Add<&$vector> for &$vector {
             type Output = $vector;
             fn add(self, rhs: &$vector) -> Self::Output {
                 Self::Output {
@@ -67,7 +67,7 @@ macro_rules! vector {
             }
         }
 
-        impl std::ops::Sub<$vector> for $vector {
+        impl const std::ops::Sub<$vector> for $vector {
             type Output = $vector;
             fn sub(self, rhs: $vector) -> Self::Output {
                 Self::Output {
@@ -77,7 +77,7 @@ macro_rules! vector {
             }
         }
 
-        impl std::ops::Sub<$vector> for &$vector {
+        impl const std::ops::Sub<$vector> for &$vector {
             type Output = $vector;
             fn sub(self, rhs: $vector) -> Self::Output {
                 Self::Output {
@@ -87,7 +87,7 @@ macro_rules! vector {
             }
         }
 
-        impl std::ops::Sub<&$vector> for $vector {
+        impl const std::ops::Sub<&$vector> for $vector {
             type Output = $vector;
             fn sub(self, rhs: &$vector) -> Self::Output {
                 Self::Output {
@@ -97,7 +97,7 @@ macro_rules! vector {
             }
         }
 
-        impl std::ops::Sub<&$vector> for &$vector {
+        impl const std::ops::Sub<&$vector> for &$vector {
             type Output = $vector;
             fn sub(self, rhs: &$vector) -> Self::Output {
                 Self::Output {
@@ -135,7 +135,7 @@ macro_rules! vector {
             }
         }
 
-        impl std::ops::Mul<$base> for $vector {
+        impl const std::ops::Mul<$base> for $vector {
             type Output = $vector;
             fn mul(self, rhs: $base) -> Self::Output {
                 Self::Output {
@@ -145,7 +145,7 @@ macro_rules! vector {
             }
         }
 
-        impl std::ops::Mul<$base> for &$vector {
+        impl const std::ops::Mul<$base> for &$vector {
             type Output = $vector;
             fn mul(self, rhs: $base) -> Self::Output {
                 Self::Output {
@@ -155,7 +155,7 @@ macro_rules! vector {
             }
         }
 
-        impl std::ops::Mul<&$base> for $vector {
+        impl const std::ops::Mul<&$base> for $vector {
             type Output = $vector;
             fn mul(self, rhs: &$base) -> Self::Output {
                 Self::Output {
@@ -165,7 +165,7 @@ macro_rules! vector {
             }
         }
 
-        impl std::ops::Mul<&$base> for &$vector {
+        impl const std::ops::Mul<&$base> for &$vector {
             type Output = $vector;
             fn mul(self, rhs: &$base) -> Self::Output {
                 Self::Output {
@@ -175,28 +175,28 @@ macro_rules! vector {
             }
         }
 
-        impl std::ops::Mul<$vector> for $base {
+        impl const std::ops::Mul<$vector> for $base {
             type Output = $vector;
             fn mul(self, rhs: $vector) -> Self::Output {
                 rhs * self
             }
         }
 
-        impl std::ops::Mul<$vector> for &$base {
+        impl const std::ops::Mul<$vector> for &$base {
             type Output = $vector;
             fn mul(self, rhs: $vector) -> Self::Output {
                 rhs * self
             }
         }
 
-        impl std::ops::Mul<&$vector> for $base {
+        impl const std::ops::Mul<&$vector> for $base {
             type Output = $vector;
             fn mul(self, rhs: &$vector) -> Self::Output {
                 rhs * self
             }
         }
 
-        impl std::ops::Mul<&$vector> for &$base {
+        impl const std::ops::Mul<&$vector> for &$base {
             type Output = $vector;
             fn mul(self, rhs: &$vector) -> Self::Output {
                 rhs * self
@@ -216,7 +216,7 @@ macro_rules! vector {
             }
         }
 
-        impl std::ops::Div<$base> for $vector {
+        impl const std::ops::Div<$base> for $vector {
             type Output = $vector;
             fn div(self, rhs: $base) -> Self::Output {
                 Self::Output {
@@ -226,7 +226,7 @@ macro_rules! vector {
             }
         }
 
-        impl std::ops::Div<$base> for &$vector {
+        impl const std::ops::Div<$base> for &$vector {
             type Output = $vector;
             fn div(self, rhs: $base) -> Self::Output {
                 Self::Output {
@@ -236,14 +236,14 @@ macro_rules! vector {
             }
         }
 
-        impl std::ops::Div<&$base> for $vector {
+        impl const std::ops::Div<&$base> for $vector {
             type Output = $vector;
             fn div(self, rhs: &$base) -> Self::Output {
                 self / *rhs
             }
         }
 
-        impl std::ops::Div<&$base> for &$vector {
+        impl const std::ops::Div<&$base> for &$vector {
             type Output = $vector;
             fn div(self, rhs: &$base) -> Self::Output {
                 *self / *rhs
@@ -263,7 +263,7 @@ macro_rules! vector {
             }
         }
 
-        impl std::ops::Neg for $vector {
+        impl const std::ops::Neg for $vector {
             type Output = $vector;
             fn neg(self) -> Self::Output {
                 Self::Output {
@@ -273,7 +273,7 @@ macro_rules! vector {
             }
         }
 
-        impl std::ops::Neg for &$vector {
+        impl const std::ops::Neg for &$vector {
             type Output = $vector;
             fn neg(self) -> Self::Output {
                 Self::Output {

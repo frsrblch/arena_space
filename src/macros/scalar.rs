@@ -2,7 +2,7 @@ macro_rules! scalar {
     {
         struct $scalar:ident($base:ty)
     } => {
-        #[derive(Debug, Default, Copy, Clone, PartialEq, PartialOrd)]
+        #[derive(Debug, Default, Copy, Clone)]
         pub struct $scalar {
             pub value: $base,
         }
@@ -10,20 +10,41 @@ macro_rules! scalar {
         impl $scalar {
             #[allow(dead_code)]
             pub(super) const fn new(value: $base) -> Self {
-                debug_assert!(value > <$base>::NEG_INFINITY && value < <$base>::INFINITY);
+                debug_assert!(value.is_finite());
                 Self { value }
             }
 
             pub const fn zero() -> Self {
                 Self::new(0.0)
             }
+        }
 
-            pub fn min(self, rhs: Self) -> Self {
-                Self::new(self.value.min(rhs.value))
+        impl const $crate::Wrapper for $scalar {
+            type Inner = $base;
+            fn value(self) -> $base {
+                self.value
             }
+        }
 
-            pub fn max(self, rhs: Self) -> Self {
-                Self::new(self.value.max(rhs.value))
+        impl const PartialEq for $scalar {
+            fn eq(&self, rhs: &Self) -> bool {
+                self.value == rhs.value
+            }
+        }
+
+        impl const Eq for $scalar {}
+
+        impl const PartialOrd for $scalar {
+            fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+                Some(self.cmp(other))
+            }
+        }
+
+        impl const Ord for $scalar {
+            fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+                if self.value < other.value { std::cmp::Ordering::Less }
+                else if self.value == other.value { std::cmp::Ordering::Equal }
+                else { std::cmp::Ordering::Greater }
             }
         }
 
@@ -33,21 +54,21 @@ macro_rules! scalar {
             }
         }
 
-        impl std::ops::Add for $scalar {
+        impl const std::ops::Add for $scalar {
             type Output = Self;
             fn add(self, rhs: Self) -> Self::Output {
                 Self::Output::new(self.value + rhs.value)
             }
         }
 
-        impl std::ops::Add<&$scalar> for $scalar {
+        impl const std::ops::Add<&$scalar> for $scalar {
             type Output = Self;
             fn add(self, rhs: &Self) -> Self::Output {
                 self + *rhs
             }
         }
 
-        impl std::ops::Add<$scalar> for &$scalar {
+        impl const std::ops::Add<$scalar> for &$scalar {
             type Output = $scalar;
             fn add(self, rhs: $scalar) -> Self::Output {
                 *self + rhs
@@ -73,28 +94,28 @@ macro_rules! scalar {
             }
         }
 
-        impl std::ops::Sub for $scalar {
+        impl const std::ops::Sub for $scalar {
             type Output = Self;
             fn sub(self, rhs: Self) -> Self::Output {
                 Self::Output::new(self.value - rhs.value)
             }
         }
 
-        impl std::ops::Sub<&$scalar> for $scalar {
+        impl const std::ops::Sub<&$scalar> for $scalar {
             type Output = Self;
             fn sub(self, rhs: &Self) -> Self::Output {
                 self - *rhs
             }
         }
 
-        impl std::ops::Sub<$scalar> for &$scalar {
+        impl const std::ops::Sub<$scalar> for &$scalar {
             type Output = $scalar;
             fn sub(self, rhs: $scalar) -> Self::Output {
                 *self - rhs
             }
         }
 
-        impl std::ops::Sub for &$scalar {
+        impl const std::ops::Sub for &$scalar {
             type Output = $scalar;
             fn sub(self, rhs: Self) -> Self::Output {
                 *self - *rhs
@@ -113,56 +134,56 @@ macro_rules! scalar {
             }
         }
 
-        impl std::ops::Mul<$base> for $scalar {
+        impl const std::ops::Mul<$base> for $scalar {
             type Output = Self;
             fn mul(self, rhs: $base) -> Self::Output {
                 Self::Output::new(self.value * rhs)
             }
         }
 
-        impl std::ops::Mul<$base> for &$scalar {
+        impl const std::ops::Mul<$base> for &$scalar {
             type Output = $scalar;
             fn mul(self, rhs: $base) -> Self::Output {
                 *self * rhs
             }
         }
 
-        impl std::ops::Mul<&$base> for $scalar {
+        impl const std::ops::Mul<&$base> for $scalar {
             type Output = Self;
             fn mul(self, rhs: &$base) -> Self::Output {
                 self * *rhs
             }
         }
 
-        impl std::ops::Mul<&$base> for &$scalar {
+        impl const std::ops::Mul<&$base> for &$scalar {
             type Output = $scalar;
             fn mul(self, rhs: &$base) -> Self::Output {
                 *self * *rhs
             }
         }
 
-        impl std::ops::Mul<$scalar> for $base {
+        impl const std::ops::Mul<$scalar> for $base {
             type Output = $scalar;
             fn mul(self, rhs: $scalar) -> Self::Output {
                 rhs * self
             }
         }
 
-        impl std::ops::Mul<&$scalar> for $base {
+        impl const std::ops::Mul<&$scalar> for $base {
             type Output = $scalar;
             fn mul(self, rhs: &$scalar) -> Self::Output {
                 rhs * self
             }
         }
 
-        impl std::ops::Mul<$scalar> for &$base {
+        impl const std::ops::Mul<$scalar> for &$base {
             type Output = $scalar;
             fn mul(self, rhs: $scalar) -> Self::Output {
                 rhs * self
             }
         }
 
-        impl std::ops::Mul<&$scalar> for &$base {
+        impl const std::ops::Mul<&$scalar> for &$base {
             type Output = $scalar;
             fn mul(self, rhs: &$scalar) -> Self::Output {
                 rhs * self
@@ -181,28 +202,28 @@ macro_rules! scalar {
             }
         }
 
-        impl std::ops::Div<$base> for $scalar {
+        impl const std::ops::Div<$base> for $scalar {
             type Output = Self;
             fn div(self, rhs: $base) -> Self::Output {
                 Self::Output::new(self.value / rhs)
             }
         }
 
-        impl std::ops::Div<$base> for &$scalar {
+        impl const std::ops::Div<$base> for &$scalar {
             type Output = $scalar;
             fn div(self, rhs: $base) -> Self::Output {
                 *self / rhs
             }
         }
 
-        impl std::ops::Div<&$base> for $scalar {
+        impl const std::ops::Div<&$base> for $scalar {
             type Output = Self;
             fn div(self, rhs: &$base) -> Self::Output {
                 self / *rhs
             }
         }
 
-        impl std::ops::Div<&$base> for &$scalar {
+        impl const std::ops::Div<&$base> for &$scalar {
             type Output = $scalar;
             fn div(self, rhs: &$base) -> Self::Output {
                 *self / *rhs
@@ -221,70 +242,70 @@ macro_rules! scalar {
             }
         }
 
-        impl std::ops::Div for $scalar {
+        impl const std::ops::Div for $scalar {
             type Output = $base;
             fn div(self, rhs: Self) -> Self::Output {
                 self.value / rhs.value
             }
         }
 
-        impl std::ops::Div<&$scalar> for $scalar {
+        impl const std::ops::Div<&$scalar> for $scalar {
             type Output = $base;
             fn div(self, rhs: &Self) -> Self::Output {
                 self.value / rhs.value
             }
         }
 
-        impl std::ops::Div<$scalar> for &$scalar {
+        impl const std::ops::Div<$scalar> for &$scalar {
             type Output = $base;
             fn div(self, rhs: $scalar) -> Self::Output {
                 self.value / rhs.value
             }
         }
 
-        impl std::ops::Div for &$scalar {
+        impl const std::ops::Div for &$scalar {
             type Output = $base;
             fn div(self, rhs: Self) -> Self::Output {
                 self.value / rhs.value
             }
         }
 
-        impl std::ops::Neg for $scalar {
+        impl const std::ops::Neg for $scalar {
             type Output = Self;
             fn neg(self) -> Self::Output {
                 Self::Output::new(-self.value)
             }
         }
 
-        impl std::ops::Neg for &$scalar {
+        impl const std::ops::Neg for &$scalar {
             type Output = $scalar;
             fn neg(self) -> Self::Output {
                 -*self
             }
         }
 
-        impl std::ops::Rem for $scalar {
+        impl const std::ops::Rem for $scalar {
             type Output = $scalar;
             fn rem(self, rhs: $scalar) -> Self::Output {
                 Self::Output::new(self.value % rhs.value)
             }
         }
 
-        impl std::ops::Rem<&$scalar> for $scalar {
+        impl const std::ops::Rem<&$scalar> for $scalar {
             type Output = $scalar;
             fn rem(self, rhs: &$scalar) -> Self::Output {
                 self % *rhs
             }
         }
 
-        impl std::ops::Rem<$scalar> for &$scalar {
+        impl const std::ops::Rem<$scalar> for &$scalar {
             type Output = $scalar;
             fn rem(self, rhs: $scalar) -> Self::Output {
                 *self % rhs
             }
         }
 
-        impl std::ops::Rem<&$scalar> for &$scalar {
+        impl const std::ops::Rem<&$scalar> for &$scalar {
             type Output = $scalar;
             fn rem(self, rhs: &$scalar) -> Self::Output {
                 *self % *rhs

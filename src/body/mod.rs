@@ -165,9 +165,7 @@ pub mod population {
             let population = colonies.people.population.iter();
             let body = colonies.body.iter();
 
-            let iter = population.zip(body);
-
-            for (pop, body) in iter {
+            for (pop, body) in population.zip(body) {
                 self.add_population(body, pop);
             }
         }

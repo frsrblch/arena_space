@@ -13,7 +13,7 @@ pub struct Spaceport {
 
 impl Spaceport {
     pub fn construction_rate() -> MassRate {
-        MassRate::in_tons_per_day(10.0)
+        10.0 * TON / DAY
     }
 }
 

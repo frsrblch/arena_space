@@ -15,7 +15,7 @@ impl Mass {
         debug_assert!(*self >= Mass::zero());
         debug_assert!(amount >= Mass::zero());
 
-        let result = self.min(amount);
+        let result = amount.min(*self);
         *self -= result;
         result
     }

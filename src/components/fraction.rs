@@ -20,6 +20,9 @@ impl From<f64> for Fraction {
 }
 
 impl Fraction {
+    pub const ZERO: Fraction = Fraction::new(0.0);
+    pub const ONE: Fraction = Fraction::new(1.0);
+
     pub const fn new(value: f64) -> Self {
         if value.is_nan() {
             return Self(0.0);
@@ -34,6 +37,14 @@ impl Fraction {
 
     pub fn value(&self) -> f64 {
         self.0
+    }
+}
+
+impl Powf<f64> for Fraction {
+    type Output = f64;
+
+    fn powf(self, rhs: f64) -> Self::Output {
+        self.0.powf(rhs)
     }
 }
 
@@ -67,6 +78,22 @@ impl Mul<Fraction> for f64 {
     }
 }
 
+impl Sqrt for Fraction {
+    type Output = Self;
+
+    fn sqrt(self) -> Self::Output {
+        Fraction(self.0.sqrt())
+    }
+}
+
+impl Squared for Fraction {
+    type Output = Self;
+
+    fn squared(self) -> Self::Output {
+        Fraction(self.0.squared())
+    }
+}
+
 macro_rules! fraction_tests {
     { $( $name:ident ( $value:expr, $expected:expr ); )* } => {
         #[cfg(test)]
@@ -76,7 +103,7 @@ macro_rules! fraction_tests {
             $(
                 #[test]
                 fn $name () {
-                    assert_eq!(Fraction::new($value), Fraction($expected));
+                    assert_eq!(Fraction::new($value).value(), $expected);
                 }
             )*
         }
@@ -92,4 +119,13 @@ fraction_tests! {
     neg_inf(f64::NEG_INFINITY, 0.0);
     neg(-1.0, 0.0);
     valid(0.4, 0.4);
+}
+
+pub trait Wrapper: Copy {
+    type Inner;
+    fn value(self) -> Self::Inner;
+}
+
+pub trait New<T> {
+    fn new(value: T) -> Self;
 }

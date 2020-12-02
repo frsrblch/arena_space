@@ -39,7 +39,7 @@ impl People {
     }
 }
 
-const INTERVAL: Duration = crate::systems::System::ColonyProductionCycle.get_interval_float();
+const INTERVAL: Duration = crate::systems::System::ColonyProductionCycle.get_interval();
 
 impl Colonies {
     /// Sums the population on each body so that multiple colonies on the same body

@@ -43,7 +43,7 @@ impl OrbitParams {
     }
 
     pub fn calculate_speed(&self) -> Speed {
-        Speed::in_m_per_s(self.radius.value * self.angular_speed.value)
+        Speed::in_m_per_s(self.radius.value() * self.angular_speed.value())
     }
 }
 
@@ -68,7 +68,7 @@ mod tests {
         let time = Angle::NEG_TWO_PI / orbit.params.angular_speed / 4.0;
         assert!(time > Duration::zero());
 
-        let quarter = orbit.calculate_position(TimeFloat::in_s(time.value));
+        let quarter = orbit.calculate_position(TimeFloat::in_s(time.value()));
 
         assert_eq!(Length::in_m(-1000.0), quarter.x);
         assert!(nearly_zero(quarter.y));
