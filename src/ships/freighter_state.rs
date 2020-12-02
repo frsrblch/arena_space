@@ -244,7 +244,7 @@ impl Assign {
                         let (destination, duration) =
                             if to_a > to_b { (b, to_b) } else { (a, to_a) };
 
-                        if duration < Duration::INFINITY {
+                        if duration <= Duration::MAX {
                             let row = MovingRow::new(
                                 time,
                                 time + duration,

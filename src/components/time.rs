@@ -28,10 +28,6 @@ impl TimeFloat {
             value: Duration::new(value),
         }
     }
-
-    pub const NEVER: Self = Self {
-        value: Duration::INFINITY,
-    };
 }
 
 impl Div for TimeFloat {
@@ -116,14 +112,7 @@ impl Duration {
 
     pub const SECONDS_PER_HOUR: f64 = 3600.0;
 
-    pub const INFINITY: Duration = Duration::new(f64::INFINITY);
-}
-
-impl Squared for Duration {
-    type Output = DurationSquared;
-    fn squared(self) -> DurationSquared {
-        DurationSquared::new(self.value * self.value)
-    }
+    pub const MAX: Duration = Duration::new(f64::MAX);
 }
 
 impl From<ChronoDuration> for Duration {
@@ -167,6 +156,13 @@ fn duration_float_from_duration() {
 scalar! {
     struct DurationSquared(f64) {
         fn in_s2(s2) -> Self;
+    }
+}
+
+impl Squared for Duration {
+    type Output = DurationSquared;
+    fn squared(self) -> DurationSquared {
+        DurationSquared::new(self.value * self.value)
     }
 }
 

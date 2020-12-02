@@ -327,3 +327,32 @@ fn vector_neg_test() {
     assert_eq!(neg, -a);
     assert_eq!(neg, -&a);
 }
+
+#[cfg(debug_assertions)]
+mod debug_tests {
+    use super::TestScalar;
+
+    #[test]
+    #[should_panic]
+    fn nan_is_invalid() {
+        TestScalar::new(f64::NAN);
+    }
+
+    #[test]
+    #[should_panic]
+    fn infinite_is_invalid() {
+        TestScalar::new(f64::INFINITY);
+    }
+
+    #[test]
+    #[should_panic]
+    fn negative_infinite_is_invalid() {
+        TestScalar::new(f64::NEG_INFINITY);
+    }
+
+    #[test]
+    #[should_panic]
+    fn overflow_panics() {
+        TestScalar::new(f64::MAX) * 2.0;
+    }
+}

@@ -10,6 +10,7 @@ macro_rules! scalar {
         impl $scalar {
             #[allow(dead_code)]
             pub(super) const fn new(value: $base) -> Self {
+                debug_assert!(value > <$base>::NEG_INFINITY && value < <$base>::INFINITY);
                 Self { value }
             }
 
