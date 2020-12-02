@@ -1,6 +1,8 @@
 use super::*;
 use Resource::Food;
 
+type Satiation = ExpMovingAvg<f64, 15.0>;
+
 #[derive(Debug, Default)]
 pub struct People {
     pub population: Component<Colony, Population>,
