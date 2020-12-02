@@ -353,6 +353,6 @@ mod debug_tests {
     #[test]
     #[should_panic]
     fn overflow_panics() {
-        TestScalar::new(f64::MAX) * 2.0;
+        let _ = TestScalar::new(f64::MAX) * 2.0;
     }
 }
