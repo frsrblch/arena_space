@@ -103,7 +103,7 @@ impl WarpDrive {
         power_available: Power,
         energy_available: Energy,
     ) -> TripDetails {
-        let pf = Fraction::new(power_available / self.max_power_draw);
+        let pf = Fraction::clamp(power_available / self.max_power_draw);
 
         let duration_by_power = self.get_trip_duration(distance, pf);
 
@@ -164,7 +164,7 @@ fn example_warp_drive() -> WarpDrive {
 fn get_energy_required() {
     let drive = example_warp_drive();
     let distance = Length::in_m(7.0);
-    let f_p = Fraction::new(0.3);
+    let f_p = Fraction::clamp(0.3);
 
     // E = P * t
     let expected = f_p.value() * drive.max_power_draw * drive.get_trip_duration(distance, f_p);

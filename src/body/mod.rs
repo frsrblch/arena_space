@@ -205,7 +205,7 @@ pub mod examples {
             ),
             conditions: BodyProperties {
                 surface: Surface::Continental {
-                    land: Fraction::new(0.204),
+                    land: Fraction::clamp(0.204),
                 },
                 pressure: Pressure::Ideal,
                 oxygen: AtmosphericOxygen::Ideal,

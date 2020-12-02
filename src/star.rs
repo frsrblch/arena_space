@@ -112,7 +112,7 @@ pub mod examples {
         Star {
             name: "Sol".to_string(),
             position: Default::default(),
-            star_type: StarType::G(Fraction::new(0.5)),
+            star_type: StarType::G(Fraction::clamp(0.5)),
         }
     }
 }

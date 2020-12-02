@@ -15,15 +15,15 @@ impl Into<f64> for Fraction {
 
 impl From<f64> for Fraction {
     fn from(value: f64) -> Self {
-        Self::new(value)
+        Self::clamp(value)
     }
 }
 
 impl Fraction {
-    pub const ZERO: Fraction = Fraction::new(0.0);
-    pub const ONE: Fraction = Fraction::new(1.0);
+    pub const ZERO: Fraction = Fraction::clamp(0.0);
+    pub const ONE: Fraction = Fraction::clamp(1.0);
 
-    pub const fn new(value: f64) -> Self {
+    pub const fn clamp(value: f64) -> Self {
         if value.is_nan() {
             return Self(0.0);
         }
@@ -103,7 +103,7 @@ macro_rules! fraction_tests {
             $(
                 #[test]
                 fn $name () {
-                    assert_eq!(Fraction::new($value).value(), $expected);
+                    assert_eq!(Fraction::clamp($value).value(), $expected);
                 }
             )*
         }
