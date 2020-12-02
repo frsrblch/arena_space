@@ -138,7 +138,3 @@ pub trait Wrapper: Copy {
     type Inner;
     fn value(self) -> Self::Inner;
 }
-
-pub trait New<T> {
-    fn new(value: T) -> Self;
-}
