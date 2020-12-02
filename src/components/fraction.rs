@@ -133,8 +133,3 @@ mod test {
         Fraction::clamp(f64::NEG_INFINITY);
     }
 }
-
-pub trait Wrapper: Copy {
-    type Inner;
-    fn value(self) -> Self::Inner;
-}
