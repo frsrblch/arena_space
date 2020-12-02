@@ -20,4 +20,4 @@ num-traits = "0.2"
 num-format = "0.4"
 
 [[example]]
-name = "sol"
+name = "freighters"
