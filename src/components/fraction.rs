@@ -24,9 +24,7 @@ impl Fraction {
     pub const ONE: Fraction = Fraction::clamp(1.0);
 
     pub const fn clamp(value: f64) -> Self {
-        if value.is_nan() {
-            return Self(0.0);
-        }
+        debug_assert!(value.is_finite());
 
         match value {
             value if value < 0.0 => Self(0.0),
@@ -90,31 +88,50 @@ impl Squared for Fraction {
     }
 }
 
-macro_rules! fraction_tests {
-    { $( $name:ident ( $value:expr, $expected:expr ); )* } => {
-        #[cfg(test)]
-        mod test {
-            use super::*;
+#[cfg(test)]
+mod test {
+    use super::*;
 
-            $(
-                #[test]
-                fn $name () {
-                    assert_eq!(Fraction::clamp($value).value(), $expected);
-                }
-            )*
-        }
+    macro_rules! fraction_tests {
+    { $( $name:ident ( $value:expr, $expected:expr ); )* } => {
+
+        $(
+            #[test]
+            fn $name () {
+                assert_eq!(Fraction::clamp($value).value(), $expected);
+            }
+        )*
     }
 }
 
-fraction_tests! {
-    zero(0.0, 0.0);
-    one(1.0, 1.0);
-    two(2.0, 1.0);
-    nan(f64::NAN, 0.0);
-    inf(f64::INFINITY, 1.0);
-    neg_inf(f64::NEG_INFINITY, 0.0);
-    neg(-1.0, 0.0);
-    valid(0.4, 0.4);
+    fraction_tests! {
+        zero(0.0, 0.0);
+        one(1.0, 1.0);
+        two(2.0, 1.0);
+        neg(-1.0, 0.0);
+        valid(0.4, 0.4);
+    }
+
+    #[cfg(debug_assertions)]
+    #[test]
+    #[should_panic]
+    fn fraction_inf() {
+        Fraction::clamp(f64::INFINITY);
+    }
+
+    #[cfg(debug_assertions)]
+    #[test]
+    #[should_panic]
+    fn fraction_neg_inf() {
+        Fraction::clamp(f64::NEG_INFINITY);
+    }
+
+    #[cfg(debug_assertions)]
+    #[test]
+    #[should_panic]
+    fn fraction_nan() {
+        Fraction::clamp(f64::NEG_INFINITY);
+    }
 }
 
 pub trait Wrapper: Copy {
