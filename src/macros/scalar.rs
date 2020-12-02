@@ -17,6 +17,10 @@ macro_rules! scalar {
             pub const fn zero() -> Self {
                 Self::new(0.0)
             }
+
+            pub fn mul_add_assign(&mut self, a: $base, b: Self) {
+                *self = (*self * a) + b;
+            }
         }
 
         impl const $crate::Wrapper for $scalar {
@@ -45,12 +49,6 @@ macro_rules! scalar {
                 if self.value < other.value { std::cmp::Ordering::Less }
                 else if self.value == other.value { std::cmp::Ordering::Equal }
                 else { std::cmp::Ordering::Greater }
-            }
-        }
-
-        impl num_traits::MulAddAssign<$base, Self> for $scalar {
-            fn mul_add_assign(&mut self, a: $base, b: Self) {
-                self.value.mul_add_assign(a, b.value);
             }
         }
 

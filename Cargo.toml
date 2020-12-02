@@ -16,7 +16,6 @@ rand = "0.7"
 wyhash = "0.4"
 time = "0.2"
 chrono = "0.4"
-num-traits = "0.2"
 num-format = "0.4"
 
 [[example]]

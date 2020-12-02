@@ -1,5 +1,4 @@
-use num_traits::MulAddAssign;
-use std::ops::Mul;
+use std::ops::{Add, Mul};
 
 #[derive(Debug, Copy, Clone, PartialOrd, PartialEq)]
 pub struct ExpMovingAvg<T, const PERIOD: f64> {
@@ -8,7 +7,7 @@ pub struct ExpMovingAvg<T, const PERIOD: f64> {
 
 impl<T, const PERIOD: f64> ExpMovingAvg<T, PERIOD>
 where
-    T: Mul<f64, Output = T> + Copy + MulAddAssign<f64, T>,
+    T: Mul<f64, Output = T> + Add<Output = T> + Copy,
 {
     pub fn new(value: T) -> Self {
         Self { value }
@@ -19,8 +18,7 @@ where
     }
 
     pub fn add_next(&mut self, value: T) {
-        self.value
-            .mul_add_assign(Self::one_sub_multiplier(), value * Self::multiplier());
+        self.value = (self.value * Self::one_sub_multiplier()) + (value * Self::multiplier());
     }
 
     const fn multiplier() -> f64 {
