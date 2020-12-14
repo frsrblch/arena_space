@@ -21,7 +21,8 @@ impl Position {
     const M_PER_LY: f64 = 9.460_730_472_580_8e15;
 }
 
-impl From<Distance> for Position {
+#[rustfmt::skip]
+impl const From<Distance> for Position {
     fn from(value: Distance) -> Self {
         Self {
             x: value.x,

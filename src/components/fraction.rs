@@ -13,15 +13,18 @@ impl Into<f64> for Fraction {
     }
 }
 
-impl Fraction {
-    pub const fn new(value: f64) -> Self {
-        if value == f64::NEG_INFINITY || value.is_nan() {
-            return Self(0.0);
-        }
+impl From<f64> for Fraction {
+    fn from(value: f64) -> Self {
+        Self::clamp(value)
+    }
+}
 
-        if value == f64::INFINITY {
-            return Self(1.0);
-        }
+impl Fraction {
+    pub const ZERO: Fraction = Fraction::clamp(0.0);
+    pub const ONE: Fraction = Fraction::clamp(1.0);
+
+    pub const fn clamp(value: f64) -> Self {
+        debug_assert!(value.is_finite());
 
         match value {
             value if value < 0.0 => Self(0.0),
@@ -32,6 +35,10 @@ impl Fraction {
 
     pub fn value(&self) -> f64 {
         self.0
+    }
+
+    pub fn powf(self, n: f64) -> f64 {
+        self.0.powf(n)
     }
 }
 
@@ -62,5 +69,67 @@ impl Mul<Fraction> for f64 {
 
     fn mul(self, rhs: Fraction) -> Self::Output {
         rhs * self
+    }
+}
+
+impl Sqrt for Fraction {
+    type Output = Self;
+
+    fn sqrt(self) -> Self::Output {
+        Fraction(self.0.sqrt())
+    }
+}
+
+impl Squared for Fraction {
+    type Output = Self;
+
+    fn squared(self) -> Self::Output {
+        Fraction(self.0.squared())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    macro_rules! fraction_tests {
+    { $( $name:ident ( $value:expr, $expected:expr ); )* } => {
+
+        $(
+            #[test]
+            fn $name () {
+                assert_eq!(Fraction::clamp($value).value(), $expected);
+            }
+        )*
+    }
+}
+
+    fraction_tests! {
+        zero(0.0, 0.0);
+        one(1.0, 1.0);
+        two(2.0, 1.0);
+        neg(-1.0, 0.0);
+        valid(0.4, 0.4);
+    }
+
+    #[cfg(debug_assertions)]
+    #[test]
+    #[should_panic]
+    fn fraction_inf() {
+        Fraction::clamp(f64::INFINITY);
+    }
+
+    #[cfg(debug_assertions)]
+    #[test]
+    #[should_panic]
+    fn fraction_neg_inf() {
+        Fraction::clamp(f64::NEG_INFINITY);
+    }
+
+    #[cfg(debug_assertions)]
+    #[test]
+    #[should_panic]
+    fn fraction_nan() {
+        Fraction::clamp(f64::NEG_INFINITY);
     }
 }

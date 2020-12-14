@@ -1,17 +1,16 @@
-use crate::components::{Area, Length};
+use crate::components::{Area, Length, Squared};
 
 pub struct Sphere {
     radius: Length,
 }
 
 impl Sphere {
-    pub fn with_radius(radius: Length) -> Self {
+    pub const fn with_radius(radius: Length) -> Self {
         Sphere { radius }
     }
 
-    pub fn get_area(&self) -> Area {
-        let r_squared = self.radius * self.radius;
-        FOUR_PI * r_squared
+    pub const fn get_area(&self) -> Area {
+        FOUR_PI * self.radius.squared()
     }
 }
 

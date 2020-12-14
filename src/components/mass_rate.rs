@@ -7,8 +7,8 @@ scalar! {
 }
 
 impl MassRate {
-    pub fn in_tons_per_day(tons: f64) -> Self {
-        Self::in_kg_per_s(tons * 1000.0 / (24.0 * 3600.0))
+    pub const fn in_tons_per_day(tons_per_day: f64) -> Self {
+        tons_per_day * TON / DAY
     }
 
     pub fn tons_per_day(self) -> TonsPerDay {
@@ -20,12 +20,12 @@ pub struct TonsPerDay(MassRate);
 
 impl Display for TonsPerDay {
     fn fmt(&self, f: &mut Formatter) -> Result {
-        let tons_per_day = (self.0.value / 1e3 * DurationFloat::SECONDS_PER_DAY) as i64;
+        let tons_per_day = (self.0.value / 1e3 * Duration::SECONDS_PER_DAY) as i64;
         write!(f, "{} t/day", tons_per_day.to_formatted_string(&Locale::en))
     }
 }
 
-scalar_div! { Mass | DurationFloat = MassRate }
+scalar_div! { Mass | Duration = MassRate }
 
 scalar! {
     struct MassRatePerPerson(f64) {

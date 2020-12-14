@@ -1,10 +1,11 @@
-use crate::components::{DurationFloat, TimeFloat};
-use chrono::{Duration, NaiveDate, NaiveDateTime, NaiveTime};
+use crate::components::{Duration, TimeFloat};
+use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 use std::fmt::{Display, Formatter, Result};
 use std::ops::AddAssign;
 
 pub type DateTime = NaiveDateTime;
-type StdDuration = std::time::Duration;
+pub type StdDuration = std::time::Duration;
+pub type ChronoDuration = chrono::Duration;
 
 #[derive(Debug)]
 pub struct TimeState {
@@ -37,7 +38,7 @@ impl TimeState {
     }
 
     fn calculate_time_float(&self) -> TimeFloat {
-        let duration: Duration = self.game_time - self.start_date;
+        let duration: ChronoDuration = self.game_time - self.start_date;
         let seconds = duration.num_milliseconds() as f64 / 1e3;
         TimeFloat::in_s(seconds)
     }
@@ -55,14 +56,14 @@ impl Display for TimeState {
 
 impl AddAssign<StdDuration> for TimeState {
     fn add_assign(&mut self, rhs: StdDuration) {
-        let duration = Duration::from_std(rhs).unwrap();
+        let duration = ChronoDuration::from_std(rhs).unwrap();
         let new_date_time = self.game_time + duration;
         self.set_date_time(new_date_time);
     }
 }
 
-impl AddAssign<DurationFloat> for TimeState {
-    fn add_assign(&mut self, rhs: DurationFloat) {
+impl AddAssign<Duration> for TimeState {
+    fn add_assign(&mut self, rhs: Duration) {
         self.add_assign(StdDuration::from(rhs));
     }
 }
@@ -85,6 +86,6 @@ pub fn get_date(year: i32, month: u32, day: u32) -> DateTime {
 
 #[test]
 fn time_size_tests() {
-    assert_eq!(16, std::mem::size_of::<Duration>());
+    assert_eq!(16, std::mem::size_of::<ChronoDuration>());
     assert_eq!(12, std::mem::size_of::<chrono::DateTime<chrono::Utc>>());
 }

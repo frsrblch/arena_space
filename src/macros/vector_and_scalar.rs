@@ -15,7 +15,7 @@ macro_rules! vector_and_scalar {
             }
         }
 
-        impl std::ops::Mul<$scalar> for ($base, $base) {
+        impl const std::ops::Mul<$scalar> for ($base, $base) {
             type Output = $vector;
 
             fn mul(self, rhs: $scalar) -> Self::Output {
@@ -26,7 +26,7 @@ macro_rules! vector_and_scalar {
             }
         }
 
-        impl std::ops::Mul<&$scalar> for ($base, $base) {
+        impl const std::ops::Mul<&$scalar> for ($base, $base) {
             type Output = $vector;
 
             fn mul(self, rhs: &$scalar) -> Self::Output {

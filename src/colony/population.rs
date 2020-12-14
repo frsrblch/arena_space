@@ -1,6 +1,8 @@
 use super::*;
 use Resource::Food;
 
+type Satiation = ExpMovingAvg<f64, 15.0>;
+
 #[derive(Debug, Default)]
 pub struct People {
     pub population: Component<Colony, Population>,
@@ -39,7 +41,7 @@ impl People {
     }
 }
 
-const INTERVAL: DurationFloat = crate::systems::System::ColonyProductionCycle.get_interval_float();
+const INTERVAL: Duration = crate::systems::System::ColonyProductionCycle.get_interval();
 
 impl Colonies {
     /// Sums the population on each body so that multiple colonies on the same body

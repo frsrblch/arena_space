@@ -20,8 +20,6 @@ pub struct ColonyLinks {
     pub body: Id<Body>,
 }
 
-type Satiation = ExpMovingAvg<f64, 15.0>;
-
 #[derive(Debug, Default)]
 pub struct Colonies {
     pub alloc: Allocator<Colony>,

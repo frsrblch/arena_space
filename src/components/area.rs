@@ -1,4 +1,4 @@
-use super::Length;
+use crate::components::*;
 
 pub const M2: Area = Area::in_m2(1.0);
 
@@ -14,9 +14,4 @@ impl Area {
     }
 }
 
-impl std::ops::Mul<Length> for Length {
-    type Output = Area;
-    fn mul(self, rhs: Self) -> Self::Output {
-        Area::new(self.value * rhs.value)
-    }
-}
+scalar_squared!(Length ^ 2 = Area);

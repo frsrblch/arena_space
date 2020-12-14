@@ -1,7 +1,7 @@
 use super::Freighter;
 use crate::body::Bodies;
 use crate::colony::{Colonies, Colony};
-use crate::components::{DurationFloat, Mass, MassRate, Price, Resource, ResourceArray, TimeFloat};
+use crate::components::{Duration, Mass, MassRate, Price, Resource, ResourceArray, TimeFloat};
 use crate::ships::cargo::CargoEntry;
 use crate::ships::drives::Drive;
 use crate::ships::freighter_assignment::Assignment;
@@ -11,7 +11,7 @@ use crate::time::TimeState;
 use gen_id::*;
 use iter_context::ContextualIterator;
 
-const INTERVAL: DurationFloat = System::FreighterState.get_interval_float();
+const INTERVAL: Duration = System::FreighterState.get_interval();
 
 table_array! {
     struct FreighterState {
@@ -83,7 +83,7 @@ pub struct Parameters<'a> {
 }
 
 impl<'a> Parameters<'a> {
-    fn get_unloading_duration<I: ValidId<Freighter>>(&self, id: I) -> DurationFloat {
+    fn get_unloading_duration<I: ValidId<Freighter>>(&self, id: I) -> Duration {
         let contents = self.cargo.get(id).iter().map(|c| c.amount).sum::<Mass>();
         let loading_rate = self.loading_rate.get(id);
 
@@ -95,7 +95,7 @@ impl<'a> Parameters<'a> {
         id: F,
         from: C,
         to: C,
-    ) -> DurationFloat {
+    ) -> Duration {
         let drive = self.drive.get(id);
         let time = self.time.get_time_float();
 
@@ -244,7 +244,7 @@ impl Assign {
                         let (destination, duration) =
                             if to_a > to_b { (b, to_b) } else { (a, to_a) };
 
-                        if duration < DurationFloat::INFINITY {
+                        if duration <= Duration::MAX {
                             let row = MovingRow::new(
                                 time,
                                 time + duration,

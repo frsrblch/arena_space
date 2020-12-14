@@ -165,9 +165,7 @@ pub mod population {
             let population = colonies.people.population.iter();
             let body = colonies.body.iter();
 
-            let iter = population.zip(body);
-
-            for (pop, body) in iter {
+            for (pop, body) in population.zip(body) {
                 self.add_population(body, pop);
             }
         }
@@ -200,14 +198,14 @@ pub mod examples {
             name: "Earth".to_string(),
             mass: Mass::in_kg(5.972e24),
             radius: Length::in_m(6371e3),
-            orbit: OrbitParams {
-                radius: Length::in_m(149.60e9),
-                period: DurationFloat::in_days(365.25),
-                offset: Default::default(),
-            },
+            orbit: OrbitParams::from_period(
+                Length::in_m(149.60e9),
+                Duration::in_days(365.25),
+                Default::default(),
+            ),
             conditions: BodyProperties {
                 surface: Surface::Continental {
-                    land: Fraction::new(0.204),
+                    land: Fraction::clamp(0.204),
                 },
                 pressure: Pressure::Ideal,
                 oxygen: AtmosphericOxygen::Ideal,
@@ -223,11 +221,12 @@ pub mod examples {
             name: "Luna".to_string(),
             mass: Mass::in_kg(7.34767309e22),
             radius: Length::in_m(1737.1e3),
-            orbit: OrbitParams {
-                radius: Length::in_m(384_400e3),
-                period: DurationFloat::in_days(27.322),
-                offset: Default::default(),
-            },
+            orbit: OrbitParams::from_period(
+                Length::in_m(384_400e3),
+                Duration::in_days(27.322),
+                Default::default(),
+            ),
+
             conditions: BodyProperties {
                 surface: Surface::Barren,
                 pressure: Pressure::Vacuum,

@@ -1,5 +1,7 @@
 use super::*;
 
+pub const PERSON: Population = Population::new(1.0);
+
 scalar!(struct Population(f64));
 
 impl Population {
@@ -8,12 +10,12 @@ impl Population {
     }
 
     pub const fn get_food_requirement(&self) -> MassRate {
-        MassRate::new(self.value * Self::FOOD_PER_PERSON.value)
+        self * Self::FOOD_PER_PERSON
     }
 
     /// 2 kg per person per day
-    const FOOD_PER_PERSON: MassRatePerPerson =
-        MassRatePerPerson::in_kg_per_s_person(2.0 / DurationFloat::SECONDS_PER_DAY);
+    const FOOD_PER_PERSON: MassRatePerPerson = 2.0 * KG / DAY / PERSON;
+    // MassRatePerPerson::in_kg_per_s_person(2.0 / Duration::SECONDS_PER_DAY);
 
     pub fn millions(self) -> Millions {
         Millions(self)
@@ -30,7 +32,7 @@ fn get_food_requirement() {
 pub struct Millions(Population);
 
 impl Display for Millions {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+    fn fmt(&self, f: &mut Formatter) -> Result {
         let millions = (self.0.value / 1e6) as i64;
         write!(f, "{} M", millions.to_formatted_string(&Locale::en))
     }

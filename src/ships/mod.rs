@@ -14,9 +14,6 @@ pub mod drives;
 pub mod freighter_assignment;
 pub mod freighter_state;
 
-#[cfg(test)]
-mod test;
-
 #[derive(Debug, Default)]
 pub struct Shipping {
     pub freighters: Freighters,

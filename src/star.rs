@@ -94,8 +94,8 @@ impl StarType {
     }
 }
 
-const SOLAR_MASS: Mass = Mass::in_kg(1.9884e30);
-const SOLAR_RADIUS: Length = Length::in_m(695_700e3);
+const SOLAR_MASS: Mass = 1.9884e30 * KG;
+const SOLAR_RADIUS: Length = 695_700.0 * KM;
 
 pub mod examples {
     use super::*;
@@ -112,7 +112,7 @@ pub mod examples {
         Star {
             name: "Sol".to_string(),
             position: Default::default(),
-            star_type: StarType::G(Fraction::new(0.5)),
+            star_type: StarType::G(Fraction::clamp(0.5)),
         }
     }
 }

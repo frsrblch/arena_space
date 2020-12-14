@@ -1,17 +1,17 @@
 use super::*;
-use chrono::Duration;
+use crate::time::{ChronoDuration, StdDuration};
 use std::cmp::Ordering;
 
-pub const S: DurationFloat = DurationFloat::in_s(1.0);
-pub const MIN: DurationFloat = DurationFloat::in_s(60.0);
-pub const HR: DurationFloat = DurationFloat::in_hours(1.0);
-pub const DAY: DurationFloat = DurationFloat::in_hours(24.0);
-pub const YR: DurationFloat = DurationFloat::in_days(365.25);
+pub const S: Duration = Duration::in_s(1.0);
+pub const MIN: Duration = Duration::in_s(60.0);
+pub const HR: Duration = Duration::in_hours(1.0);
+pub const DAY: Duration = Duration::in_hours(24.0);
+pub const YR: Duration = Duration::in_days(365.25);
 
-/// Elapsed game time in seconds. Distinct from Duration, which is a relative amount of time.
+/// Elapsed game time in seconds.
 #[derive(Debug, Default, Copy, Clone, PartialEq)]
 pub struct TimeFloat {
-    value: f64,
+    pub value: Duration,
 }
 
 impl TimeFloat {
@@ -20,16 +20,14 @@ impl TimeFloat {
     }
 
     pub fn in_days(days: f64) -> Self {
-        Self::in_s(days * DurationFloat::SECONDS_PER_DAY)
+        Self::in_s(days * Duration::SECONDS_PER_DAY)
     }
 
     fn new(value: f64) -> Self {
-        Self { value }
+        Self {
+            value: Duration::new(value),
+        }
     }
-
-    pub const NEVER: Self = Self {
-        value: f64::INFINITY,
-    };
 }
 
 impl Div for TimeFloat {
@@ -39,37 +37,41 @@ impl Div for TimeFloat {
     }
 }
 
-impl Add<DurationFloat> for TimeFloat {
+impl Add<Duration> for TimeFloat {
     type Output = Self;
-    fn add(self, rhs: DurationFloat) -> Self {
-        Self::new(self.value + rhs.value)
+    fn add(self, rhs: Duration) -> Self {
+        Self {
+            value: self.value + rhs,
+        }
     }
 }
 
-impl AddAssign<DurationFloat> for TimeFloat {
-    fn add_assign(&mut self, rhs: DurationFloat) {
-        self.value += rhs.value;
+impl AddAssign<Duration> for TimeFloat {
+    fn add_assign(&mut self, rhs: Duration) {
+        self.value += rhs;
     }
 }
 
-impl Sub<DurationFloat> for TimeFloat {
+impl Sub<Duration> for TimeFloat {
     type Output = Self;
-    fn sub(self, rhs: DurationFloat) -> Self {
-        Self::new(self.value - rhs.value)
+    fn sub(self, rhs: Duration) -> Self {
+        Self {
+            value: self.value - rhs,
+        }
     }
 }
 
 impl Sub for TimeFloat {
-    type Output = DurationFloat;
-    fn sub(self, rhs: Self) -> DurationFloat {
-        DurationFloat::in_s(self.value - rhs.value)
+    type Output = Duration;
+    fn sub(self, rhs: Self) -> Duration {
+        self.value - rhs.value
     }
 }
 
-impl Div<DurationFloat> for TimeFloat {
+impl Div<Duration> for TimeFloat {
     type Output = f64;
-    fn div(self, rhs: DurationFloat) -> Self::Output {
-        self.value / rhs.value
+    fn div(self, rhs: Duration) -> Self::Output {
+        self.value / rhs
     }
 }
 
@@ -88,12 +90,12 @@ impl Ord for TimeFloat {
 }
 
 scalar! {
-    struct DurationFloat(f64) {
+    struct Duration(f64) {
         fn in_s(seconds) -> Self;
     }
 }
 
-impl DurationFloat {
+impl Duration {
     pub const fn in_days(days: f64) -> Self {
         Self::in_s(days * Self::SECONDS_PER_DAY)
     }
@@ -110,43 +112,53 @@ impl DurationFloat {
 
     pub const SECONDS_PER_HOUR: f64 = 3600.0;
 
-    pub const INFINITY: DurationFloat = DurationFloat::new(f64::INFINITY);
+    pub const MAX: Duration = Duration::new(f64::MAX);
 }
 
-impl From<chrono::Duration> for DurationFloat {
-    fn from(duration: Duration) -> Self {
+impl From<ChronoDuration> for Duration {
+    fn from(duration: ChronoDuration) -> Self {
         let seconds = duration.num_milliseconds() as f64 / 1e3;
-        DurationFloat::in_s(seconds)
+        Duration::in_s(seconds)
     }
 }
 
-impl From<DurationFloat> for chrono::Duration {
-    fn from(duration: DurationFloat) -> Self {
+impl From<Duration> for ChronoDuration {
+    fn from(duration: Duration) -> Self {
         let microseconds = (duration.value * 1e6) as i64;
-        Duration::microseconds(microseconds)
+        ChronoDuration::microseconds(microseconds)
     }
 }
 
-impl From<DurationFloat> for std::time::Duration {
-    fn from(duration: DurationFloat) -> Self {
+impl From<Duration> for StdDuration {
+    fn from(duration: Duration) -> Self {
         let microseconds = (duration.value * 1e6) as u64;
-        std::time::Duration::from_micros(microseconds)
+        StdDuration::from_micros(microseconds)
     }
 }
 
-pub struct Days(DurationFloat);
+pub struct Days(Duration);
 
 impl Display for Days {
     fn fmt(&self, f: &mut Formatter) -> Result {
-        let days = self.0 / DurationFloat::in_days(1.0);
+        let days = self.0 / Duration::in_days(1.0);
         write!(f, "{:.1} days", days)
     }
 }
 
 #[test]
 fn duration_float_from_duration() {
-    let one_second = chrono::Duration::seconds(1);
-    let one_second = DurationFloat::from(one_second);
+    let one_second = ChronoDuration::seconds(1);
+    let one_second = Duration::from(one_second);
 
-    assert_eq!(DurationFloat::in_s(1.0), one_second);
+    assert_eq!(Duration::in_s(1.0), one_second);
 }
+
+scalar! {
+    struct DurationSquared(f64) {
+        fn in_s2(s2) -> Self;
+    }
+}
+
+scalar_squared!(Duration ^ 2 = DurationSquared);
+
+scalar_div!(Length | Acceleration = DurationSquared);

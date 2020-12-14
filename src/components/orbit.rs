@@ -20,21 +20,31 @@ impl Orbit {
 #[derive(Debug, Copy, Clone)]
 pub struct OrbitParams {
     pub radius: Length,
-    pub period: DurationFloat,
+    pub angular_speed: AngularSpeed,
     pub offset: Angle,
 }
 
 impl OrbitParams {
+    pub fn from_period(radius: Length, period: Duration, offset: Angle) -> Self {
+        Self {
+            radius,
+            angular_speed: Angle::NEG_TWO_PI / period,
+            offset,
+        }
+    }
+
     pub fn calculate_position(&self, time: TimeFloat) -> Distance {
         let angle = self.get_angle(time);
         Distance::from_angle_and_radius(angle, self.radius)
     }
 
     pub fn get_angle(&self, time: TimeFloat) -> Angle {
-        Angle::in_rad(time / self.period * Self::NEG_TWO_PI) - self.offset
+        time.value * self.angular_speed - self.offset
     }
 
-    const NEG_TWO_PI: f64 = std::f64::consts::PI * -2.0;
+    pub fn calculate_speed(&self) -> Speed {
+        Speed::in_m_per_s(self.radius.value() * self.angular_speed.value())
+    }
 }
 
 #[cfg(test)]
@@ -55,9 +65,10 @@ mod tests {
     #[test]
     fn orbit_test_at_quarter_orbit() {
         let orbit = get_planet_orbit();
-        let time = TimeFloat::in_s(orbit.params.period.value / 4.0);
+        let time = Angle::NEG_TWO_PI / orbit.params.angular_speed / 4.0;
+        assert!(time > Duration::zero());
 
-        let quarter = orbit.calculate_position(time);
+        let quarter = orbit.calculate_position(TimeFloat::in_s(time.value()));
 
         assert_eq!(Length::in_m(-1000.0), quarter.x);
         assert!(nearly_zero(quarter.y));
@@ -86,11 +97,7 @@ mod tests {
 
     fn get_planet_orbit_with_offset(offset: Angle) -> Orbit {
         Orbit {
-            params: OrbitParams {
-                radius: Length::in_m(1000.0),
-                period: DurationFloat::in_s(60.0),
-                offset,
-            },
+            params: OrbitParams::from_period(Length::in_m(1000.0), Duration::in_s(60.0), offset),
             parent: None,
         }
     }
@@ -101,11 +108,11 @@ mod tests {
 
     fn get_moon_orbit() -> Orbit {
         Orbit {
-            params: OrbitParams {
-                radius: Length::in_m(10.0),
-                period: DurationFloat::in_s(10.0),
-                offset: Angle::default(),
-            },
+            params: OrbitParams::from_period(
+                Length::in_m(10.0),
+                Duration::in_s(10.0),
+                Angle::default(),
+            ),
             parent: Some(get_planet_orbit().params),
         }
     }

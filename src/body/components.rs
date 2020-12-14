@@ -229,7 +229,7 @@ pub mod examples {
     pub fn earth() -> BodyProperties {
         BodyProperties {
             surface: Surface::Continental {
-                land: Fraction::new(0.29),
+                land: Fraction::clamp(0.29),
             },
             pressure: Pressure::Ideal,
             oxygen: AtmosphericOxygen::Ideal,

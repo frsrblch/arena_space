@@ -14,7 +14,7 @@ impl Drive {
         colonies: &Colonies,
         bodies: &Bodies,
         stars: &Stars,
-    ) -> DurationFloat {
+    ) -> Duration {
         let from_body = colonies.body.get(from);
         let from_star = bodies.star.get(from_body);
 
@@ -39,9 +39,9 @@ impl Drive {
         from_orbit: &Orbit,
         to_orbit: &Orbit,
         departure: TimeFloat,
-    ) -> DurationFloat {
+    ) -> Duration {
         let from_position = from_orbit.calculate_position(departure);
-        let mut duration = DurationFloat::zero();
+        let mut duration = Duration::zero();
 
         // Newton's method used to compensate for orbital motion
         for _ in 0..5 {
@@ -57,7 +57,7 @@ impl Drive {
         duration
     }
 
-    fn calculate_trip_duration_interstellar(&self, from: Position, to: Position) -> DurationFloat {
+    fn calculate_trip_duration_interstellar(&self, from: Position, to: Position) -> Duration {
         let distance = (from - to).magnitude();
 
         match self {

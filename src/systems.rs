@@ -1,7 +1,7 @@
-use crate::components::DurationFloat;
+use crate::components::*;
 use crate::state::State;
 use crate::time::{DateTime, TimeState};
-use chrono::Duration;
+use chrono::Duration as ChronoDuration;
 use std::cmp::Reverse;
 use std::collections::BinaryHeap;
 use std::iter::FromIterator;
@@ -19,7 +19,7 @@ impl UpdateToken {
         self.system.run(state);
 
         UpdateToken {
-            next_update: self.next_update + self.system.get_interval(),
+            next_update: self.next_update + self.system.get_chrono_interval(),
             system: self.system,
         }
     }
@@ -61,24 +61,24 @@ impl System {
         }
     }
 
-    pub fn get_interval(self) -> Duration {
-        self.get_interval_float().into()
+    pub fn get_chrono_interval(self) -> ChronoDuration {
+        self.get_interval().into()
     }
 
-    pub const fn get_interval_float(self) -> DurationFloat {
+    pub const fn get_interval(self) -> Duration {
         match self {
-            System::FreighterState => DurationFloat::in_s(60.0 * 10.0),
-            System::ColonyProductionCycle => DurationFloat::in_days(1.0),
+            System::FreighterState => 10.0 * MIN,
+            System::ColonyProductionCycle => 1.0 * DAY,
             // System::NationFoodTargets => DurationFloat::in_days(30.0),
-            System::ColonyPopulation => DurationFloat::in_days(5.0),
-            System::ResourceDecay => DurationFloat::in_days(30.0),
-            System::PrintState => DurationFloat::in_days(90.0),
-            System::ShippingAverage => DurationFloat::in_days(365.25 / 52.0),
+            System::ColonyPopulation => 5.0 * DAY,
+            System::ResourceDecay => 30.0 * DAY,
+            System::PrintState => 90.0 * DAY,
+            System::ShippingAverage => 7.0 * DAY,
         }
     }
 
     pub const fn get_interval_as_year_fraction(self) -> f64 {
-        self.get_interval_float().value / DurationFloat::in_days(365.25).value
+        self.get_interval() / Duration::in_days(365.25)
     }
 }
 
@@ -114,8 +114,8 @@ impl SystemQueue {
         state.time.set_date_time(target);
     }
 
-    pub fn update_by(&mut self, state: &mut State, duration: DurationFloat) {
-        let time = state.time.get_time() + Duration::from(duration);
+    pub fn update_by(&mut self, state: &mut State, duration: Duration) {
+        let time = state.time.get_time() + ChronoDuration::from(duration);
         self.update(state, time);
     }
 
