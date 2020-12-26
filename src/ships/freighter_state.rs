@@ -320,7 +320,7 @@ impl Arrivals {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct Unloaded {
     transition: Transition<Index<Unloading>>,
 }
@@ -433,7 +433,7 @@ impl Loading {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct Loaded {
     transition: Transition<Index<Loading>>,
 }
