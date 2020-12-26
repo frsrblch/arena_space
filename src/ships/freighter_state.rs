@@ -177,7 +177,7 @@ impl FreighterState {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct Assign {
     assign: Transition<(Index<Idle>, Assignment)>,
 }
@@ -264,7 +264,7 @@ impl Assign {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct Arrivals {
     transition: Transition<Index<Moving>>,
 }

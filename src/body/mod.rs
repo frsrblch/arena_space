@@ -23,7 +23,7 @@ pub struct BodyLinks {
     pub parent: Option<Id<Body>>,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct Bodies {
     pub alloc: Allocator<Body>,
 
@@ -138,7 +138,7 @@ impl Bodies {
         let planet = self.create(row.body, links);
 
         let moon_links = BodyLinks {
-            star: links.star,
+            star,
             parent: Some(planet),
         };
 
