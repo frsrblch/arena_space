@@ -36,14 +36,14 @@ impl Drive {
 
     fn calculate_trip_duration_in_system(
         &self,
-        from_orbit: &Orbit,
-        to_orbit: &Orbit,
+        from_orbit: &BodyOrbit,
+        to_orbit: &BodyOrbit,
         departure: TimeFloat,
     ) -> Duration {
         let from_position = from_orbit.calculate_position(departure);
         let mut duration = Duration::zero();
 
-        // Newton's method used to compensate for orbital motion
+        // Newton's method used to compensate for orbital motion affecting trip length
         for _ in 0..5 {
             let to_position = to_orbit.calculate_position(departure + duration);
 

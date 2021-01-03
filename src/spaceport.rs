@@ -8,7 +8,7 @@ use super::*;
 #[derive(Debug, Copy, Clone)]
 pub struct Spaceport {
     pub mass: Mass,
-    pub orbit: OrbitParams,
+    pub orbit: Orbit,
 }
 
 impl Spaceport {

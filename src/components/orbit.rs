@@ -1,12 +1,12 @@
 use super::*;
 
 #[derive(Debug, Copy, Clone)]
-pub struct Orbit {
-    pub params: OrbitParams,
-    pub parent: Option<OrbitParams>,
+pub struct BodyOrbit {
+    pub params: Orbit,
+    pub parent: Option<Orbit>,
 }
 
-impl Orbit {
+impl BodyOrbit {
     pub fn calculate_position(&self, time: TimeFloat) -> Position {
         if let Some(parent) = self.parent {
             parent.calculate_position(time) + self.params.calculate_position(time)
@@ -18,17 +18,17 @@ impl Orbit {
 }
 
 #[derive(Debug, Copy, Clone)]
-pub struct OrbitParams {
+pub struct Orbit {
     pub radius: Length,
     pub angular_speed: AngularSpeed,
     pub offset: Angle,
 }
 
-impl OrbitParams {
+impl Orbit {
     pub fn from_period(radius: Length, period: Duration, offset: Angle) -> Self {
         Self {
             radius,
-            angular_speed: Angle::NEG_TWO_PI / period,
+            angular_speed: -Angle::TWO_PI / period,
             offset,
         }
     }
@@ -52,6 +52,14 @@ mod tests {
     use super::*;
     use std::f64::consts::PI;
 
+    fn get_planet_orbit() -> Orbit {
+        get_planet_orbit_with_offset(Angle::default())
+    }
+
+    fn get_planet_orbit_with_offset(offset: Angle) -> Orbit {
+        Orbit::from_period(Length::in_m(1000.0), Duration::in_s(60.0), offset)
+    }
+
     #[test]
     fn orbit_test_at_time_zero() {
         let orbit = get_planet_orbit();
@@ -59,13 +67,13 @@ mod tests {
 
         let position = orbit.calculate_position(time);
 
-        assert_eq!(Position::in_m(0.0, 1000.0), position);
+        assert_eq!(Distance::in_m(0.0, 1000.0), position);
     }
 
     #[test]
     fn orbit_test_at_quarter_orbit() {
         let orbit = get_planet_orbit();
-        let time = Angle::NEG_TWO_PI / orbit.params.angular_speed / 4.0;
+        let time = -Angle::TWO_PI / orbit.angular_speed / 4.0;
         assert!(time > Duration::zero());
 
         let quarter = orbit.calculate_position(TimeFloat::in_s(time.value()));
@@ -95,25 +103,10 @@ mod tests {
         assert_eq!(Position::in_m(0.0, 1010.0), moon_position);
     }
 
-    fn get_planet_orbit_with_offset(offset: Angle) -> Orbit {
-        Orbit {
-            params: OrbitParams::from_period(Length::in_m(1000.0), Duration::in_s(60.0), offset),
-            parent: None,
-        }
-    }
-
-    fn get_planet_orbit() -> Orbit {
-        get_planet_orbit_with_offset(Angle::default())
-    }
-
-    fn get_moon_orbit() -> Orbit {
-        Orbit {
-            params: OrbitParams::from_period(
-                Length::in_m(10.0),
-                Duration::in_s(10.0),
-                Angle::default(),
-            ),
-            parent: Some(get_planet_orbit().params),
+    fn get_moon_orbit() -> BodyOrbit {
+        BodyOrbit {
+            params: Orbit::from_period(Length::in_m(10.0), Duration::in_s(10.0), Angle::default()),
+            parent: Some(get_planet_orbit()),
         }
     }
 

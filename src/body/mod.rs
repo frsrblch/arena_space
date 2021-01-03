@@ -11,7 +11,7 @@ pub struct Body {
     pub name: String,
     pub mass: Mass,
     pub radius: Length,
-    pub orbit: OrbitParams,
+    pub orbit: Orbit,
     pub conditions: BodyProperties,
 }
 
@@ -30,7 +30,7 @@ pub struct Bodies {
     pub name: Component<Body, String>,
     pub mass: Component<Body, Mass>,
     pub radius: Component<Body, Length>,
-    pub orbit: Component<Body, Orbit>,
+    pub orbit: Component<Body, BodyOrbit>,
     pub properties: Component<Body, BodyProperties>,
 
     pub population: HashMap<Id<Body>, Population>,
@@ -58,7 +58,7 @@ impl Bodies {
         id
     }
 
-    fn get_orbit(&self, parent: Option<Id<Body>>, params: OrbitParams) -> Orbit {
+    fn get_orbit(&self, parent: Option<Id<Body>>, params: Orbit) -> BodyOrbit {
         let parent = parent.map(|parent| self.orbit.get(parent)).map(|orbit| {
             assert!(
                 orbit.parent.is_none(),
@@ -67,7 +67,7 @@ impl Bodies {
             orbit.params
         });
 
-        Orbit { params, parent }
+        BodyOrbit { params, parent }
     }
 
     pub fn get_position<I: ValidId<Body>>(&self, id: I, time: TimeFloat) -> Position {
@@ -198,7 +198,7 @@ pub mod examples {
             name: "Earth".to_string(),
             mass: Mass::in_kg(5.972e24),
             radius: Length::in_m(6371e3),
-            orbit: OrbitParams::from_period(
+            orbit: Orbit::from_period(
                 Length::in_m(149.60e9),
                 Duration::in_days(365.25),
                 Default::default(),
@@ -221,7 +221,7 @@ pub mod examples {
             name: "Luna".to_string(),
             mass: Mass::in_kg(7.34767309e22),
             radius: Length::in_m(1737.1e3),
-            orbit: OrbitParams::from_period(
+            orbit: Orbit::from_period(
                 Length::in_m(384_400e3),
                 Duration::in_days(27.322),
                 Default::default(),
