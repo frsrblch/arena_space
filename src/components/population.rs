@@ -5,6 +5,10 @@ pub const PERSON: Population = Population::new(1.0);
 scalar!(struct Population(f64));
 
 impl Population {
+    pub const fn in_people(people: f64) -> Self {
+        Self::new(people)
+    }
+
     pub const fn in_millions(mm_people: f64) -> Self {
         Self::new(mm_people * 1e6)
     }

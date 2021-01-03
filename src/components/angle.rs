@@ -1,4 +1,4 @@
-use super::Duration;
+use super::{Duration, Length, Speed};
 use rand::distributions::{Distribution, Standard};
 use rand::Rng;
 use std::f64::consts::PI;
@@ -27,8 +27,6 @@ impl Angle {
     const RAD_PER_DEG: f64 = PI / 180.0;
 
     pub const TWO_PI: Self = Angle::in_rad(2.0 * PI);
-
-    pub const NEG_TWO_PI: Self = Angle::in_rad(-2.0 * PI);
 }
 
 impl Distribution<Angle> for Standard {
@@ -44,6 +42,8 @@ scalar! {
 }
 
 scalar_div!(Angle | Duration = AngularSpeed);
+
+scalar_div!(Speed | Length = AngularSpeed);
 
 #[cfg(test)]
 mod tests {

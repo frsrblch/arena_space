@@ -9,6 +9,12 @@ scalar! {
 scalar_div!(Energy | Duration = Power);
 scalar_div!(Power | Speed = Force);
 
+scalar! {
+    struct RadiantIntensity(f64) {
+        fn in_w_per_sr(watts_per_steradian) -> Self;
+    }
+}
+
 #[test]
 fn conversion_test() {
     use crate::components::{KG, M, S};
