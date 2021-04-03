@@ -1,7 +1,9 @@
 use super::Freighter;
 use crate::body::Bodies;
 use crate::colony::{Colonies, Colony};
-use crate::components::{Duration, Mass, MassRate, Price, Resource, ResourceArray, TimeFloat};
+use crate::components::{
+    Duration, Fraction, Mass, MassRate, Price, PricePerMeter, Resource, ResourceArray, TimeFloat,
+};
 use crate::ships::cargo::CargoEntry;
 use crate::ships::drives::Drive;
 use crate::ships::freighter_assignment::Assignment;
@@ -74,6 +76,7 @@ pub struct Parameters<'a> {
     pub cargo: &'a mut Component<Freighter, Vec<CargoEntry>>,
     pub capacity: &'a Component<Freighter, Mass>,
     pub loading_rate: &'a Component<Freighter, MassRate>,
+    pub shipping_cost: &'a Component<Freighter, PricePerMeter>,
     pub drive: &'a Component<Freighter, Drive>,
 
     pub time: &'a TimeState,
@@ -83,21 +86,23 @@ pub struct Parameters<'a> {
 }
 
 impl<'a> Parameters<'a> {
-    fn get_unloading_duration<I: ValidId<Freighter>>(&self, id: I) -> Duration {
-        let contents = self.cargo.get(id).iter().map(|c| c.amount).sum::<Mass>();
-        let loading_rate = self.loading_rate.get(id);
+    fn get_unloading_duration<I>(&self, id: I) -> Duration
+    where
+        I: ValidId<Freighter>,
+    {
+        let contents = self.contents(id);
+        let loading_rate = self.loading_rate[id];
 
         contents / loading_rate
     }
 
-    fn get_trip_duration<F: ValidId<Freighter>, C: ValidId<Colony>>(
-        &self,
-        id: F,
-        from: C,
-        to: C,
-    ) -> Duration {
+    fn get_trip_duration<F, C>(&self, id: F, from: C, to: C) -> Duration
+    where
+        F: ValidId<Freighter>,
+        C: ValidId<Colony>,
+    {
         let drive = self.drive.get(id);
-        let time = self.time.get_time_float();
+        let time = self.time.get_time();
 
         drive.calculate_trip_duration(from, to, time, self.colonies, self.bodies, self.stars)
     }
@@ -114,23 +119,26 @@ impl<'a> Parameters<'a> {
         &self,
         source: I,
         destination: I,
+        shipping_cost: Price,
         resource: Resource,
     ) -> Price {
         let prices = &self.colonies.resources.price.get(resource);
         let destination_price = prices.get(destination);
         let source_price = prices.get(source);
-        destination_price - source_price
+        destination_price - source_price - shipping_cost
     }
 
-    fn get_stockpile<C: ValidId<Colony>>(&self, colony: C, resource: Resource) -> Mass {
+    fn get_stockpile<C>(&self, colony: C, resource: Resource) -> Mass
+    where
+        C: ValidId<Colony>,
+    {
         *self.colonies.resources.stockpile.get(resource).get(colony)
     }
 
-    fn get_stockpile_mut<C: ValidId<Colony>>(
-        &mut self,
-        colony: C,
-        resource: Resource,
-    ) -> &mut Mass {
+    fn get_stockpile_mut<C>(&mut self, colony: C, resource: Resource) -> &mut Mass
+    where
+        C: ValidId<Colony>,
+    {
         self.colonies
             .resources
             .stockpile
@@ -138,7 +146,10 @@ impl<'a> Parameters<'a> {
             .get_mut(colony)
     }
 
-    fn add_cargo<F: ValidId<Freighter>>(&mut self, id: F, resource: Resource, amount: Mass) {
+    fn add_cargo<F>(&mut self, id: F, resource: Resource, amount: Mass)
+    where
+        F: ValidId<Freighter>,
+    {
         let cargo = self.cargo.get_mut(id);
 
         if let Some(entry) = cargo.iter_mut().find(|e| e.resource == resource) {
@@ -217,7 +228,7 @@ impl Assign {
         indices: &mut Indices,
         parameters: &mut Parameters,
     ) {
-        let time = parameters.time.get_time_float();
+        let time = parameters.time.get_time();
 
         for (index, assignment) in self.assign.drain() {
             let (id, idle_row) = idle.swap_remove(index, indices);
@@ -282,7 +293,7 @@ impl Arrivals {
     }
 
     fn get_arrivals(&mut self, arrival: &Column<Moving, TimeFloat>, parameters: &Parameters) {
-        let time = parameters.time.get_time_float();
+        let time = parameters.time.get_time();
 
         let iter = arrival
             .iter()
@@ -338,7 +349,7 @@ impl Unloaded {
     }
 
     fn get_unloaded(&mut self, unloading: &Unloading, parameters: &Parameters) {
-        let time = parameters.time.get_time_float();
+        let time = parameters.time.get_time();
 
         let iter = unloading
             .completion
@@ -382,6 +393,7 @@ impl Unloaded {
 impl Loading {
     pub fn update(&mut self, parameters: &mut Parameters) {
         let ids = self.id.iter().map(Valid::assert);
+        let mut price_difference = ResourceArray::<Price>::default();
 
         ids.zip(self.location.iter())
             .zip(self.destination.iter())
@@ -389,18 +401,28 @@ impl Loading {
             .for_each(|(((id, location), destination), abort)| {
                 let loading_rate = parameters.loading_rate.get(id);
 
+                let shipping_cost = parameters.shipping_cost.get(id);
+                let from_body = parameters.colonies.body[location];
+                let to_body = parameters.colonies.body[destination];
+                let distance = parameters.bodies.get_distance(
+                    from_body,
+                    to_body,
+                    parameters.time.get_time(),
+                    parameters.stars,
+                );
+                let cost = shipping_cost * distance.magnitude();
+
                 let capacity = parameters.capacity.get(id);
                 let contents = parameters.contents(id);
 
                 let remaining = capacity - contents;
                 let mut to_load = remaining.min(loading_rate * INTERVAL);
 
-                let mut price_difference = ResourceArray::<Price>::default();
-
                 price_difference
                     .iter_enum_mut()
                     .for_each(|(price, resource)| {
-                        *price = parameters.get_price_gradient(location, destination, *resource);
+                        *price =
+                            parameters.get_price_gradient(location, destination, cost, *resource);
                     });
 
                 while to_load.is_some() && !*abort {
@@ -411,7 +433,7 @@ impl Loading {
                             **price > Price::zero()
                                 && parameters.get_stockpile(location, **resource).is_some()
                         })
-                        .fold_first(|(max_price, max_resource), (price, resource)| {
+                        .reduce(|(max_price, max_resource), (price, resource)| {
                             if price > max_price {
                                 (price, resource)
                             } else {
@@ -473,27 +495,30 @@ impl Loaded {
         indices: &mut Indices,
         parameters: &mut Parameters,
     ) {
-        let time = parameters.time.get_time_float();
+        let time = parameters.time.get_time();
 
         self.transition.drain().for_each(|index| {
             let (id, row) = loading.swap_remove(index, indices);
+            let location = row.location;
             let id = Valid::assert(id);
 
-            for cargo in parameters.cargo.get(id) {
+            let cargo_entries = parameters.cargo.get(id);
+
+            for cargo in cargo_entries {
                 let shipped = &mut parameters.colonies.resources.shipping;
-                let shipped = shipped.get_mut(cargo.resource).get_mut(row.location);
+                let shipped = shipped.get_mut(cargo.resource).get_mut(location);
                 *shipped -= cargo.amount;
             }
 
             match parameters.assignment.get(id) {
-                Some(Assignment::Route(a, destination)) if row.location.eq(a) => {
-                    let duration = parameters.get_trip_duration(id, row.location, *destination);
-                    let row = MovingRow::new(time, time + duration, row.location, destination);
+                Some(Assignment::Route(a, destination)) if location.eq(a) => {
+                    let duration = parameters.get_trip_duration(id, location, *destination);
+                    let row = MovingRow::new(time, time + duration, location, destination);
                     moving.insert(id, row, indices);
                 }
-                Some(Assignment::Route(destination, b)) if row.location.eq(b) => {
-                    let duration = parameters.get_trip_duration(id, row.location, *destination);
-                    let row = MovingRow::new(time, time + duration, row.location, destination);
+                Some(Assignment::Route(destination, b)) if location.eq(b) => {
+                    let duration = parameters.get_trip_duration(id, location, *destination);
+                    let row = MovingRow::new(time, time + duration, location, destination);
                     moving.insert(id, row, indices);
                 }
                 Some(Assignment::Route(_, _)) | None => {
@@ -503,5 +528,19 @@ impl Loaded {
                 }
             }
         });
+    }
+}
+
+impl Moving {
+    pub fn get_trip_fraction(&self, index: &Index<Moving>, time: &TimeState) -> Option<Fraction> {
+        let time = time.get_time();
+        let departure = *self.departure.get(index)?;
+        let arrival = *self.arrival.get(index)?;
+
+        if time > departure && time < arrival {
+            Some(Fraction::clamp((time - departure) / (arrival - departure)))
+        } else {
+            None
+        }
     }
 }

@@ -1,3 +1,4 @@
+use crate::body::BodyProperties;
 use crate::colony::{Colonies, Colony};
 use crate::components::*;
 use crate::systems::System;
@@ -56,7 +57,7 @@ pub struct Resources {
     pub price_multiplier: ResourceComponent<Colony, f64>,
 
     pub shipping: ResourceComponent<Colony, Mass>,
-    pub avg_shipping: ResourceComponent<Colony, ExpMovingAvg<MassRate, 12.0>>,
+    pub avg_shipping: ResourceComponent<Colony, ExpMovingAvg<MassRate, 30.0>>,
 }
 
 impl Resources {
@@ -168,17 +169,36 @@ impl Resources {
             .zip(multiplier)
             .zip(self.supply.iter())
             .zip(self.demand.iter())
+            .zip(self.stockpile.iter())
             .zip(crate::PRICE_DEFAULT.iter());
 
-        for ((((prices, multiplier), supply), demand), default) in iter {
-            let iter = prices.zip(multiplier).zip(supply).zip(demand);
+        for (((((prices, multiplier), supply), demand), stock), default) in iter {
+            let iter = prices.zip(multiplier).zip(supply).zip(demand).zip(stock);
 
-            for (((price, mult), supply), demand) in iter {
-                let ratio = DemandSupplyRatio::calculate(*demand, *supply);
+            for ((((price, mult), supply), demand), stock) in iter {
+                let dsr = demand_supply_ratio(*demand, *supply);
+                let sdr = stockpile_demand_ratio(*stock, *demand).sqrt();
+                let ratio = dsr * sdr;
+
+                let sp = *price;
+                let mt = *mult;
+                let rt = ratio;
+
                 *price = ratio * *mult * default;
-                *mult *= ratio.powf(0.02);
+                let ep = *price;
+
+                *mult *= ratio.powf(0.005);
+
+                if rt != 1.0 {
+                    println!(
+                        "start: {}, end: {}, ratio: {:.2}, mult: {:.2}, dsr: {:.2}, sdr: {:.2}",
+                        sp, ep, rt, mt, dsr, sdr
+                    );
+                }
             }
         }
+
+        println!();
     }
 
     pub fn decay(&mut self) {
@@ -205,43 +225,39 @@ impl Resources {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialOrd, PartialEq)]
-struct DemandSupplyRatio(f64);
-
-impl DemandSupplyRatio {
-    fn calculate(demand: MassRate, supply: MassRate) -> f64 {
-        debug_assert!(demand.value().is_sign_positive());
-        debug_assert!(supply.value().is_sign_positive());
-
-        let value = if supply == demand {
-            1.0
-        } else if supply == MassRate::zero() {
-            DemandSupplyRatio::MAX_VALUE
-        } else {
-            (demand / supply).min(Self::MAX_VALUE)
-        };
-
-        value
-    }
-
+fn demand_supply_ratio(demand: MassRate, supply: MassRate) -> f64 {
     const MAX_VALUE: f64 = 4.0;
+
+    debug_assert!(demand.value().is_sign_positive());
+    debug_assert!(supply.value().is_sign_positive());
+
+    if supply == demand {
+        1.0
+    } else {
+        (demand / supply).min(MAX_VALUE)
+    }
 }
 
-#[test]
-fn demand_supply_ratio_tests() {
-    let demand_supply_expected = |demand: f64, supply: f64, expected: f64| {
-        let supply = MassRate::in_kg_per_s(supply);
-        let demand = MassRate::in_kg_per_s(demand);
-        assert_eq!(expected, DemandSupplyRatio::calculate(demand, supply))
-    };
+fn stockpile_demand_ratio(stock: Mass, demand: MassRate) -> f64 {
+    const TARGET: Duration = Duration::in_days(180.0);
+    const MAX_VALUE: f64 = 4.0;
 
-    demand_supply_expected(1.0, 1.0, 1.0);
-    demand_supply_expected(0.0, 0.0, 1.0);
-    demand_supply_expected(1.0, 0.0, DemandSupplyRatio::MAX_VALUE);
-    demand_supply_expected(0.0, 1.0, 0.0);
-    demand_supply_expected(2.0, 1.0, 2.0);
-    demand_supply_expected(1.0, 2.0, 0.5);
-    demand_supply_expected(1000.0, 1.0, DemandSupplyRatio::MAX_VALUE);
+    debug_assert!(stock.value().is_sign_positive());
+    debug_assert!(demand.value().is_sign_positive());
+
+    if demand == MassRate::zero() {
+        1.0
+    } else {
+        (TARGET * (demand / stock)).min(MAX_VALUE)
+    }
+}
+
+fn price_cost_ratio(price: Price, cost: Price) -> f64 {
+    debug_assert!(price.value.is_sign_positive());
+    debug_assert!(cost.value.is_sign_positive());
+
+    let cost = cost.max(Price::in_credits_per_kg(0.01));
+    price / cost
 }
 
 #[derive(Debug, Default)]
@@ -343,12 +359,16 @@ impl Production {
     }
 
     fn output(&mut self, resources: &mut Resources) {
+        const RATIO_SCALAR: f64 = 4.0 * INTERVAL / Duration::in_days(365.25);
+
         for (production, facility) in self.iter_enum_mut() {
             let output = facility.get_output();
             let stockpile = resources.stockpile.get_mut(output);
             let supply = resources.supply.get_mut(output);
+            let demand = resources.demand.get(output);
+            let price = resources.price.get(output);
 
-            for (colony, unit) in production.iter() {
+            for (colony, unit) in production.iter_mut() {
                 let output = unit.get_output();
 
                 let stockpile = stockpile.get_mut(colony);
@@ -356,6 +376,19 @@ impl Production {
 
                 let supply = supply.get_mut(colony);
                 *supply += output;
+
+                let supply = *supply;
+                let demand = demand[colony];
+
+                let dsr = demand_supply_ratio(demand, supply);
+                let pcr = price_cost_ratio(price[colony], unit.production_cost);
+                let ratio = (dsr * pcr).sqrt();
+
+                let production_multiplier = (ratio - 1.0) * RATIO_SCALAR + 1.0;
+                // let production_multiplier =
+                //     (price[colony] / unit.production_cost - 1.0) * RATIO_SCALAR + 1.0;
+
+                unit.capacity *= production_multiplier;
             }
         }
     }
@@ -365,13 +398,15 @@ impl Production {
 pub struct ProductionUnit {
     pub capacity: MassRate,
     pub fulfillment: f64,
+    pub production_cost: Price,
 }
 
 impl ProductionUnit {
-    pub fn new(capacity: MassRate) -> Self {
+    pub fn new(capacity: MassRate, resource: Resource, location: &BodyProperties) -> Self {
         Self {
             capacity,
             fulfillment: 0.0,
+            production_cost: resource.get_production_cost(location),
         }
     }
 
@@ -428,5 +463,24 @@ mod tests {
                 Duration::in_s(2.0)
             )
         );
+    }
+
+    #[test]
+    fn demand_supply_ratio_tests() {
+        let demand_supply_expected = |demand: f64, supply: f64, expected: f64| {
+            let supply = MassRate::in_kg_per_s(supply);
+            let demand = MassRate::in_kg_per_s(demand);
+            assert_eq!(expected, demand_supply_ratio(demand, supply))
+        };
+
+        const MAX: f64 = 4.0;
+
+        demand_supply_expected(1.0, 1.0, 1.0);
+        demand_supply_expected(0.0, 0.0, 1.0);
+        demand_supply_expected(1.0, 0.0, MAX);
+        demand_supply_expected(0.0, 1.0, 0.0);
+        demand_supply_expected(2.0, 1.0, 2.0);
+        demand_supply_expected(1.0, 2.0, 0.5);
+        demand_supply_expected(1000.0, 1.0, MAX);
     }
 }

@@ -4,7 +4,7 @@ macro_rules! vector {
             fn $in_unit:ident($unit:ident: $base:ty) -> Self;
         }
     } => {
-        #[derive(Debug, Default, Copy, Clone, PartialEq, PartialOrd)]
+        #[derive(Debug, Default, Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
         pub struct $vector {
             pub x: $scalar,
             pub y: $scalar,

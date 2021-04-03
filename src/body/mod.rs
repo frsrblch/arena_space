@@ -12,7 +12,7 @@ pub struct Body {
     pub mass: Mass,
     pub radius: Length,
     pub orbit: Orbit,
-    pub conditions: BodyProperties,
+    pub properties: BodyProperties,
 }
 
 fixed_arena!(Body);
@@ -39,7 +39,12 @@ pub struct Bodies {
 }
 
 impl Bodies {
-    pub fn create(&mut self, row: Body, links: BodyLinks) -> Id<Body> {
+    pub fn create(
+        &mut self,
+        row: Body,
+        links: BodyLinks,
+        star_bodies: &mut Vec<Id<Body>>,
+    ) -> Id<Body> {
         let id = self.alloc.create();
 
         self.name.insert(id, row.name);
@@ -51,9 +56,10 @@ impl Bodies {
         let orbit = self.get_orbit(links.parent, row.orbit);
         self.orbit.insert(id, orbit);
 
-        self.properties.insert(id, row.conditions);
+        self.properties.insert(id, row.properties);
 
         self.star.insert(id, links.star);
+        star_bodies.push(id);
 
         id
     }
@@ -132,10 +138,16 @@ pub struct Planet {
 }
 
 impl Bodies {
-    pub fn create_planet(&mut self, row: Planet, star: Id<Star>) -> Id<Body> {
+    pub fn create_planet(
+        &mut self,
+        row: Planet,
+        star: Id<Star>,
+        star_bodies: &mut Vec<Id<Body>>,
+    ) -> Id<Body> {
         let links = BodyLinks { star, parent: None };
+        star_bodies.reserve(row.moons.len() + 1);
 
-        let planet = self.create(row.body, links);
+        let planet = self.create(row.body, links, star_bodies);
 
         let moon_links = BodyLinks {
             star,
@@ -143,7 +155,7 @@ impl Bodies {
         };
 
         for moon in row.moons {
-            self.create(moon, moon_links);
+            self.create(moon, moon_links, star_bodies);
         }
 
         planet
@@ -186,14 +198,62 @@ pub mod population {
 pub mod examples {
     use super::*;
 
-    pub fn planet_earth() -> Planet {
+    pub fn mercury() -> Planet {
         Planet {
-            body: earth(),
+            body: Body {
+                name: "Mercury".to_string(),
+                mass: Mass::in_kg(0.33011e24),
+                radius: Length::in_m(2439.7e3),
+                orbit: Orbit {
+                    radius: Length::in_m(57.909e9),
+                    angular_speed: Angle::TWO_PI / Duration::in_days(87.969),
+                    offset: 0.25 * Angle::TWO_PI,
+                },
+                properties: BodyProperties {
+                    surface: Surface::Barren,
+                    pressure: Pressure::Vacuum,
+                    oxygen: AtmosphericOxygen::None,
+                    hydrosphere: Hydrosphere::None,
+                    biosphere: Biosphere::None,
+                    magnetosphere: Magnetosphere::Absent,
+                },
+            },
+            moons: vec![],
+        }
+    }
+
+    pub fn venus() -> Planet {
+        Planet {
+            body: Body {
+                name: "Venus".to_string(),
+                mass: Mass::in_kg(4.8675e24),
+                radius: Length::in_m(6051.8e3),
+                orbit: Orbit {
+                    radius: Length::in_m(108.209e9),
+                    angular_speed: Angle::TWO_PI / Duration::in_days(224.7),
+                    offset: 0.6 * Angle::TWO_PI,
+                },
+                properties: BodyProperties {
+                    surface: Surface::Barren,
+                    pressure: Pressure::Crushing,
+                    oxygen: AtmosphericOxygen::None,
+                    hydrosphere: Hydrosphere::None,
+                    biosphere: Biosphere::None,
+                    magnetosphere: Magnetosphere::Absent,
+                },
+            },
+            moons: vec![],
+        }
+    }
+
+    pub fn earth() -> Planet {
+        Planet {
+            body: earth_body(),
             moons: vec![luna()],
         }
     }
 
-    pub fn earth() -> Body {
+    pub fn earth_body() -> Body {
         Body {
             name: "Earth".to_string(),
             mass: Mass::in_kg(5.972e24),
@@ -203,7 +263,7 @@ pub mod examples {
                 Duration::in_days(365.25),
                 Default::default(),
             ),
-            conditions: BodyProperties {
+            properties: BodyProperties {
                 surface: Surface::Continental {
                     land: Fraction::clamp(0.204),
                 },
@@ -227,7 +287,7 @@ pub mod examples {
                 Default::default(),
             ),
 
-            conditions: BodyProperties {
+            properties: BodyProperties {
                 surface: Surface::Barren,
                 pressure: Pressure::Vacuum,
                 oxygen: AtmosphericOxygen::None,
@@ -235,6 +295,30 @@ pub mod examples {
                 biosphere: Biosphere::None,
                 magnetosphere: Magnetosphere::Absent,
             },
+        }
+    }
+
+    pub fn mars() -> Planet {
+        Planet {
+            body: Body {
+                name: "Mars".to_string(),
+                mass: Mass::in_kg(0.64171e24),
+                radius: Length::in_m(3396.2e3),
+                orbit: Orbit {
+                    radius: Length::in_m(227.923e9),
+                    angular_speed: Angle::TWO_PI / Duration::in_days(686.98),
+                    offset: 0.8 * Angle::TWO_PI,
+                },
+                properties: BodyProperties {
+                    surface: Surface::Barren,
+                    pressure: Pressure::Thin,
+                    oxygen: AtmosphericOxygen::None,
+                    hydrosphere: Hydrosphere::None,
+                    biosphere: Biosphere::None,
+                    magnetosphere: Magnetosphere::Absent,
+                },
+            },
+            moons: vec![],
         }
     }
 }

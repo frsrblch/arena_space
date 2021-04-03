@@ -35,7 +35,7 @@ impl Facility {
         self.get_inputs()
             .iter()
             .map(|i| i.get_default_price())
-            .fold_first(|a, b| a + b)
+            .reduce(|a, b| a + b)
             .unwrap_or_else(|| Price::in_credits_per_kg(1.0))
     }
 }

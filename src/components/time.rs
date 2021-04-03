@@ -159,6 +159,29 @@ scalar! {
     }
 }
 
+scalar! {
+    struct Frequency(f64) {
+        fn per_s(s) -> Self;
+    }
+}
+
+scalar_div! { f64 | Duration = Frequency }
+
 scalar_squared!(Duration ^ 2 = DurationSquared);
 
 scalar_div!(Length | Acceleration = DurationSquared);
+
+trait New {
+    fn new(value: f64) -> Self;
+    fn value(self) -> f64;
+}
+
+impl const New for f64 {
+    fn new(value: f64) -> Self {
+        value
+    }
+
+    fn value(self) -> f64 {
+        self
+    }
+}

@@ -1,6 +1,8 @@
 use super::*;
 
-#[derive(Debug, Default, Copy, Clone, PartialEq)]
+// TODO create GalaxyPosition, GalaxyDistance to prevent comparing positions in different star systems
+
+#[derive(Debug, Default, Copy, Clone, Eq, PartialEq)]
 pub struct Position {
     pub x: Length,
     pub y: Length,
@@ -14,7 +16,7 @@ impl Position {
         }
     }
 
-    pub fn in_ly(x: f64, y: f64) -> Self {
+    pub const fn in_ly(x: f64, y: f64) -> Self {
         Self::in_m(x * Self::M_PER_LY, y * Self::M_PER_LY)
     }
 

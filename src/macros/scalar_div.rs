@@ -5,112 +5,112 @@ macro_rules! scalar_div {
         impl const std::ops::Div<$den> for $num {
             type Output = $res;
             fn div(self, rhs: $den) -> Self::Output {
-                Self::Output::new(self.value / rhs.value)
+                Self::Output::new(self.value() / rhs.value())
             }
         }
 
         impl const std::ops::Div<$den> for &$num {
             type Output = $res;
             fn div(self, rhs: $den) -> Self::Output {
-                Self::Output::new(self.value / rhs.value)
+                Self::Output::new(self.value() / rhs.value())
             }
         }
 
         impl const std::ops::Div<&$den> for $num {
             type Output = $res;
             fn div(self, rhs: &$den) -> Self::Output {
-                Self::Output::new(self.value / rhs.value)
+                Self::Output::new(self.value() / rhs.value())
             }
         }
 
         impl const std::ops::Div<&$den> for &$num {
             type Output = $res;
             fn div(self, rhs: &$den) -> Self::Output {
-                Self::Output::new(self.value / rhs.value)
+                Self::Output::new(self.value() / rhs.value())
             }
         }
 
         impl const std::ops::Div<$res> for $num {
             type Output = $den;
             fn div(self, rhs: $res) -> Self::Output {
-                Self::Output::new(self.value / rhs.value)
+                Self::Output::new(self.value() / rhs.value())
             }
         }
 
         impl const std::ops::Div<$res> for &$num {
             type Output = $den;
             fn div(self, rhs: $res) -> Self::Output {
-                Self::Output::new(self.value / rhs.value)
+                Self::Output::new(self.value() / rhs.value())
             }
         }
 
         impl const std::ops::Div<&$res> for $num {
             type Output = $den;
             fn div(self, rhs: &$res) -> Self::Output {
-                Self::Output::new(self.value / rhs.value)
+                Self::Output::new(self.value() / rhs.value())
             }
         }
 
         impl const std::ops::Div<&$res> for &$num {
             type Output = $den;
             fn div(self, rhs: &$res) -> Self::Output {
-                Self::Output::new(self.value / rhs.value)
+                Self::Output::new(self.value() / rhs.value())
             }
         }
 
         impl const std::ops::Mul<$den> for $res {
             type Output = $num;
             fn mul(self, rhs: $den) -> Self::Output {
-                Self::Output::new(self.value * rhs.value)
+                Self::Output::new(self.value() * rhs.value())
             }
         }
 
         impl const std::ops::Mul<$den> for &$res {
             type Output = $num;
             fn mul(self, rhs: $den) -> Self::Output {
-                Self::Output::new(self.value * rhs.value)
+                Self::Output::new(self.value() * rhs.value())
             }
         }
 
         impl const std::ops::Mul<&$den> for $res {
             type Output = $num;
             fn mul(self, rhs: &$den) -> Self::Output {
-                Self::Output::new(self.value * rhs.value)
+                Self::Output::new(self.value() * rhs.value())
             }
         }
 
         impl const std::ops::Mul<&$den> for &$res {
             type Output = $num;
             fn mul(self, rhs: &$den) -> Self::Output {
-                Self::Output::new(self.value * rhs.value)
+                Self::Output::new(self.value() * rhs.value())
             }
         }
 
         impl const std::ops::Mul<$res> for $den {
             type Output = $num;
             fn mul(self, rhs: $res) -> Self::Output {
-                Self::Output::new(self.value * rhs.value)
+                Self::Output::new(self.value() * rhs.value())
             }
         }
 
         impl const std::ops::Mul<$res> for &$den {
             type Output = $num;
             fn mul(self, rhs: $res) -> Self::Output {
-                Self::Output::new(self.value * rhs.value)
+                Self::Output::new(self.value() * rhs.value())
             }
         }
 
         impl const std::ops::Mul<&$res> for $den {
             type Output = $num;
             fn mul(self, rhs: &$res) -> Self::Output {
-                Self::Output::new(self.value * rhs.value)
+                Self::Output::new(self.value() * rhs.value())
             }
         }
 
         impl const std::ops::Mul<&$res> for &$den {
             type Output = $num;
             fn mul(self, rhs: &$res) -> Self::Output {
-                Self::Output::new(self.value * rhs.value)
+                Self::Output::new(self.value() * rhs.value())
             }
         }
 

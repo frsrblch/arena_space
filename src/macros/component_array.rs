@@ -13,6 +13,14 @@ macro_rules! component_array {
             }
         }
 
+        impl<ID, T: Clone> Clone for $name<ID, T> {
+            fn clone(&self) -> Self {
+                Self {
+                    components: self.components.clone(),
+                }
+            }
+        }
+
         impl<ID, T: Clone> $name<ID, T> {
             pub fn insert<I: ValidId<ID>>(&mut self, id: I, value: T) {
                 self.components

@@ -21,6 +21,10 @@ macro_rules! scalar {
             pub fn mul_add_assign(&mut self, a: $base, b: Self) {
                 *self = (*self * a) + b;
             }
+
+            pub const fn value(self) -> $base {
+                self.value
+            }
         }
 
         impl const $crate::Wrapper for $scalar {
@@ -73,7 +77,7 @@ macro_rules! scalar {
             }
         }
 
-        impl std::ops::Add for &$scalar {
+        impl const std::ops::Add for &$scalar {
             type Output = $scalar;
             fn add(self, rhs: Self) -> Self::Output {
                 *self + *rhs

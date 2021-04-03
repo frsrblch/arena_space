@@ -26,6 +26,7 @@ impl Display for TonsPerDay {
 }
 
 scalar_div! { Mass | Duration = MassRate }
+scalar_div! { MassRate | Frequency = Mass }
 
 scalar! {
     struct MassRatePerPerson(f64) {

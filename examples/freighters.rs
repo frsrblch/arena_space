@@ -1,4 +1,4 @@
-use arena_space::body::examples::{earth, luna};
+use arena_space::body::examples::{earth_body, luna};
 use arena_space::body::Planet;
 use arena_space::colony::economy::ProductionUnit;
 use arena_space::colony::*;
@@ -74,7 +74,7 @@ struct TestState {
 fn get_test_state() -> TestState {
     let mut state = SystemState::default();
 
-    let (_sol, _bodies) = state.state.create(get_test_star_system());
+    state.state.create(get_test_star_system());
 
     let earth = state.state.body.get_by_name("Earth").unwrap();
     let luna = state.state.body.get_by_name("Luna").unwrap();
@@ -92,7 +92,11 @@ fn get_test_state() -> TestState {
 
     // create production
     let food_required = (earth_pop + luna_pop).get_food_requirement();
-    let production_unit = ProductionUnit::new(food_required * 1.075);
+    let production_unit = ProductionUnit::new(
+        food_required * 1.075,
+        Resource::Food,
+        state.state.body.properties.get(earth),
+    );
     let food_production = state.state.colony.production.get_mut(Facility::Farmland);
     food_production.insert(farm_colony, production_unit);
 
@@ -121,7 +125,7 @@ fn get_test_star_system() -> StarSystem {
     StarSystem {
         star: sol(),
         planets: vec![Planet {
-            body: earth(),
+            body: earth_body(),
             moons: vec![luna()],
         }],
     }
@@ -130,9 +134,11 @@ fn get_test_star_system() -> StarSystem {
 fn get_random_freighter(rng: &mut impl rand::Rng) -> Freighter {
     let tonnage = rng.gen_range(100.0, 250.0) * TON * 5.0;
     Freighter {
+        name: "Random Ship".to_string(),
         tonnage,
         capacity: tonnage * 2.5,
         loading_rate: rng.gen_range(1.0, 2.5) * TON / MIN,
+        shipping_cost: PricePerMeter::in_credits_per_kg_m(1.0 / 150e9),
         drive: Drive::Warp(rng.gen_range(40.0, 60.0) * KM / S),
     }
 }

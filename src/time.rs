@@ -29,11 +29,11 @@ impl TimeState {
         self.time_float = self.calculate_time_float();
     }
 
-    pub fn get_time(&self) -> DateTime {
+    pub fn get_date_time(&self) -> DateTime {
         self.game_time
     }
 
-    pub fn get_time_float(&self) -> TimeFloat {
+    pub fn get_time(&self) -> TimeFloat {
         self.time_float
     }
 

@@ -47,18 +47,6 @@ impl Colonies {
         id
     }
 
-    // pub fn kill(&mut self, id: Id<Colony>) {
-    //     if let Some(id) = self.alloc.validate(id) {
-    //         self.name.get_mut(id).clear();
-    //         self.people.insert(id, Population::zero());
-    //         self.resources.insert(id);
-    //         self.production.kill(id.value);
-    //
-    //         let id = id.value;
-    //         self.alloc.kill(id);
-    //     }
-    // }
-
     pub fn print(&self) {
         println!(" == COLONIES ==");
         for id in self.alloc.ids() {
@@ -67,16 +55,30 @@ impl Colonies {
     }
 
     fn print_colony<I: ValidId<Colony>>(&self, id: I) {
-        println!(
-            "{}: {}",
-            self.name.get(id),
-            self.people.population.get(id).millions()
-        );
+        println!("{}: {}", self.name.get(id), self.people.population.get(id));
         self.resources.print_colony(id);
         self.production.print_colony(id);
     }
 
     pub fn get_body<I: ValidId<Colony>>(&self, id: I) -> Id<Body> {
         *self.body.get(id)
+    }
+}
+
+pub mod examples {
+    use super::*;
+
+    pub fn european_union() -> Colony {
+        Colony {
+            name: "European Union".to_string(),
+            population: Population::in_millions(623.3),
+        }
+    }
+
+    pub fn china() -> Colony {
+        Colony {
+            name: "People's Republic of China".to_string(),
+            population: Population::in_millions(1.531e3),
+        }
     }
 }

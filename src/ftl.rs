@@ -2,12 +2,42 @@
 
 use crate::components::*;
 
-pub enum FtlType {
+#[derive(Debug, Copy, Clone)]
+pub enum Propulsion {
     Warp(WarpFactor),
+}
+
+impl Propulsion {
+    pub const LEN: usize = 1;
+
+    pub const DEFAULTS: [Self; Self::LEN] = [Self::Warp(Default::default())];
+
+    pub fn get_duration(&self, distance: Length) -> Option<Duration> {
+        match self {
+            Propulsion::Warp(factor) => Some(distance / factor.get_max_speed()),
+        }
+    }
+
+    pub fn iter_defaults() -> std::slice::Iter<'static, Propulsion> {
+        Self::DEFAULTS.iter()
+    }
+
+    pub fn index(&self) -> usize {
+        match self {
+            Propulsion::Warp(_) => 0,
+        }
+    }
 }
 
 #[derive(Debug, Copy, Clone, Eq, Ord, PartialOrd, PartialEq, Hash)]
 pub struct WarpFactor(u32);
+
+#[rustfmt::skip]
+impl const Default for WarpFactor {
+    fn default() -> Self {
+        WarpFactor(1000)
+    }
+}
 
 impl WarpFactor {
     pub fn new(fraction_of_c: f64) -> Self {

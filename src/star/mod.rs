@@ -1,17 +1,7 @@
 use crate::body::{Body, Planet};
 use crate::state::State;
 use crate::*;
-
-// create_fixed_arena! {
-//     struct Stars {
-//         type Entity = struct Star;
-//         components {
-//             name: String,
-//             position: Position,
-//             star_type: StarType,
-//         }
-//     }
-// }
+use std::fmt::{Display, Formatter, Result};
 
 #[derive(Debug, Clone)]
 pub struct Star {
@@ -29,6 +19,8 @@ pub struct Stars {
     pub name: Component<Star, String>,
     pub position: Component<Star, Position>,
     pub star_type: Component<Star, StarType>,
+
+    pub bodies: Component<Star, Vec<Id<Body>>>,
 }
 
 impl Stars {
@@ -38,8 +30,14 @@ impl Stars {
         self.name.insert(id, row.name);
         self.position.insert(id, row.position);
         self.star_type.insert(id, row.star_type);
+        self.bodies.insert(id, Vec::with_capacity(16));
 
         id
+    }
+
+    #[inline]
+    pub fn get_radius<I: ValidId<Star>>(&self, id: I) -> Length {
+        self.star_type.get(id).get_radius()
     }
 }
 
@@ -50,16 +48,13 @@ pub struct StarSystem {
 }
 
 impl State {
-    pub fn create(&mut self, star_system: StarSystem) -> (Id<Star>, Vec<Id<Body>>) {
+    pub fn create(&mut self, star_system: StarSystem) {
         let star = self.star.create(star_system.star);
+        let bodies = self.star.bodies.get_mut(star);
 
-        let planets = star_system
-            .planets
-            .into_iter()
-            .map(|p| self.body.create_planet(p, star))
-            .collect();
-
-        (star, planets)
+        for planet in star_system.planets {
+            self.body.create_planet(planet, star, bodies);
+        }
     }
 }
 
@@ -94,6 +89,14 @@ impl StarType {
     }
 }
 
+impl Display for StarType {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        match self {
+            StarType::G(_) => write!(f, "G-Type star"),
+        }
+    }
+}
+
 const SOLAR_MASS: Mass = 1.9884e30 * KG;
 const SOLAR_RADIUS: Length = 695_700.0 * KM;
 
@@ -104,7 +107,7 @@ pub mod examples {
     pub fn sol_system() -> StarSystem {
         StarSystem {
             star: sol(),
-            planets: vec![planet_earth()],
+            planets: vec![mercury(), venus(), earth(), mars()],
         }
     }
 

@@ -1,4 +1,5 @@
 use crate::components::Fraction;
+use std::fmt::{Display, Formatter, Result};
 use Habitability::*;
 use Pressure::*;
 use Surface::*;
@@ -62,6 +63,19 @@ impl Default for BodyProperties {
             hydrosphere: Hydrosphere::None,
             biosphere: Biosphere::None,
             magnetosphere: Magnetosphere::Absent,
+        }
+    }
+}
+
+impl Display for BodyProperties {
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        match self.surface {
+            Gaseous => write!(f, "Gas giant"),
+            Volcanic => write!(f, "Volcanic"),
+            Frozen => write!(f, "Frozen"),
+            Barren => write!(f, "Barren"),
+            Continental { .. } => write!(f, "Continental"),
+            Oceanic => write!(f, "Oceanic"),
         }
     }
 }

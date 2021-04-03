@@ -19,27 +19,59 @@ impl Population {
 
     /// 2 kg per person per day
     const FOOD_PER_PERSON: MassRatePerPerson = 2.0 * KG / DAY / PERSON;
-    // MassRatePerPerson::in_kg_per_s_person(2.0 / Duration::SECONDS_PER_DAY);
+}
 
-    pub fn millions(self) -> Millions {
-        Millions(self)
+impl Display for Population {
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        match self.value.abs() {
+            v if v < 1e4 => {
+                write!(f, "{:.0}", self.value)
+            }
+            v if v < 1e5 => {
+                write!(f, "{:.1} k", self.value / 1e3)
+            }
+            v if v < 1e6 => {
+                write!(f, "{:.0} k", self.value / 1e3)
+            }
+            v if v < 1e7 => {
+                write!(f, "{:.2} M", self.value / 1e6)
+            }
+            v if v < 1e8 => {
+                write!(f, "{:.1} M", self.value / 1e6)
+            }
+            v if v < 1e9 => {
+                write!(f, "{:.0} M", self.value / 1e6)
+            }
+            v if v < 1e10 => {
+                write!(f, "{:.2} B", self.value / 1e9)
+            }
+            v if v < 1e11 => {
+                write!(f, "{:.1} B", self.value / 1e9)
+            }
+            _ => write!(f, "{:.0} B", self.value / 1e9),
+        }
     }
 }
 
 #[test]
-fn get_food_requirement() {
-    let p = Population::in_millions(1.0);
+fn population_to_string() {
+    let assert_pop = |exp: &str, pop: f64| assert_eq!(exp, Population::new(pop).to_string());
 
-    assert_eq!(p.get_food_requirement(), p * Population::FOOD_PER_PERSON);
-}
-
-pub struct Millions(Population);
-
-impl Display for Millions {
-    fn fmt(&self, f: &mut Formatter) -> Result {
-        let millions = (self.0.value / 1e6) as i64;
-        write!(f, "{} M", millions.to_formatted_string(&Locale::en))
-    }
+    assert_pop("0", 0.0);
+    assert_pop("1", 1e0);
+    assert_pop("10", 1e1);
+    assert_pop("100", 1e2);
+    assert_pop("1000", 1e3);
+    assert_pop("10.0 k", 1e4);
+    assert_pop("100 k", 1e5);
+    assert_pop("1.00 M", 1e6);
+    assert_pop("10.0 M", 1e7);
+    assert_pop("100 M", 1e8);
+    assert_pop("1.00 B", 1e9);
+    assert_pop("10.0 B", 1e10);
+    assert_pop("100 B", 1e11);
+    assert_pop("1000 B", 1e12);
+    assert_pop("-10.0 k", -1e4);
 }
 
 scalar!(struct PopulationDensity(f64));

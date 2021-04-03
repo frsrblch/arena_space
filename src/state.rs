@@ -10,7 +10,6 @@ pub struct State {
     pub time: TimeState,
     pub star: Stars,
     pub body: Bodies,
-    // pub nation: Nations,
     pub colony: Colonies,
     pub freighter: Freighters,
 }

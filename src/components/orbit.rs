@@ -1,6 +1,6 @@
 use super::*;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct BodyOrbit {
     pub params: Orbit,
     pub parent: Option<Orbit>,
@@ -17,7 +17,7 @@ impl BodyOrbit {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Orbit {
     pub radius: Length,
     pub angular_speed: AngularSpeed,
@@ -28,7 +28,7 @@ impl Orbit {
     pub fn from_period(radius: Length, period: Duration, offset: Angle) -> Self {
         Self {
             radius,
-            angular_speed: -Angle::TWO_PI / period,
+            angular_speed: Angle::TWO_PI / period,
             offset,
         }
     }
@@ -73,12 +73,12 @@ mod tests {
     #[test]
     fn orbit_test_at_quarter_orbit() {
         let orbit = get_planet_orbit();
-        let time = -Angle::TWO_PI / orbit.angular_speed / 4.0;
+        let time = Angle::TWO_PI / orbit.angular_speed / 4.0;
         assert!(time > Duration::zero());
 
         let quarter = orbit.calculate_position(TimeFloat::in_s(time.value()));
 
-        assert_eq!(Length::in_m(-1000.0), quarter.x);
+        assert_eq!(Length::in_m(1000.0), quarter.x);
         assert!(nearly_zero(quarter.y));
     }
 

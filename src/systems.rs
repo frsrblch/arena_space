@@ -29,7 +29,6 @@ array_enum! {
     enum System {
         FreighterState,
         ColonyProductionCycle,
-        // NationFoodTargets,
         ColonyPopulation,
         ResourceDecay,
         PrintState,
@@ -46,7 +45,6 @@ impl System {
                     .update(&state.time, &mut state.colony, &state.body, &state.star)
             }
             System::ColonyProductionCycle => state.colony.production_cycle(),
-            // System::NationFoodTargets => state.nation.update_food_targets(&mut state.colony),
             System::ColonyPopulation => state.colony.update_population(&mut state.body),
             System::ResourceDecay => state.colony.resources.decay(),
             System::PrintState => {} // state.print(),
@@ -69,7 +67,6 @@ impl System {
         match self {
             System::FreighterState => 10.0 * MIN,
             System::ColonyProductionCycle => 1.0 * DAY,
-            // System::NationFoodTargets => DurationFloat::in_days(30.0),
             System::ColonyPopulation => 5.0 * DAY,
             System::ResourceDecay => 30.0 * DAY,
             System::PrintState => 90.0 * DAY,
@@ -90,7 +87,7 @@ pub struct SystemQueue {
 impl Default for SystemQueue {
     fn default() -> Self {
         let start = TimeState::default();
-        Self::new(start.get_time())
+        Self::new(start.get_date_time())
     }
 }
 
@@ -115,7 +112,7 @@ impl SystemQueue {
     }
 
     pub fn update_by(&mut self, state: &mut State, duration: Duration) {
-        let time = state.time.get_time() + ChronoDuration::from(duration);
+        let time = state.time.get_date_time() + ChronoDuration::from(duration);
         self.update(state, time);
     }
 
@@ -125,13 +122,11 @@ impl SystemQueue {
     }
 
     fn peek(&self) -> &UpdateToken {
-        // SAFETY: system queue will never be empty
-        self.queue.peek().unwrap()
+        self.queue.peek().expect("system queue is empty")
     }
 
     fn pop(&mut self) -> UpdateToken {
-        // SAFETY: system queue will never be empty
-        self.queue.pop().unwrap()
+        self.queue.pop().expect("system queue is empty")
     }
 
     fn push(&mut self, token: UpdateToken) {

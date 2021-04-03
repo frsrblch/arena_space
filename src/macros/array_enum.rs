@@ -25,7 +25,7 @@ macro_rules! array_enum {
                 ]
                     .len();
 
-            pub fn index(&self) -> usize {
+            pub const fn index(&self) -> usize {
                 *self as usize
             }
 

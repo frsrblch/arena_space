@@ -1,4 +1,5 @@
 use super::*;
+use crate::body::{BodyProperties, Habitability};
 
 array_enum! {
     enum Resource {
@@ -33,6 +34,19 @@ impl<ID, T: Default> ResourceComponent<ID, T> {
 }
 
 impl Resource {
+    pub fn get_production_cost(&self, location: &BodyProperties) -> Price {
+        match self {
+            Food => match location.get_habitability() {
+                Habitability::Uninhabitable => Price::in_credits_per_kg(8.0),
+                Habitability::Hostile => Price::in_credits_per_kg(4.0),
+                Habitability::Marginal => Price::in_credits_per_kg(1.0),
+                Habitability::Optimal => Price::in_credits_per_kg(0.5),
+            },
+            Ore => Price::in_credits_per_kg(0.1),
+            Metal => Price::in_credits_per_kg(5.0),
+        }
+    }
+
     pub const fn get_facility(&self) -> &'static [Facility] {
         match self {
             Food => &[Farmland, Hydroponics],
@@ -53,7 +67,7 @@ impl Resource {
         self.get_facility()
             .iter()
             .map(|f| f.get_default_price())
-            .fold_first(|a, b| if a < b { a } else { b })
+            .reduce(|a, b| if a < b { a } else { b })
             .unwrap_or_else(|| Price::in_credits_per_kg(1.0))
     }
 }
