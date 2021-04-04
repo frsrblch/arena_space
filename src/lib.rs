@@ -26,7 +26,6 @@ pub mod components;
 pub mod construction;
 pub mod entity;
 pub mod ftl;
-pub mod geometry;
 pub mod resources;
 pub mod ships;
 pub mod spaceport;

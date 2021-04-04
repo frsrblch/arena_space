@@ -1,7 +1,6 @@
 use crate::star::{Star, Stars};
 use crate::*;
 
-use crate::geometry::Sphere;
 pub use components::*;
 
 mod components;
@@ -27,6 +26,7 @@ impl BodyLinks {
     pub fn planet(star: Id<Star>) -> Self {
         Self { star, parent: None }
     }
+
     pub fn moon(star: Id<Star>, parent: Id<Body>) -> Self {
         Self {
             star,
@@ -121,7 +121,7 @@ impl Bodies {
 
     pub fn get_land_area<I: ValidId<Body>>(&self, id: I) -> Area {
         let radius = self.radius.get(id);
-        let area = Sphere::with_radius(*radius).get_area();
+        let area = Area::of_sphere(*radius);
 
         match self.properties.get(id).surface {
             Surface::Gaseous => Area::zero(),
@@ -140,6 +140,12 @@ impl Bodies {
             .into_iter()
             .filter_map(|(n, id)| if *n == name { Some(id) } else { None })
             .next()
+    }
+
+    pub fn get_gravity(&self, id: Id<Body>) -> Acceleration {
+        let radius = self.radius[id];
+        let mass = self.mass[id];
+        Acceleration::from_gravity(mass, radius)
     }
 }
 
