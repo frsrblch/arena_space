@@ -35,6 +35,12 @@ pub struct FreighterLinks {
     pub location: Id<Colony>,
 }
 
+impl From<Id<Colony>> for FreighterLinks {
+    fn from(location: Id<Colony>) -> Self {
+        FreighterLinks { location }
+    }
+}
+
 dynamic_arena!(Freighter);
 
 #[derive(Debug, Default)]
@@ -55,7 +61,15 @@ pub struct Freighters {
 }
 
 impl Freighters {
-    pub fn create(&mut self, freighter: Freighter, links: FreighterLinks) -> Id<Freighter> {
+    pub fn create<L: Into<FreighterLinks>>(
+        &mut self,
+        freighter: Freighter,
+        links: L,
+    ) -> Id<Freighter> {
+        self.create_inner(freighter, links.into())
+    }
+
+    fn create_inner(&mut self, freighter: Freighter, links: FreighterLinks) -> Id<Freighter> {
         let id = self.alloc.create();
 
         self.name.insert(id, freighter.name);

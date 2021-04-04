@@ -23,6 +23,18 @@ pub struct BodyLinks {
     pub parent: Option<Id<Body>>,
 }
 
+impl BodyLinks {
+    pub fn planet(star: Id<Star>) -> Self {
+        Self { star, parent: None }
+    }
+    pub fn moon(star: Id<Star>, parent: Id<Body>) -> Self {
+        Self {
+            star,
+            parent: Some(parent),
+        }
+    }
+}
+
 #[derive(Debug, Default, Clone)]
 pub struct Bodies {
     pub alloc: Allocator<Body>,
@@ -138,24 +150,18 @@ pub struct Planet {
 }
 
 impl Bodies {
-    pub fn create_planet(
+    pub fn create_planetary_system(
         &mut self,
         row: Planet,
         star: Id<Star>,
         star_bodies: &mut Vec<Id<Body>>,
     ) -> Id<Body> {
-        let links = BodyLinks { star, parent: None };
         star_bodies.reserve(row.moons.len() + 1);
 
-        let planet = self.create(row.body, links, star_bodies);
-
-        let moon_links = BodyLinks {
-            star,
-            parent: Some(planet),
-        };
+        let planet = self.create(row.body, BodyLinks::planet(star), star_bodies);
 
         for moon in row.moons {
-            self.create(moon, moon_links, star_bodies);
+            self.create(moon, BodyLinks::moon(star, planet), star_bodies);
         }
 
         planet

@@ -74,7 +74,7 @@ struct TestState {
 fn get_test_state() -> TestState {
     let mut state = SystemState::default();
 
-    state.state.create(get_test_star_system());
+    state.state.create_star_system(get_test_star_system());
 
     let earth = state.state.body.get_by_name("Earth").unwrap();
     let luna = state.state.body.get_by_name("Luna").unwrap();

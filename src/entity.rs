@@ -48,8 +48,7 @@ impl<'a> Entity<'a, Star> {
     pub fn bodies(&self) -> impl Iterator<Item = Entity<Body>> {
         self.state
             .star
-            .bodies
-            .get(self.id)
+            .bodies(self.id.value)
             .iter()
             .map(move |b| self.state.get(b))
     }

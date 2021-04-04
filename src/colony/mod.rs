@@ -20,6 +20,12 @@ pub struct ColonyLinks {
     pub body: Id<Body>,
 }
 
+impl From<Id<Body>> for ColonyLinks {
+    fn from(body: Id<Body>) -> Self {
+        ColonyLinks { body }
+    }
+}
+
 #[derive(Debug, Default)]
 pub struct Colonies {
     pub alloc: Allocator<Colony>,
@@ -34,7 +40,11 @@ pub struct Colonies {
 }
 
 impl Colonies {
-    pub fn create(&mut self, row: Colony, links: ColonyLinks) -> Id<Colony> {
+    pub fn create<L: Into<ColonyLinks>>(&mut self, row: Colony, links: L) -> Id<Colony> {
+        self.create_inner(row, links.into())
+    }
+
+    fn create_inner(&mut self, row: Colony, links: ColonyLinks) -> Id<Colony> {
         let id = self.alloc.create();
 
         self.name.insert(id, row.name);

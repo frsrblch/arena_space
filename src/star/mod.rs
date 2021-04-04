@@ -1,6 +1,7 @@
 use crate::body::{Body, Planet};
 use crate::state::State;
 use crate::*;
+use iter_context::ContextualIterator;
 use std::fmt::{Display, Formatter, Result};
 
 #[derive(Debug, Clone)]
@@ -20,7 +21,7 @@ pub struct Stars {
     pub position: Component<Star, Position>,
     pub star_type: Component<Star, StarType>,
 
-    pub bodies: Component<Star, Vec<Id<Body>>>,
+    bodies: Component<Star, Vec<Id<Body>>>,
 }
 
 impl Stars {
@@ -39,6 +40,27 @@ impl Stars {
     pub fn get_radius<I: ValidId<Star>>(&self, id: I) -> Length {
         self.star_type.get(id).get_radius()
     }
+
+    pub fn get_by_name(&self, name: &str) -> Option<Id<Star>> {
+        self.name
+            .iter()
+            .zip(self.alloc.ids())
+            .into_iter()
+            .filter_map(
+                |(star_name, id)| {
+                    if star_name.eq(name) {
+                        Some(id)
+                    } else {
+                        None
+                    }
+                },
+            )
+            .nth(0)
+    }
+
+    pub fn bodies(&self, star: Id<Star>) -> &Vec<Id<Body>> {
+        self.bodies.get(star)
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -48,12 +70,12 @@ pub struct StarSystem {
 }
 
 impl State {
-    pub fn create(&mut self, star_system: StarSystem) {
+    pub fn create_star_system(&mut self, star_system: StarSystem) {
         let star = self.star.create(star_system.star);
         let bodies = self.star.bodies.get_mut(star);
 
         for planet in star_system.planets {
-            self.body.create_planet(planet, star, bodies);
+            self.body.create_planetary_system(planet, star, bodies);
         }
     }
 }
