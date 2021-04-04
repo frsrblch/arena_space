@@ -7,9 +7,9 @@ pub struct Fraction(f64);
 
 impl Eq for Fraction {}
 
-impl Into<f64> for Fraction {
-    fn into(self) -> f64 {
-        self.0
+impl From<Fraction> for f64 {
+    fn from(fraction: Fraction) -> Self {
+        fraction.0
     }
 }
 

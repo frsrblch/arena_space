@@ -55,7 +55,7 @@ impl Stars {
                     }
                 },
             )
-            .nth(0)
+            .next()
     }
 
     pub fn bodies(&self, star: Id<Star>) -> &Vec<Id<Body>> {

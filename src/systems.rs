@@ -155,7 +155,7 @@ impl<T: Ord> MinHeap<T> {
 
 impl<T: Ord> FromIterator<T> for MinHeap<T> {
     fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
-        let heap = BinaryHeap::from_iter(iter.into_iter().map(Reverse));
+        let heap = iter.into_iter().map(Reverse).collect();
         Self { heap }
     }
 }

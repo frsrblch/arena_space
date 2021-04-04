@@ -3,7 +3,7 @@ use crate::colony::{Colonies, Colony};
 use crate::components::*;
 use crate::systems::System;
 use gen_id::*;
-use iter_context::{ContextualIterator, Iter, IterMut, Zip};
+use iter_context::{ContextualIterator, Iter, IterMut};
 
 // TODO split economy into production, pricing, decay?
 
@@ -189,7 +189,7 @@ impl Resources {
 
                 *mult *= ratio.powf(0.005);
 
-                if rt != 1.0 {
+                if (rt - 1.0).abs() > f64::EPSILON {
                     println!(
                         "start: {}, end: {}, ratio: {:.2}, mult: {:.2}, dsr: {:.2}, sdr: {:.2}",
                         sp, ep, rt, mt, dsr, sdr
@@ -292,26 +292,12 @@ impl Production {
         self.data.iter_mut()
     }
 
-    pub fn iter_enum(
-        &self,
-    ) -> Zip<Facility, Iter<Facility, IdMap<Colony, ProductionUnit>>, Iter<Facility, Facility>>
-    {
-        self.data.iter_enum()
-    }
-
-    pub fn iter_enum_mut(
-        &mut self,
-    ) -> Zip<Facility, IterMut<Facility, IdMap<Colony, ProductionUnit>>, Iter<Facility, Facility>>
-    {
-        self.data.iter_enum_mut()
-    }
-
     pub fn kill(&mut self, id: Id<Colony>) {
         self.data.iter_mut().for_each(|map| map.kill(id));
     }
 
     pub fn request_resources(&mut self, resources: &mut Resources) {
-        for (production, facility) in self.iter_enum_mut() {
+        for (production, facility) in self.data.iter_enum_mut() {
             for input in facility.get_inputs() {
                 let demand = resources.demand.get_mut(input.resource);
 
@@ -325,7 +311,7 @@ impl Production {
     }
 
     fn get_fulfillment(&mut self, resources: &Resources) {
-        for (production, facility) in self.iter_enum_mut() {
+        for (production, facility) in self.data.iter_enum_mut() {
             Self::reset_fulfillment(production);
 
             for input in facility.get_inputs() {
@@ -346,7 +332,7 @@ impl Production {
     }
 
     fn take_inputs(&mut self, resources: &mut Resources) {
-        for (production, facility) in self.iter_enum_mut() {
+        for (production, facility) in self.data.iter_enum_mut() {
             for input in facility.get_inputs() {
                 let stockpile = resources.stockpile.get_mut(input.resource);
 
@@ -361,7 +347,7 @@ impl Production {
     fn output(&mut self, resources: &mut Resources) {
         const RATIO_SCALAR: f64 = 4.0 * INTERVAL / Duration::in_days(365.25);
 
-        for (production, facility) in self.iter_enum_mut() {
+        for (production, facility) in self.data.iter_enum_mut() {
             let output = facility.get_output();
             let stockpile = resources.stockpile.get_mut(output);
             let supply = resources.supply.get_mut(output);

@@ -212,9 +212,12 @@ impl Assign {
         let iter = ids
             .zip(idle.indices())
             .into_iter()
-            .filter_map(|(id, index)| match parameters.assignment.get(id) {
-                None => None,
-                Some(assignment) => Some((index, *assignment)),
+            .filter_map(|(id, index)| {
+                parameters
+                    .assignment
+                    .get(id)
+                    .as_ref()
+                    .map(|assignment| (index, *assignment))
             });
 
         self.assign.fill(iter);

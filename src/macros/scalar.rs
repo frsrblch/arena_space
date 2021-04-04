@@ -42,17 +42,21 @@ macro_rules! scalar {
 
         impl const Eq for $scalar {}
 
-        impl const PartialOrd for $scalar {
+        impl PartialOrd for $scalar {
             fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
                 Some(self.cmp(other))
             }
         }
 
-        impl const Ord for $scalar {
+        impl Ord for $scalar {
             fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-                if self.value < other.value { std::cmp::Ordering::Less }
-                else if self.value == other.value { std::cmp::Ordering::Equal }
-                else { std::cmp::Ordering::Greater }
+                if (self.value - other.value).abs() < <$base>::EPSILON {
+                    std::cmp::Ordering::Equal
+                } else if self.value < other.value {
+                    std::cmp::Ordering::Less
+                } else {
+                    std::cmp::Ordering::Greater
+                }
             }
         }
 
