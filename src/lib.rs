@@ -2,11 +2,9 @@
 #![feature(
     const_fn,
     const_generics,
-    const_option,
     const_panic,
     const_float_classify,
     const_trait_impl,
-    const_trait_bound_opt_out,
     const_fn_floating_point_arithmetic,
     bool_to_option
 )]
