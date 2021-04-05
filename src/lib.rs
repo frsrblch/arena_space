@@ -39,7 +39,7 @@ pub use star::{Star, Stars};
 pub use state::State;
 
 #[allow(dead_code)]
-type HashMap<K, V> = fnv::FnvHashMap<K, V>;
+type HashMap<K, V> = fxhash::FxHashMap<K, V>;
 
 #[allow(dead_code)]
-type HashSet<K> = fnv::FnvHashSet<K>;
+type HashSet<K> = fxhash::FxHashSet<K>;
