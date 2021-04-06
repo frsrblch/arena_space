@@ -2,6 +2,7 @@ use crate::star::{Star, Stars};
 use crate::*;
 
 pub use components::*;
+use std::f64::consts::PI;
 
 mod components;
 
@@ -146,6 +147,39 @@ impl Bodies {
         let radius = self.radius[id];
         let mass = self.mass[id];
         Acceleration::from_gravity(mass, radius)
+    }
+
+    pub fn get_orbit_with_period(&self, body: Id<Body>, period: Duration) -> Option<Orbit> {
+        let mass = self.mass[body];
+        let body_radius = self.radius[body];
+        let radius = Length::of_orbit(mass, period);
+
+        let angular_speed = Angle::TWO_PI / period;
+
+        // TODO include angle and time to calculate offset
+        if radius > body_radius {
+            Some(Orbit {
+                radius,
+                angular_speed,
+                offset: Default::default(),
+            })
+        } else {
+            None
+        }
+    }
+
+    pub fn get_orbit_with_altitude(&self, body: Id<Body>, altitude: Length) -> Option<Orbit> {
+        let mass = self.mass[body];
+        let radius = self.radius[body] + altitude;
+
+        let angular_speed = AngularSpeed::of_orbit(mass, radius);
+
+        // TODO include angle and time to calculate offset
+        Some(Orbit {
+            radius,
+            angular_speed,
+            offset: Default::default(),
+        })
     }
 }
 

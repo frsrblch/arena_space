@@ -1,4 +1,6 @@
 use super::{Duration, Length, Speed};
+use crate::components::Mass;
+use crate::constants::G;
 use rand::distributions::{Distribution, Standard};
 use rand::Rng;
 use std::f64::consts::PI;
@@ -38,6 +40,13 @@ impl Distribution<Angle> for Standard {
 scalar! {
     struct AngularSpeed(f64) {
         fn in_rad_per_s(rad_per_s) -> Self;
+    }
+}
+
+impl AngularSpeed {
+    pub fn of_orbit(mass: Mass, radius: Length) -> Self {
+        let r_cubed = radius.value * radius.value * radius.value;
+        Self::new((G * mass.value / r_cubed).sqrt())
     }
 }
 

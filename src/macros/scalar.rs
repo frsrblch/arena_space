@@ -25,6 +25,10 @@ macro_rules! scalar {
             pub const fn value(self) -> $base {
                 self.value
             }
+
+            pub fn abs(self) -> Self {
+                Self::new(self.value.abs())
+            }
         }
 
         impl const $crate::Wrapper for $scalar {

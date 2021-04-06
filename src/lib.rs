@@ -21,6 +21,7 @@ pub mod action;
 pub mod body;
 pub mod colony;
 pub mod components;
+pub mod constants;
 pub mod construction;
 pub mod entity;
 pub mod ftl;
